@@ -21,8 +21,16 @@ appropriately depending on whether or not you use C++. */
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
-#include "typedef.h"
-#include "idt.h"
+#include "kio.h"
+#include "kstdio.h"
+#include "kstring.h"
+#include "irq.h"
+#include "time.h"
+//#include "typedef.h"
+//#include "idt.h"
+
+static const uint8_t VERSION[] = "SHOS Version 0.0.1";
+static const uint8_t COPYRIGHT = "Sin Hing 2018 all rights reserved"
 
 extern uint32_t PAGE_TABLE[1024 * 1024];		/* # of entries/page table * total # of page tables 
 													actual size = 4194304 bytes = 4MiB, represents 4GiB in physical memory (size of unsigned int = 4 bytes)
@@ -35,82 +43,25 @@ extern uint32_t IDT_POINTER;
 #define KERNEL_PAGE_TABLE			(KERNEL_VIRTUAL_BASE >> 22)	// Constant declaring Page Table index in virtual memory (from Kernel.asm)
 #define DISPLAY_SIZE				2000						// 2000 = 80 x 25 Characters - VGA Text-mode Display size
 
-/* For debugging purpose */
-void outb(unsigned short port, unsigned char value) 
-{
-	__asm__
-	(
-		"mov al, [ebp+12]\n"
-		"mov dx, [ebp+8]\n"
-		"outb dx, al\n"
-	);
-}
-
-void clearScreen(uint8_t bgColor, uint8_t fgColor) {
-	uint8_t color = ((bgColor << 4) & 0xF0) | (fgColor & 0x0F);
-	uint16_t* lpVideoBuffer = (uint16_t*) 0xB8000;
-	for (uint32_t i = 0; i < DISPLAY_SIZE; i++) {
-		lpVideoBuffer[i] = ((uint16_t) color << 8) | 0x00;
-	}
-}
-
-void shiftDisplayUp() {
-	__asm__
-	(
-		"mov edi, 0xB8000\n"		// origin of video mem
-		"mov esi, 0xB80A0\n"		//	2nd line
-		"mov ecx, 0x780\n"			//	VGA_WIDTH * 24
-		"rep movsw\n"
-	);
-}
-
-void print(const char* text) {
-	// pos = y * 80 + x;
-	// x = pos % 80;
-	// y = pos / 80;
-	static uint16_t currentPosition;
-	uint16_t* lpVideoBuffer = (uint16_t*) 0xB8000;
-
-	for (int i = 0; text[i] > 0; i++) {
-		if (text[i] == '\n') {
-			currentPosition += 80 - (currentPosition % 80);
-			if (currentPosition >= DISPLAY_SIZE) {
-				shiftDisplayUp();
-				currentPosition = DISPLAY_SIZE - 80;
-			}
-		}
-		else if (text[i] == '\t') {
-			for (int space = 0; space < 4; space++) {
-				lpVideoBuffer[currentPosition] = (uint16_t) (0x0200 | ' ');
-				if (currentPosition >= DISPLAY_SIZE) {
-					shiftDisplayUp();
-					currentPosition = DISPLAY_SIZE - 80;
-				}
-			}
-		}
-		else if (text[i] == '\b' && currentPosition > 0) {
-			lpVideoBuffer[--currentPosition] = (uint16_t) (0x200 | ' ');
-		}
-		else {
-			lpVideoBuffer[currentPosition++] = (uint16_t) (0x200 | text[i]);
-			if (currentPosition >= DISPLAY_SIZE) {
-				shiftDisplayUp();
-				currentPosition = DISPLAY_SIZE - 80;
-			}
-		}
-
-		outb(0x3D4, 14);
-		outb(0x3D5, (uint8_t)(currentPosition >> 8));
-		outb(0x3D4, 15);
-		outb(0x3D5, (uint8_t)(currentPosition));
-	}
-}
-
 //void CommonInterruptHandler(int handlerNum) {
 //}
+// extern void _set_color(uint8_t fg, uint8_t bg);
+// extern void _clear(void);
+
+static void _clear_screen() {
+	_set_color(2, 0);	//	Green foreground, black background
+	_clear();
+
+	_printf("%s\n%s", VERSION, COPYRIGHT);
+}
 
 void _kernel_main(void) {
-	// DisplayColour and Delay methods cannot be used until virtual addressing is set up i.e. until PG bit of CR0 is on.
+	_clear_screen();
+
+	init_irq();
+	init_timer();
+	
+/* 	// DisplayColour and Delay methods cannot be used until virtual addressing is set up i.e. until PG bit of CR0 is on.
 	// Use inline assembly colour method for debugging.
 	// This is because until virtual addressing is set up, code is only accessible through physical addresses but method calls 
 	// are based on virtual addresses (because of the link script).
@@ -250,5 +201,5 @@ void _kernel_main(void) {
 	while (1)
 	{
     	;		
-	}	
+	}	 */
 }

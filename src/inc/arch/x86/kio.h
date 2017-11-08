@@ -1,5 +1,5 @@
-#ifndef		__ARC_X86_IO_H_
-#define		__ARC_X86_IO_H_
+#ifndef		__ARCH_X86_KIO_H_
+#define		__ARCH_X86_KIO_H_
 
 // inportb: Get a byte from the selected port
 uint32_t inb(uint32_t port);
@@ -28,4 +28,4 @@ void idle();
 // reboot: Reboot the Computer:
 void reboot();
 
-#endif	//	__ARC_X86_IO_H_
+#endif	//	__ARCH_X86_KIO_H_

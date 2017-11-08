@@ -1,5 +1,5 @@
-#ifndef INCLUDE_STDARG_H
-#define INCLUDE_STDARG_H
+#ifndef __ARCH_X86_KSTDARG_H_
+#define __ARCH_X86_KSTDARG_H_
 
 // These functions are from the official GNU stdarg.h file 
 typedef char *va_list;
