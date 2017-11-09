@@ -191,6 +191,24 @@ _start:
 		jmp .hang
 .end:
 
+gdt_flush:	; Function to reload GDT
+		enter
+		
+		mov		eax, [ebp+8]
+		lgdt	[eax]
+		mov		eax, 0x10		; 0x10 is the offset in the GDT to our data segment, 3rd entry (0x00, 0x08, 0x10, 0x18, ... + 8 byte)
+		mov		ds, ax
+		mov		es, ax
+		mov		fs, ax
+		mov		gs, ax
+		mov		ss, ax
+		jmp		0x08:flush2		; 0x08 is the offset to our code segment: Far jump!
+flush2:
+		leave
+    	ret						; Function end
+		
+
+
 ; BEGIN - Interrupt Handler Macro	
 
 extern CommonInterruptHandler
