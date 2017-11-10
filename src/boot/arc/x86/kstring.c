@@ -1,4 +1,4 @@
-#include "kstring.h"
+#include "boot.h"
 
 uint32_t strlen(const uint32_t* str) {
 	uint8_t* p = str;

@@ -1,6 +1,4 @@
-#include "kio.h"
-#include "irq.h"
-#include "time.h"
+#include "boot.h"
 
 void init_timer(void) {		
 	// Initialize Timer Interrupt

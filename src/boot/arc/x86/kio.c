@@ -1,4 +1,4 @@
-#include "kio.h"
+#include "boot.h"
 
 __inline__ uint32_t inb(uint32_t port)
 {

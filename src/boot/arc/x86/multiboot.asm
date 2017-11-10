@@ -56,27 +56,27 @@ kernel_stack_bottom:
 kernel_stack_top:
  
 section .text
-; BEGIN - GDT allocations
-; This is the GDT table pre-filled with the entries we want
-GDT_Contents:
-; I have a suspicion that the order of the items in the GDT matters
-;	Code and data selectors first then TSS
-db	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00			; Offset: 0  - Null selector - required 
-db	0x16, 0x16, 0x00, 0x00, 0x00, 0x9A, 0xCF, 0x00			; Offset: 8  - KM Code selector - covers the entire 4GiB address range
-db	0x16, 0x16, 0x00, 0x00, 0x00, 0x92, 0xCF, 0x00			; Offset: 16 - KM Data selector - covers the entire 4GiB address range
-db	0x16, 0x16, 0x00, 0x00, 0x00, 0xFA, 0xCF, 0x00			; Offset: 24 - UM Code selector - covers the entire 4GiB address range
-db	0x16, 0x16, 0x00, 0x00, 0x00, 0xF2, 0xCF, 0x00			; Offset: 32 - UM Data selector - covers the entire 4GiB address range
+; ; BEGIN - GDT allocations
+; ; This is the GDT table pre-filled with the entries we want
+; GDT_Contents:
+; ; I have a suspicion that the order of the items in the GDT matters
+; ;	Code and data selectors first then TSS
+; db	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00			; Offset: 0  - Null selector - required 
+; db	0x16, 0x16, 0x00, 0x00, 0x00, 0x9A, 0xCF, 0x00			; Offset: 8  - KM Code selector - covers the entire 4GiB address range
+; db	0x16, 0x16, 0x00, 0x00, 0x00, 0x92, 0xCF, 0x00			; Offset: 16 - KM Data selector - covers the entire 4GiB address range
+; db	0x16, 0x16, 0x00, 0x00, 0x00, 0xFA, 0xCF, 0x00			; Offset: 24 - UM Code selector - covers the entire 4GiB address range
+; db	0x16, 0x16, 0x00, 0x00, 0x00, 0xF2, 0xCF, 0x00			; Offset: 32 - UM Data selector - covers the entire 4GiB address range
 
-;	Size - Change if adding/removing rows from GDT contents
-;	Size = Total bytes in GDT - 1
-GDT_Pointer			db 39, 0, 0, 0, 0, 0
-; END - GDT allocations
+; ;	Size - Change if adding/removing rows from GDT contents
+; ;	Size = Total bytes in GDT - 1
+; GDT_Pointer			db 39, 0, 0, 0, 0, 0
+; ; END - GDT allocations
 
-; BEGIN - IDT allocations
-IDT_Contents:
-		times 2048	db 0
-IDT_Pointer db 0xFF, 0x7, 0, 0, 0, 0
-; END - IDT allocations
+; ; BEGIN - IDT allocations
+; IDT_Contents:
+; 		times 2048	db 0
+; IDT_Pointer db 0xFF, 0x7, 0, 0, 0, 0
+; ; END - IDT allocations
 
 ; The linker script specifies _start as the entry point to the kernel and the
 ; bootloader will jump to this position once the kernel has been loaded. It

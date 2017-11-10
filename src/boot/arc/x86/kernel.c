@@ -21,16 +21,12 @@ appropriately depending on whether or not you use C++. */
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
-#include "kio.h"
-#include "kstdio.h"
-#include "kstring.h"
-#include "irq.h"
-#include "time.h"
+#include "boot.h"
 //#include "typedef.h"
 //#include "idt.h"
 
-static const uint8_t VERSION[] = "SHOS Version 0.0.1";
-static const uint8_t COPYRIGHT = "Sin Hing 2018 all rights reserved"
+static const uint8_t VERSION[] = "SHOS Version 0.0.1\n";
+static const uint8_t COPYRIGHT = "Sin Hing 2018 all rights reserved\n"
 
 extern uint32_t PAGE_TABLE[1024 * 1024];		/* # of entries/page table * total # of page tables 
 													actual size = 4194304 bytes = 4MiB, represents 4GiB in physical memory (size of unsigned int = 4 bytes)
@@ -52,11 +48,20 @@ static void _clear_screen() {
 	_set_color(2, 0);	//	Green foreground, black background
 	_clear();
 
-	_printf("%s\n%s", VERSION, COPYRIGHT);
+	_printf("%s%s", VERSION, COPYRIGHT);
 }
 
 void _kernel_main(void) {
 	_clear_screen();
+
+	//	initialize GDT
+	_printf("\nInitializing GDT... ");
+	gdt_init();
+	_printf("[OK]\n")
+
+	_printf("Initializing IDT... ");
+	idt_init();
+	_printf("[OK]\n");
 
 	init_irq();
 	init_timer();

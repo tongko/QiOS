@@ -1,6 +1,4 @@
-#include "kio.h"
-#include "kstring.h"
-#include "kstdio.h"
+#include "boot.h"
 
 static uint16_t* VIDEO_MEM = (uint16_t*) 0xB8000;
 static uint8_t _print_color = 0x2F;
