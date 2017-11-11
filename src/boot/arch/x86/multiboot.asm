@@ -44,11 +44,11 @@ section .bss
 GLOBAL PAGE_TABLE:data
 GLOBAL PAGE_DIRECTORY:data
 
-alignb 4096
-PAGE_TABLE:			resb (1024 * 4 * 1024)	; Reserve uninitialised space for Page Table -  # of entries/page table * 4 bytes/entry * total # of page tables 
-											; actual size = 4194304 bytes = 4MiB, represents 4GiB in physical memory
-											; ie. each 4 byte entry represent 4 KiB in physical memory
-PAGE_DIRECTORY:		resb (1024 * 4 * 1)		; Reserve uninitialised space for Page Directory - # of pages tables * 4 bytes/entry * # of directory (4096 = 4 KiB)
+; alignb 4096
+; PAGE_TABLE:			resb (1024 * 4 * 1024)	; Reserve uninitialised space for Page Table -  # of entries/page table * 4 bytes/entry * total # of page tables 
+; 											; actual size = 4194304 bytes = 4MiB, represents 4GiB in physical memory
+; 											; ie. each 4 byte entry represent 4 KiB in physical memory
+; PAGE_DIRECTORY:		resb (1024 * 4 * 1)		; Reserve uninitialised space for Page Directory - # of pages tables * 4 bytes/entry * # of directory (4096 = 4 KiB)
 
 alignb 16
 kernel_stack_bottom:
@@ -135,20 +135,20 @@ _start:
 		; C++ features such as global constructors and exceptions will require
 		; runtime support to work as well.
  
-		; BEGIN - Tell CPU about GDT
-		mov		dword [GDT_Pointer + 2], GDT_Contents
-		mov		dword eax, GDT_Pointer
-		lgdt	[eax]
-		; Set data segments
-		mov		dword eax, 0x10
-		mov		word ds, eax
-		mov		word es, eax
-		mov		word fs, eax
-		mov		word gs, eax
-		mov		word ss, eax
-		; Force reload of code segment
-		jmp		8:.Boot_FlushCsGDT
-.Boot_FlushCsGDT:
+; 		; BEGIN - Tell CPU about GDT
+; 		mov		dword [GDT_Pointer + 2], GDT_Contents
+; 		mov		dword eax, GDT_Pointer
+; 		lgdt	[eax]
+; 		; Set data segments
+; 		mov		dword eax, 0x10
+; 		mov		word ds, eax
+; 		mov		word es, eax
+; 		mov		word fs, eax
+; 		mov		word gs, eax
+; 		mov		word ss, eax
+; 		; Force reload of code segment
+; 		jmp		8:.Boot_FlushCsGDT
+; .Boot_FlushCsGDT:
 		; END - Tell CPU about GDT
 	
 		; END - Set Screen Colour
@@ -192,7 +192,7 @@ _start:
 .end:
 
 gdt_flush:	; Function to reload GDT
-		enter
+		enter	0, 0
 		
 		mov		eax, [ebp+8]
 		lgdt	[eax]
@@ -202,8 +202,8 @@ gdt_flush:	; Function to reload GDT
 		mov		fs, ax
 		mov		gs, ax
 		mov		ss, ax
-		jmp		0x08:flush2		; 0x08 is the offset to our code segment: Far jump!
-flush2:
+		jmp		0x08:.flush2		; 0x08 is the offset to our code segment: Far jump!
+.flush2:
 		leave
     	ret						; Function end
 		

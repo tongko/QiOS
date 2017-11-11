@@ -3,8 +3,8 @@
 
 // #include <stdint.h>
 
-// uint32_t strlen(const uint8_t*);
+// uint32_t strlen(const unsigned char*);
 
-// uint32_t* strcat(uint8_t*, const uint8_t*);
+// uint32_t* strcat(unsigned char*, const unsigned char*);
 
 // #endif	//	__ARCH_X86_KSTRING_H_

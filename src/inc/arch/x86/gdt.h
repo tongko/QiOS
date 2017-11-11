@@ -8,10 +8,10 @@
 // typedef struct _gdt_entry {
 // 	uint16_t limit_low;
 // 	uint16_t base_low;
-// 	uint8_t base_middle;
-// 	uint8_t access;
-// 	uint8_t granularity;
-// 	uint8_t base_high;
+// 	unsigned char base_middle;
+// 	unsigned char access;
+// 	unsigned char granularity;
+// 	unsigned char base_high;
 // } gdt_entry __attribute__((packed));
 
 // //	Special pointer which includes the limit: The max bytes taken up by the GDT, minus 1. Again, this
@@ -30,7 +30,7 @@
 // extern void gdt_flush(gdt_ptr* ptr);
 
 // //	Setup a descriptor in the GDT.
-// void gdt_set_gate(uint32_t num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
+// void gdt_set_gate(uint32_t num, uint32_t base, uint32_t limit, unsigned char access, unsigned char gran);
 // //	Initialize GDT.
 // void gdt_init(void);
 

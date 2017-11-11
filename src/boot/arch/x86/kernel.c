@@ -25,8 +25,8 @@ extern "C" /* Use C linkage for kernel_main. */
 //#include "typedef.h"
 //#include "idt.h"
 
-static const uint8_t VERSION[] = "SHOS Version 0.0.1\n";
-static const uint8_t COPYRIGHT = "Sin Hing 2018 all rights reserved\n"
+static const unsigned char VERSION[] = "SHOS Version 0.0.1";
+static const unsigned char COPYRIGHT[] = "Sin Hing 2018 all rights reserved";
 
 extern uint32_t PAGE_TABLE[1024 * 1024];		/* # of entries/page table * total # of page tables 
 													actual size = 4194304 bytes = 4MiB, represents 4GiB in physical memory (size of unsigned int = 4 bytes)
@@ -41,14 +41,14 @@ extern uint32_t IDT_POINTER;
 
 //void CommonInterruptHandler(int handlerNum) {
 //}
-// extern void _set_color(uint8_t fg, uint8_t bg);
+// extern void _set_color(unsigned char fg, unsigned char bg);
 // extern void _clear(void);
 
 static void _clear_screen() {
 	_set_color(2, 0);	//	Green foreground, black background
 	_clear();
 
-	_printf("%s%s", VERSION, COPYRIGHT);
+	_printf("%s\n%s\n", VERSION, COPYRIGHT);
 }
 
 void _kernel_main(void) {
@@ -57,14 +57,14 @@ void _kernel_main(void) {
 	//	initialize GDT
 	_printf("\nInitializing GDT... ");
 	gdt_init();
-	_printf("[OK]\n")
+	_printf("[OK]\n");
 
 	_printf("Initializing IDT... ");
 	idt_init();
 	_printf("[OK]\n");
 
-	init_irq();
-	init_timer();
+	// init_irq();
+	// init_timer();
 	
 /* 	// DisplayColour and Delay methods cannot be used until virtual addressing is set up i.e. until PG bit of CR0 is on.
 	// Use inline assembly colour method for debugging.

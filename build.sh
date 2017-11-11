@@ -12,7 +12,7 @@ fi
 # Variables
 
 NASM=" -felf32 "
-CFLAGS=" -std=gnu99 -ffreestanding -O2 -Wall -Wextra "
+CFLAGS=" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -masm=intel"
 if [ "$DEBUG" == 1 ]; then
 	NASM=$NASM"-gdwarf "
 	CFLAGS=$CFLAGS"-g "
@@ -27,11 +27,12 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 WORKSPACE="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-SOURCEDIR="$WORKSPACE"/src
-INCLUDEDIR="$SOURCEDIR"/inc
+SRCDIR="$WORKSPACE"/src
+INCDIR1="$SRCDIR"/inc
+INCDIR2="$SRCDIR"/inc/arch/x86
 OBJDIR="$WORKSPACE"/obj
 OUTPUTDIR="$WORKSPACE"/bin
-LINKERSCRIPT="$SOURCEDIR"/linker.located
+LINKERSCRIPT="$SRCDIR"/linker.located
 OUTPUTTARGET="$OUTPUTDIR"/boot/shos.bin
 ISODIR="$OUTPUTDIR"/isodir
 ISOBOOT="$ISODIR"/boot
@@ -39,14 +40,15 @@ ISOGRUB="$ISOBOOT"/grub
 OBJLIST=" "
 
 # Compiling all source file
-for f in $(find $SOURCEDIR -name '*.c' -or -name '*.asm'); do
+for f in $(find $SRCDIR -name '*.c' -or -name '*.asm'); do
 	filename=$(basename "$f")
 	ext="${filename##*.}"
 	target="$OBJDIR"/${filename%.*}.o
+	echo "Compiling $f"
 	if [ "$ext" == "asm" ]; then
 		nasm $NASM -o "$target" "$f"
 	else
-		i686-elf-gcc -c "$f" -I "$INCLUDEDIR" -o "$target" $CFLAGS
+		i686-elf-gcc -c "$f" -I "$INCDIR1" -I "$INCDIR2" -o "$target" $CFLAGS
 	fi
 	if [ $? -ne 0 ]; then
 		exit
@@ -54,7 +56,7 @@ for f in $(find $SOURCEDIR -name '*.c' -or -name '*.asm'); do
 	OBJLIST+="$target "
 done
 
-i686-elf-gcc -T "$LINKERSCRIPT" -o "$OUTPUTTARGET" -ffreestanding -O2 -nostdlib -I"$SOURCEDIR"/"$1"/ $OBJLIST -lgcc
+i686-elf-gcc -T "$LINKERSCRIPT" -o "$OUTPUTTARGET" -ffreestanding -O2 -nostdlib -I"$SRCDIR"/"$1"/ $OBJLIST -lgcc
 if [ $? -ne 0 ]; then
 	exit
 fi
@@ -74,7 +76,7 @@ fi
 
 mkdir -p "$ISOGRUB"
 cp "$OUTPUTTARGET" "$ISOBOOT"/shos.bin
-cp "$SOURCEDIR"/grub.cfg "$ISOGRUB"/grub.cfg
+cp "$SRCDIR"/grub.cfg "$ISOGRUB"/grub.cfg
 
 grub-mkrescue -o "$OUTPUTDIR"/simpleos.iso "$ISODIR"
 if [ $? -ne 0 ]; then

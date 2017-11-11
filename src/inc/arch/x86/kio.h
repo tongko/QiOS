@@ -8,7 +8,7 @@
 // void outb(uint32_t port, uint32_t val);
 
 // // write_nmi: Write Non Maskable Interrupt
-// //void write_nmi(uint8_t nmi);
+// //void write_nmi(unsigned char nmi);
 
 // // enable_nmi: Enable Non Maskable Interrupt
 // //void enable_nmi(void);

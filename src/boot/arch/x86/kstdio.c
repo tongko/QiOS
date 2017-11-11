@@ -1,41 +1,41 @@
 #include "boot.h"
 
 static uint16_t* VIDEO_MEM = (uint16_t*) 0xB8000;
-static uint8_t _print_color = 0x2F;
+static unsigned char _print_color = 0x2F;
 
-static __inline__ uint8_t vga_color_entry(uint8_t fg, uint8_t bg) {
+static __inline__ unsigned char vga_color_entry(unsigned char fg, unsigned char bg) {
 	return	fg | bg << 4;
 }
 
-static __inline__ uint16_t vga_entry(uint8_t c, uint8_t color) {
+static __inline__ uint16_t vga_entry(char c, unsigned char color) {
 	return (uint16_t) c | (uint16_t) color << 8;
 }
 
-static uint8_t* itoa(uint32_t value, uint8_t* str, uint32_t base) {
-	uint8_t* p = str;
+static char *itoa(uint32_t value, char *str, uint32_t base) {
+	char *p = str;
 	int i = 30;
 	
 	for(; value && i ; --i, value /= base) {	
-		p[i] = "0123456789abcdef"[val % base];
+		p[i] = "0123456789abcdef"[value % base];
 	}
 	
 	return p;
 }
 
-static __inline__ void _set_cursor(uint8_t x, uint8_t y) {
+static __inline__ void _set_cursor(unsigned char x, unsigned char y) {
 	outb(0x3d4, 0x0f); 
 	outb(0x3d5, x); 
 	outb(0x3d4, 0x0e); 		
 	outb(0x3d5, y);	
 }
 
-void _set_color(uint8_t fg, uint8_t bg) {
+void _set_color(unsigned char fg, unsigned char bg) {
 	_print_color = vga_color_entry(fg, bg);
 }
 
 void _clear(void) {
 	// Fill the screen with background color 
-	for(i = 0; i < 2000; i++) {					
+	for(uint32_t i = 0; i < 2000; i++) {					
 		VIDEO_MEM[i] = vga_entry(' ', _print_color);
 	}
 
@@ -43,12 +43,12 @@ void _clear(void) {
 	_set_cursor(0, 0);
 }
 
-void _putc(uint8 c) {
+void _putc(char c) {
 	//	Video memory offset
-	uint32_t offset, i;
+	uint32_t offset;
 
 	//	Get cursor Y position
-	outb(ox3d4, 0x0e);
+	outb(0x3d4, 0x0e);
 	offset = inb(0x3d5);
 	offset <<= 8;		// shift left 8 bit to make room for x
 
@@ -83,7 +83,7 @@ void _putc(uint8 c) {
 	//	end of screen?
 	if (offset >= 2000) {
 
-		__asm__ (".intel_syntax;\n"
+		__asm__ __volatile__(//".intel_syntax noprefix;\n"
 			"push edi;\n"
 			"push esi;\n"
 			"push eax;\n"
@@ -92,8 +92,8 @@ void _putc(uint8 c) {
 			"mov esi, 0xB80A0;\n"
 			"mov ecx, 0x30C;\n"
 			"rep movsw;\n"
-			"mov edi, 0xB9680"
-			"mov eax, 0;\n"
+			"mov edi, 0xB9680;\n"
+			"xor eax, eax;\n"
 			"mov ecx, 40;\n"
 			"rep stosw;\n"
 			"pop ecx;\n"
@@ -119,58 +119,60 @@ void _putc(uint8 c) {
 	_set_cursor(offset & 0x00ff, offset >> 8);
 }
 
-uint32_t _vsprintf(uint8_t* str, const uint8_t* format, va_list arg) {
-	uint8_t*	p = str;
-	uint8_t*	f = format;
-	uint8_t*	s;
+uint32_t _vsprintf(char *str, const char *format, va_list arg) {
+	char*	p = str;
+	char*	s;
 	uint32_t	d;
-	uint8_t		c;
+	unsigned char		c;
 	uint32_t	i = 0;
 
 	*p = '\0';
 	//	loop through the string until NULL terminator
-	while (*f != '\0') {
-		if (*f != '%') {
+	while (*format != '\0') {
+		if (*format != '%') {
 			//	Normal character
 			i = strlen(p);
-			p[i] = *f;
+			p[i] = *format;
 			p[i + 1] = '\0';
 		}
 		else {
-			switch (*(f + 1)) {
+			switch (*(format + 1)) {
 				case 'c': // Char
-					c = (char) va_arg(ap, int);
+					c = (char) va_arg(arg, int);
 					i = strlen(p);
 					p[i] = c;
 					p[i + 1]  = '\0';
 					break;
 				case 's': // String
-					s = va_arg(ap, char *);
+					s = va_arg(arg, char *);
 					strcat(p, s);
 					break;
 				case 'd': // Integer
 				case 'i':
-					d = va_arg(ap, int);
-					uint8_t buff[10] = {0};	// decimal max 10 digits.
-					strcat(p, itoa(d, s, 10));
+					d = va_arg(arg, int);
+					char buff[10] = {0};	// decimal max 10 digits.
+					strcat(p, itoa(d, buff, 10));
 					break;
 				default:
 				// Print the % and the following character
 					i = strlen(p);
-					p[i]  = *f;
-					p[i + 1]  = *(f + 1);
+					p[i]  = *format;
+					p[i + 1]  = *(format + 1);
 					p[i + 2]  = '\0';
 					break;
 			}
 
-			f++;
+			format++;
 		}
-		f++;
+
+		format++;
 	}
+
+	return strlen(str);
 }
 
-uint32_t _printf(const uint8_t* format, ...) {
-	uint8_t buffer[MAXLEN];
+uint32_t _printf(const char *format, ...) {
+	char buffer[MAXLEN];
 	va_list arg;
 	uint32_t i = 0;
 

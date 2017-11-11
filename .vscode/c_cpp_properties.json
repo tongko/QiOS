@@ -11,7 +11,7 @@
             "browse": {
                 "path": [
 					"~/opt/cross/lib/gcc/i686-elf/7.2.0/include",
-                    "${workspaceRoot}"
+					"${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

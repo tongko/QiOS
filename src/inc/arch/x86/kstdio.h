@@ -9,10 +9,10 @@
 // typedef	uint32_t	size_t;
 // typedef int32_t		ssize_t;
 
-// void _set_color(uint8_t fg, uint8_t bg);
+// void _set_color(unsigned char fg, unsigned char bg);
 // void _clear(void);
-// void _putc(uint8):
-// uint32_t _printf(const uint8_t*, ...);
-// uint32_t _vsprintf(uint8_t*, const uint8_t*, va_list);
+// void _putc(uchar):
+// uint32_t _printf(const unsigned char*, ...);
+// uint32_t _vsprintf(unsigned char*, const unsigned char*, va_list);
 
 // #endif	//	__ARCH_X86_kSTDIO_H_

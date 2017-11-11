@@ -1,6 +1,6 @@
 #include "boot.h"
 
-void gdt_set_gate(uint32_t num, uint32_t base, uint8_t limit, uint8_t access, uint8_t gran) {
+void gdt_set_gate(uint32_t num, uint32_t base, uint32_t limit, unsigned char access, unsigned char gran) {
     /* Setup the descriptor base address */
 	gdt[num].base_low = (base & 0xFFFF);
 	gdt[num].base_middle = (base >> 16) & 0xFF;
@@ -17,7 +17,7 @@ void gdt_set_gate(uint32_t num, uint32_t base, uint8_t limit, uint8_t access, ui
 
 void gdt_init(void) {
     //	Setup the GDT pointer and limit
-	gp.limit = (sizeof(gdt_entry) * 5) - 1;
+	gp.limit = (sizeof(gdt_entry) * 6) - 1;
 	gp.base = (uint32_t) &gdt;
 
 	//	Our NULL descriptor
@@ -45,5 +45,5 @@ void gdt_init(void) {
 	gdt_set_gate(5, 0, 0xFFFFFFFF, 0xC2, 0xCF);
 
 	/* Flush out the old GDT and install the new changes! */
-	gdt_flush((uint32_t)&gp);
+	gdt_flush((gdt_ptr*)&gp);
 }
