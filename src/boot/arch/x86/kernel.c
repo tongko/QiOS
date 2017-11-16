@@ -1,11 +1,3 @@
-/* Surely you will remove the processor conditionals and this comment
-appropriately depending on whether or not you use C++. */
-#if !defined(__cplusplus)
-#include <stdbool.h> /* C doesn't have booleans by default. */
-#endif
-#include <stddef.h>
-#include <stdint.h>
-
 /* Check if the compiler thinks we are targeting the wrong operating system. */
 #if defined(__linux__)
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
@@ -21,23 +13,15 @@ appropriately depending on whether or not you use C++. */
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
+#include "multiboot.h"
 #include "boot.h"
-//#include "typedef.h"
-//#include "idt.h"
 
 static const unsigned char VERSION[] = "SHOS Version 0.0.1";
 static const unsigned char COPYRIGHT[] = "Sin Hing 2018 all rights reserved";
 
-extern uint32_t PAGE_TABLE[1024 * 1024];		/* # of entries/page table * total # of page tables 
-													actual size = 4194304 bytes = 4MiB, represents 4GiB in physical memory (size of unsigned int = 4 bytes)
-													ie. each 4 byte entry represent 4 KiB in physical memory */
-extern uint32_t PAGE_DIRECTORY[1024 * 1];  	// # of pages tables * # of directory (4096 bytes = 4 KiB)
-extern uint32_t IDT_CONTENTS;
-extern uint32_t IDT_POINTER;
-
-#define KERNEL_VIRTUAL_BASE			0xC0000000					// Constant declaring base of Higher-half kernel (from Kernel.asm)
-#define KERNEL_PAGE_TABLE			(KERNEL_VIRTUAL_BASE >> 22)	// Constant declaring Page Table index in virtual memory (from Kernel.asm)
-#define DISPLAY_SIZE				2000						// 2000 = 80 x 25 Characters - VGA Text-mode Display size
+//#define KERNEL_VIRTUAL_BASE			0xC0000000					// Constant declaring base of Higher-half kernel (from Kernel.asm)
+// #define KERNEL_PAGE_TABLE			(KERNEL_VIRTUAL_BASE >> 22)	// Constant declaring Page Table index in virtual memory (from Kernel.asm)
+// #define DISPLAY_SIZE				2000						// 2000 = 80 x 25 Characters - VGA Text-mode Display size
 
 //void CommonInterruptHandler(int handlerNum) {
 //}
@@ -47,21 +31,17 @@ extern uint32_t IDT_POINTER;
 static void _clear_screen() {
 	_set_color(2, 0);	//	Green foreground, black background
 	_clear();
-
-	_printf("%s\n%s\n", VERSION, COPYRIGHT);
 }
 
 void _kernel_main(void) {
+	_enable_cursor(0, 15);	// Block shape cursor
 	_clear_screen();
 
-	//	initialize GDT
-	_printf("\nInitializing GDT... ");
-	gdt_init();
-	_printf("[OK]\n");
+	_printf("%s\n%s\n", VERSION, COPYRIGHT);
 
-	_printf("Initializing IDT... ");
-	idt_init();
-	_printf("[OK]\n");
+	// _printf("Initializing IDT... ");
+	// idt_init();
+	// _printf("[OK]\n");
 
 	// init_irq();
 	// init_timer();

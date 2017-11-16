@@ -1,7 +1,9 @@
 #include "boot.h"
 
-static uint16_t* VIDEO_MEM = (uint16_t*) 0xB8000;
-static unsigned char _print_color = 0x2F;
+static uint16_t		*VIDEO_MEM = (uint16_t*) 0xB8000;
+static uint8_t	 	_print_color = 0x2F;
+static uint8_t		_cursor_x;
+static uint8_t		_cursor_y;
 
 static __inline__ unsigned char vga_color_entry(unsigned char fg, unsigned char bg) {
 	return	fg | bg << 4;
@@ -22,11 +24,28 @@ static char *itoa(uint32_t value, char *str, uint32_t base) {
 	return p;
 }
 
-static __inline__ void _set_cursor(unsigned char x, unsigned char y) {
-	outb(0x3d4, 0x0f); 
-	outb(0x3d5, x); 
-	outb(0x3d4, 0x0e); 		
-	outb(0x3d5, y);	
+// void _disable_cursor(void) {
+// 	 _outb(0x3D4, 0x0A);
+// 	 _outb(0x3D5, 0x20);
+// }
+
+void _enable_cursor(uint8_t cursor_start, uint8_t cursor_end)
+{
+	_outb(0x3D4, 0x0A);
+	_outb(0x3D5, (_inb(0x3D5) & 0xC0) | cursor_start);
+ 
+	_outb(0x3D4, 0x0B);
+	_outb(0x3D5, (_inb(0x3E0) & 0xE0) | cursor_end);
+}
+
+static void _set_cursor(uint8_t x, uint8_t y) {
+	uint16_t pos = y * 80 + x;
+
+	_outb(0x3D4, 0x0F);
+	_outb(0x3D5, (uint8_t) (pos & 0xFF));
+
+	_outb(0x3D4, 0x0E);
+	_outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));	
 }
 
 void _set_color(unsigned char fg, unsigned char bg) {
@@ -40,27 +59,29 @@ void _clear(void) {
 	}
 
 	// Set the cursor to the upper-left corner of the screen
-	_set_cursor(0, 0);
+	_cursor_x = 0;
+	_cursor_y = 0;
+	_set_cursor(_cursor_x, _cursor_y);
 }
 
-void _putc(char c) {
+static void _putc(char c) {
 	//	Video memory offset
-	uint32_t offset;
+	uint32_t offset = _cursor_y * 80 + _cursor_x;
 
-	//	Get cursor Y position
-	outb(0x3d4, 0x0e);
-	offset = inb(0x3d5);
-	offset <<= 8;		// shift left 8 bit to make room for x
+	// //	Get cursor Y position
+	// _outb(0x3d4, 0x0e);
+	// offset = _inb(0x3d5);
+	// offset <<= 8;		// shift left 8 bit to make room for x
 
-	//	Add cursor x position
-	outb(0x3d4, 0x0f);
-	offset += inb(0x3d5);
-	offset <<= 1;		//	shift left 1 bit, 1 byte for color, 1 byte for char
+	// //	Add cursor x position
+	// _outb(0x3d4, 0x0f);
+	// offset += _inb(0x3d5);
+	// //offset <<= 1;		//	shift left 1 bit, 1 byte for color, 1 byte for char
 
 	switch (c) {
 		// new line
 		case '\n':
-			offset = (offset / 80) * 80 + 80;
+			offset = (offset / 80) * 80 + 80;			
 			break;
 		// carriage return
 		case '\r':
@@ -81,7 +102,7 @@ void _putc(char c) {
 	}
 
 	//	end of screen?
-	if (offset >= 2000) {
+	if (offset > 1999) {
 
 		__asm__ __volatile__(//".intel_syntax noprefix;\n"
 			"push edi;\n"
@@ -111,19 +132,21 @@ void _putc(char c) {
 			VIDEO_MEM[i] = vga_entry(' ', _print_color);
 		}
 */
-		VIDEO_MEM -= 80;
+		offset -= 80;
 	}
 
 	//	set cursor new position
-	offset >>= 1;
-	_set_cursor(offset & 0x00ff, offset >> 8);
+	//offset >>= 1;
+	//_set_cursor(offset & 0x00ff, offset >> 8);
+	_cursor_x = offset % 80;
+	_cursor_y = (offset / 80);
 }
 
 uint32_t _vsprintf(char *str, const char *format, va_list arg) {
-	char*	p = str;
-	char*	s;
+	char		*p = str;
+	char		*s;
 	uint32_t	d;
-	unsigned char		c;
+	char		c;
 	uint32_t	i = 0;
 
 	*p = '\0';
@@ -183,6 +206,7 @@ uint32_t _printf(const char *format, ...) {
 	while(buffer[i] != '\0') {
 		_putc(buffer[i++]);
 	}
+	_set_cursor(_cursor_x, _cursor_y);
 
 	return i;
 }

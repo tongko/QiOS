@@ -9,34 +9,34 @@ SECTIONS
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
 	/*. = 1M;*/
-	. = 0xC0100000          /* the code should be relocated to 3GB + 1MB */
+	/*. = 0xC0100000*/          /* the code should be relocated to 3GB + 1MB */
 	/* these labels get exported to the code files */
-    kernel_virtual_start = .;
-    kernel_physical_start = . - 0xC0000000;
+    /*kernel_virtual_start = .;
+    kernel_physical_start = . - 0xC0000000;*/
 
 	/* First put the multiboot header, as it is required to be put very early
 	   early in the image or the bootloader won't recognize the file format.
 	   Next we'll put the .text section. */
-	.text BLOCK(4K) : ALIGN(0x1000) AT(ADDR(.text)-0xC0000000)
+	.text : /*AT(ADDR(.text)-0xC0000000)*/ ALIGN(0x1000)
 	{
-		*(.multiboot)
+		/* *(.multiboot) */
 		*(.text)
 	}
 
 	/* Read-only data. */
-	.rodata BLOCK(4K) : ALIGN(4K) AT(ADDR(.rodata)-0xC0000000)
+	.rodata : /*AT(ADDR(.text)-0xC0000000)*/ ALIGN(4K)
 	{
 		*(.rodata)
 	}
 
 	/* Read-write data (initialized) */
-	.data BLOCK(4K) : ALIGN(4K) AT(ADDR(.data)-0xC0000000)
+	.data : /*AT(ADDR(.text)-0xC0000000)*/ ALIGN(4K)
 	{
 		*(.data)
 	}
 
 	/* Read-write data (uninitialized) and stack */
-	.bss BLOCK(4K) : ALIGN(4K) AT(ADDR(.bss)-0xC0000000)
+	.bss : /*AT(ADDR(.text)-0xC0000000)*/ ALIGN(4K)
 	{
 		*(COMMON)
 		*(.bss)
@@ -45,6 +45,6 @@ SECTIONS
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
 	
-	kernel_virtual_end = .;
-    kernel_physical_end = . - 0xC0000000;
+	/*kernel_virtual_end = .;
+    kernel_physical_end = . - 0xC0000000;*/
 }

@@ -1,15 +1,14 @@
 #include "boot.h"
 
-uint32_t strlen(const int32_t* str) {
-	char *p = str;
+uint32_t strlen(const char* str) {
 	uint32_t i = 0;
-	while p[i++] != '\0') {
+	while (str[i++] != '\0') {
 	}
 
-	return i;
+	return i - 1;
 }
 
-unsigned char* strcat(char *dest, const char *src) {
+char *strcat(char *dest, const char *src) {
 	for (; *dest != '\0'; dest++) {
 	}
 
