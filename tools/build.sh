@@ -64,7 +64,7 @@ for f in $(find $SRCDIR -name '*.c' -or -name '*.asm'); do
 	target="$OBJDIR"/${filename%.*}.o
 	echo "Compiling $f"
 	if [ "$ext" == "asm" ]; then
-		nasm $NASM -o "$target" "$f"
+		nasm $NASM -o "$target" -i"$INCDIR2" "$f"
 	else
 		i686-elf-gcc -c "$f" -I "$INCDIR1" -I "$INCDIR2" -o "$target" $CFLAGS
 	fi
@@ -80,10 +80,10 @@ if [ $? -ne 0 ]; then
 fi
 
 # Verification and ISO creation
-if grub-file --is-x86-multiboot "$OUTPUTTARGET"; then
-  echo multiboot confirmed
+if grub-file --is-x86-multiboot2 "$OUTPUTTARGET"; then
+  echo multiboot2 confirmed
 else
-  echo the file is not multiboot
+  echo the file is not multiboot2
   exit -2
 fi
 
@@ -136,7 +136,7 @@ EOF
 		exit -7
 	fi
 
-	sudo grub-install --root-directory=/mnt --no-floppy --modules="normal part_msdos ext2 multiboot" --target=i386-pc "$LD0"
+	sudo grub-install --boot-directory=/mnt/boot --no-floppy --modules="normal part_msdos ext2 multiboot" --target=i386-pc "$LD0"
 	if [ $? -ne 0 ]; then
 		exit -8
 	fi
@@ -157,10 +157,12 @@ else
 fi
 
 # Copy kernel to disk.img
+echo "Copy grub.cfg to disk.img"
 sudo cp "$SRCDIR/grub.cfg" /mnt/boot/grub/
 if [ $? -ne 0 ]; then
 	exit -8
 fi
+echo "Copy kernel binary to disk.img"
 sudo cp "$OUTPUTTARGET" /mnt/boot/
 if [ $? -ne 0 ]; then
 	exit -8

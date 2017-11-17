@@ -1,5 +1,5 @@
-#ifndef		__ARCH_X86_BOOT_H_
-#define		__ARCH_X86_BOOT_H_
+#ifndef __ARCH_X86_BOOT_H_
+#define __ARCH_X86_BOOT_H_
 
 #include "stdint.h"
 
@@ -10,20 +10,20 @@ extern uint32_t kernel_physical_end;
 uint8_t _inb(uint16_t port);
 void _outb(uint16_t port, uint8_t val);
 
-// These functions are from the official GNU stdarg.h file 
+// These functions are from the official GNU stdarg.h file
 typedef char *va_list;
 
 // Amount of space required in an argument list for an arg of type TYPE.
-// TYPE may alternatively be an expression whose type is used.  
+// TYPE may alternatively be an expression whose type is used.
 
-#define __va_rounded_size(TYPE) (((sizeof (TYPE) + sizeof (int) - 1) / sizeof (int)) * sizeof (int))
+#define __va_rounded_size(TYPE) (((sizeof(TYPE) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
 
-#define va_start(AP, LASTARG) (AP = ((char *) &(LASTARG) + __va_rounded_size(LASTARG)))
+#define va_start(AP, LASTARG) (AP = ((char *)&(LASTARG) + __va_rounded_size(LASTARG)))
 
-extern void va_end (va_list);
-#define va_end(AP) //  Does Nothing 
+extern void va_end(va_list);
+#define va_end(AP)  //  Does Nothing
 
-#define va_arg(AP, TYPE) (AP += __va_rounded_size (TYPE), *((TYPE *) (AP - __va_rounded_size (TYPE))))
+#define va_arg(AP, TYPE) (AP += __va_rounded_size(TYPE), *((TYPE *)(AP - __va_rounded_size(TYPE))))
 
 #define MILLISECONDS_PER_TICK 10
 
@@ -104,7 +104,6 @@ uint32_t strlen(const char *str);
 //	Concatenate src to the end of dest.
 char *strcat(char *dest, const char *src);
 
-
 //	Set console color
 void _set_color(unsigned char fg, unsigned char bg);
 //	Clear console
@@ -118,7 +117,4 @@ uint32_t _printf(const char *format, ...);
 //	Print string with format to dest buffer.
 uint32_t _vsprintf(char *dest, const char *format, va_list);
 
-
-
-
-#endif	//	__ARCH_X86_BOOT_H_
+#endif  //	__ARCH_X86_BOOT_H_

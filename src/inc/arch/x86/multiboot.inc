@@ -5,23 +5,26 @@
 %ifndef		__MULTIBOOT_INC_
 %define		__MULTIBOOT_INC_
 
-/*  How many bytes from the start of the file we search for the header. */
+;  How many bytes from the start of the file we search for the header. 
 MULTIBOOT_SEARCH						equ 32768
 MULTIBOOT_HEADER_ALIGN					equ 8
 
-/*  The magic field should contain this. */
+;  The magic field should contain this. 
 MULTIBOOT2_HEADER_MAGIC					equ 0xe85250d6
 
-/*  This should be in %eax. */
+;  This should be in %eax. 
 MULTIBOOT2_BOOTLOADER_MAGIC				equ 0x36d76289
 
-/*  Alignment of multiboot modules. */
+;  Grub2 Architecture: 0 - 32-bit pmode i386,   4 - 32-bit MIPS
+GRUB_MULTIBOOT_ARCHITECTURE_I386		equ	0
+
+;  Alignment of multiboot modules. 
 MULTIBOOT_MOD_ALIGN						equ 0x00001000
 
-/*  Alignment of the multiboot info structure. */
+;  Alignment of the multiboot info structure. 
 MULTIBOOT_INFO_ALIGN					equ 0x00000008
 
-/*  Flags set in the 'flags' member of the multiboot header. */
+;  Flags set in the 'flags' member of the multiboot header. 
 
 MULTIBOOT_TAG_ALIGN							equ 8
 MULTIBOOT_TAG_TYPE_END						equ 0
@@ -70,6 +73,9 @@ MULTIBOOT_LOAD_PREFERENCE_HIGH				equ 2
 MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED	equ 1
 MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED	equ 2
 
-STACK_SIZE                      			equ 0x40000000	; 1MB
+MULTIBOOT_MODULE_ALIGN_REQUIRED				equ 1
+
+
+STACK_SIZE                      			equ 0x100000	; 1MB
 
 %endif		; __MULTIBOOT_INC_

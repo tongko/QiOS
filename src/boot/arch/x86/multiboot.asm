@@ -1,67 +1,90 @@
 [bits 32]
 
-%include 'multiboot.inc'
-section .text
-global _start:function (_start.end - _start)
-_start:
-		jmp		.multiboot_entry
+%include 'src/inc/arch/x86/multiboot.inc'
 
-		; Align to 64 bits boundry
-		align	8
-.multiboot_header:
-		/*  magic */
+section .multiboot
+		; Align to 32 bits boundry (i386 need to be align 4, 64 need to be align 8 for Multiboot2)
+		align	16
+multiboot_header:
+		;  magic 
 		dd		MULTIBOOT2_HEADER_MAGIC
-		/*  ISA: i386 */
+		;  ISA: i386 
 		dd		GRUB_MULTIBOOT_ARCHITECTURE_I386
-		/*  Header length. */
-		dd		.multiboot_header_end - .multiboot_header
-		/*  checksum */
-		dd		-(MULTIBOOT2_HEADER_MAGIC + GRUB_MULTIBOOT_ARCHITECTURE_I386 + (.multiboot_header_end - .multiboot_header))
-.address_tag_start:
-		dw		MULTIBOOT_HEADER_TAG_ADDRESS
-		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-		dd		.address_tag_end - .address_tag_start
-		/*  header_addr */
-		dd		.multiboot_header
-		/*  load_addr */
-		dd		_start
-		/*  load_end_addr */
-		dd		.end
-		/*  bss_end_addr */
-		dd		_bss_end
-.address_tag_end:
-.entry_address_tag_start:
-		dw		MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
-		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-		dd		.entry_address_tag_end - .entry_address_tag_start
-		/*  entry_addr */
-		dd		.multiboot_entry
-.entry_address_tag_end:
-.framebuffer_tag_start:
-		dw		MULTIBOOT_HEADER_TAG_FRAMEBUFFER
-		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-		dd		framebuffer_tag_end - framebuffer_tag_start
-		dd		1024
-		dd		768
-		dd		32
-.framebuffer_tag_end:
+		;  Header length. 
+		dd		multiboot_header_end - multiboot_header
+		;  checksum 
+		dd		-(MULTIBOOT2_HEADER_MAGIC + GRUB_MULTIBOOT_ARCHITECTURE_I386 + (multiboot_header_end - multiboot_header))
+
+		; align	8
+; .address_tag_start:
+; 		dw		MULTIBOOT_HEADER_TAG_ADDRESS
+; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
+; 		dd		.address_tag_end - .address_tag_start
+; 		;  header_addr 
+; 		dd		.multiboot_header
+; 		;  load_addr 
+; 		dd		_start
+; 		;  load_end_addr 
+; 		dd		_end
+; 		;  bss_end_addr 
+; 		dd		_bss_end
+; .address_tag_end:
+; .entry_address_tag_start:
+; 		dw		MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
+; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
+; 		dd		.entry_address_tag_end - .entry_address_tag_start
+; 		;  entry_addr 
+; 		dd		.multiboot_entry
+; .entry_address_tag_end:
+
+		align	8
+consoleFlags_tag_start:
+		dw		MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS
+		dw		MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED
+		dd		consoleFlags_tag_end - consoleFlags_tag_start
+		dd		MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED
+consoleFlags_tag_end:
+
+		align	8
+moduleAlign_tag_start:
+		dw		MULTIBOOT_HEADER_TAG_MODULE_ALIGN
+		dw		MULTIBOOT_MODULE_ALIGN_REQUIRED
+		dd		moduleAlign_tag_end - moduleAlign_tag_start
+moduleAlign_tag_end:
+
+; 		align	8
+; .framebuffer_tag_start:
+; 		dw		MULTIBOOT_HEADER_TAG_FRAMEBUFFER
+; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
+; 		dd		.framebuffer_tag_end - .framebuffer_tag_start
+; 		dd		1024
+; 		dd		768
+; 		dd		32
+; .framebuffer_tag_end:
+
+		align	8
 		dw		MULTIBOOT_HEADER_TAG_END
 		dw		0
+		;dw		0
 		dd		8
-.multiboot_header_end:
-.multiboot_entry:
+multiboot_header_end:
+
+section .boot
+global _start:function (_start.end - _start)
+		align	8
+_start:
 		cli
 
-		/*  Initialize the stack pointer. */
+		;  Initialize the stack pointer. 
 		mov		esp, kernel_stack_top
 		
-		/*  Reset EFLAGS. */
+		;  Reset EFLAGS. 
 		push	0
 		popfd
 
-		/*  Push the pointer to the Multiboot information structure. */
+		;  Push the pointer to the Multiboot information structure. 
 		push	ebx
-		/*  Push the magic value. */
+		;  Push the magic value. 
 		push	eax
 
 		extern	_kernel_main
@@ -70,15 +93,39 @@ _start:
 		add		esp, 8
 
 		;	Halted
+		extern	_printf
 		push	.halt_message
 		call	_printf
 .hang:	cli
  		hlt
  		jmp		.hang
 
+		align	8
 .halt_message:
 		db		"Halted."
 .end:
+
+section .text
+global _gdt_flush:function (_gdt_flush.end - _gdt_flush)
+		align	8
+_gdt_flush:  ; Function to reload GDT 
+		enter  0, 0 
+
+		mov		eax, [ebp+8] 
+		lgdt	[eax] 
+		mov		eax, 0x10    ; 0x10 is the offset in the GDT to our data segment, 3rd entry (0x00, 0x08, 0x10, 0x18, ... + 8 byte) 
+		mov		ds, ax 
+		mov		es, ax 
+		mov		fs, ax 
+		mov		gs, ax 
+		mov		ss, ax 
+		jmp		0x08:.flush2    ; 0x08 is the offset to our code segment: Far jump! 
+
+		align	8
+.flush2: 
+    leave 
+      ret            ; Function end 
+.end:	; _gdt_flush End of function
 
 section .bss
 align 4
@@ -86,7 +133,6 @@ kernel_stack_bottom:
 		resb	STACK_SIZE
 kernel_stack_top:
 
-_bss_end:
 ; ;GLOBAL IDT_Contents:data
 ; ;GLOBAL IDT_Pointer:data
 ; GLOBAL PAGE_TABLE:data

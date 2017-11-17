@@ -8,18 +8,22 @@ SECTIONS
 {
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
-	/*. = 1M;*/
+	/* . = 1M; */
 	/*. = 0xC0100000*/          /* the code should be relocated to 3GB + 1MB */
 	/* these labels get exported to the code files */
     /*kernel_virtual_start = .;
     kernel_physical_start = . - 0xC0000000;*/
+
+	.boot : ALIGN(0x1000)
+	{
+		*(.multiboot)
+	}
 
 	/* First put the multiboot header, as it is required to be put very early
 	   early in the image or the bootloader won't recognize the file format.
 	   Next we'll put the .text section. */
 	.text : /*AT(ADDR(.text)-0xC0000000)*/ ALIGN(0x1000)
 	{
-		/* *(.multiboot) */
 		*(.text)
 	}
 

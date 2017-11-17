@@ -13,178 +13,155 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
-#include "multiboot.h"
 #include "boot.h"
+#include "multiboot2.h"
 
-static const unsigned char VERSION[] = "SHOS Version 0.0.1";
+    static const unsigned char VERSION[] = "SHOS Version 0.0.1";
 static const unsigned char COPYRIGHT[] = "Sin Hing 2018 all rights reserved";
 
-//#define KERNEL_VIRTUAL_BASE			0xC0000000					// Constant declaring base of Higher-half kernel (from Kernel.asm)
-// #define KERNEL_PAGE_TABLE			(KERNEL_VIRTUAL_BASE >> 22)	// Constant declaring Page Table index in virtual memory (from Kernel.asm)
-// #define DISPLAY_SIZE				2000						// 2000 = 80 x 25 Characters - VGA Text-mode Display size
-
-//void CommonInterruptHandler(int handlerNum) {
-//}
-// extern void _set_color(unsigned char fg, unsigned char bg);
-// extern void _clear(void);
-
 static void _clear_screen() {
-	_set_color(2, 0);	//	Green foreground, black background
+	_set_color(2, 0);  //	Green foreground, black background
 	_clear();
 }
 
-void _kernel_main(void) {
-	_enable_cursor(0, 15);	// Block shape cursor
+/*  Check if MAGIC is valid and print the Multiboot information structure pointed by ADDR. */
+void _kernel_main(uint32_t magic, uint32_t mbi_addr) {
+	struct multiboot_tag *tag;
+	uint32_t size;
+
+	// Initialize screen
+	_enable_cursor(0, 15);  // Block shape cursor
 	_clear_screen();
+
+	//	Am I booted by a Multiboot-compliant boot loader?
+	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
+		_printf("Invalid magic number: 0x%x\n", magic);
+		return;
+	}
+
+	if (mbi_addr & 7) {
+		_printf("Unaligned MBI: 0x%x\n", mbi_addr);
+		return;
+	}
 
 	_printf("%s\n%s\n", VERSION, COPYRIGHT);
 
-	// _printf("Initializing IDT... ");
-	// idt_init();
-	// _printf("[OK]\n");
+	size = *(uint32_t *)mbi_addr;
+	_printf("Announced mbi size 0x%x\n", size);
+	for (tag = (struct multiboot_tag *)(mbi_addr + 8);
+	     tag->type != MULTIBOOT_TAG_TYPE_END;
+	     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
+		_printf("Tag 0x%x, Size 0x%x\n", tag->type, tag->size);
+		switch (tag->type) {
+			case MULTIBOOT_TAG_TYPE_CMDLINE:
+				_printf("Command line = %s\n",
+				        ((struct multiboot_tag_string *)tag)->string);
+				break;
+			case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
+				_printf("Boot loader name = %s\n",
+				        ((struct multiboot_tag_string *)tag)->string);
+				break;
+			case MULTIBOOT_TAG_TYPE_MODULE:
+				_printf("Module at 0x%x-0x%x. Command line %s\n",
+				        ((struct multiboot_tag_module *)tag)->mod_start,
+				        ((struct multiboot_tag_module *)tag)->mod_end,
+				        ((struct multiboot_tag_module *)tag)->cmdline);
+				break;
+			case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
+				_printf("mem_lower = %uKB, mem_upper = %uKB\n",
+				        ((struct multiboot_tag_basic_meminfo *)tag)->mem_lower,
+				        ((struct multiboot_tag_basic_meminfo *)tag)->mem_upper);
+				break;
+			case MULTIBOOT_TAG_TYPE_BOOTDEV:
+				_printf("Boot device 0x%x,%u,%u\n",
+				        ((struct multiboot_tag_bootdev *)tag)->biosdev,
+				        ((struct multiboot_tag_bootdev *)tag)->slice,
+				        ((struct multiboot_tag_bootdev *)tag)->part);
+				break;
+			case MULTIBOOT_TAG_TYPE_MMAP: {
+				multiboot_memory_map_t *mmap;
 
-	// init_irq();
-	// init_timer();
-	
-/* 	// DisplayColour and Delay methods cannot be used until virtual addressing is set up i.e. until PG bit of CR0 is on.
-	// Use inline assembly colour method for debugging.
-	// This is because until virtual addressing is set up, code is only accessible through physical addresses but method calls 
-	// are based on virtual addresses (because of the link script).
-	
-	uint32_t	physicalAddressAndFlags = 7;			// ; 0b111 - Setting Page Table flags (Present: ON, Read/Write: ON, User/Supervisor: ON)
-	uint32_t	numberOfPageTables = 4;					// 4 is arbitrary to cover 16MiB
-	uint32_t	entriesPerPageTable = 1024;				// There is always 1024 pages (4KiB/Page)
-	uint32_t	startPageTableEntryIndex = 0;
-	uint32_t	sizeOfPageTables = numberOfPageTables * entriesPerPageTable;
-	uint32_t	index = 0;
-	uint32_t*	lpPageTable1Physical = (uint32_t*)((uint32_t)PAGE_TABLE - KERNEL_VIRTUAL_BASE);
-	uint32_t*	lpPageDirectoryPhysical = (uint32_t*)((uint32_t)PAGE_DIRECTORY - KERNEL_VIRTUAL_BASE);
-	
-	//Setting up identity mapping
-	for	(index = 0; index < (sizeOfPageTables + startPageTableEntryIndex); index++) {
-		lpPageTable1Physical[index] = physicalAddressAndFlags;
-		physicalAddressAndFlags += 4096;
+				_printf("mmap\n");
+
+				for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
+				     (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
+				     mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size))
+					_printf(
+					    " base_addr = 0x%x%x,"
+					    " length = 0x%x%x, type = 0x%x\n",
+					    (uint32_t)(mmap->addr >> 32),
+					    (uint32_t)(mmap->addr & 0xffffffff),
+					    (uint32_t)(mmap->len >> 32),
+					    (uint32_t)(mmap->len & 0xffffffff),
+					    (uint32_t)mmap->type);
+				break;
+			}
+			case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
+				multiboot_uint32_t color;
+				uint32_t i;
+				struct multiboot_tag_framebuffer *tagfb = (struct multiboot_tag_framebuffer *)tag;
+				void *fb = (void *)(unsigned long)tagfb->common.framebuffer_addr;
+
+				switch (tagfb->common.framebuffer_type) {
+					case MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED: {
+						unsigned best_distance, distance;
+						struct multiboot_color *palette;
+
+						palette = tagfb->framebuffer_palette;
+
+						color = 0;
+						best_distance = 4 * 256 * 256;
+
+						for (i = 0; i < tagfb->framebuffer_palette_num_colors; i++) {
+							distance = (0xff - palette[i].blue) * (0xff - palette[i].blue) + palette[i].red * palette[i].red + palette[i].green * palette[i].green;
+							if (distance < best_distance) {
+								color = i;
+								best_distance = distance;
+							}
+						}
+					} break;
+
+					case MULTIBOOT_FRAMEBUFFER_TYPE_RGB:
+						color = ((1 << tagfb->framebuffer_blue_mask_size) - 1)
+						        << tagfb->framebuffer_blue_field_position;
+						break;
+
+					case MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT:
+						color = '\\' | 0x0100;
+						break;
+
+					default:
+						color = 0xffffffff;
+						break;
+
+						for (i = 0; i < tagfb->common.framebuffer_width && i < tagfb->common.framebuffer_height; i++) {
+							switch (tagfb->common.framebuffer_bpp) {
+								case 8: {
+									multiboot_uint8_t *pixel = fb + tagfb->common.framebuffer_pitch * i + i;
+									*pixel = color;
+								} break;
+								case 15:
+								case 16: {
+									multiboot_uint16_t *pixel = fb + tagfb->common.framebuffer_pitch * i + 2 * i;
+									*pixel = color;
+								} break;
+								case 24: {
+									multiboot_uint32_t *pixel = fb + tagfb->common.framebuffer_pitch * i + 3 * i;
+									*pixel = (color & 0xffffff) | (*pixel & 0xff000000);
+								} break;
+
+								case 32: {
+									multiboot_uint32_t *pixel = fb + tagfb->common.framebuffer_pitch * i + 4 * i;
+									*pixel = color;
+								} break;
+							}
+						}
+						break;
+				}
+			}
+		}
 	}
-	
-	physicalAddressAndFlags = 7;
-	index = (KERNEL_PAGE_TABLE * 1024);
-	startPageTableEntryIndex = (KERNEL_PAGE_TABLE * 1024);
-	
-	for (index = KERNEL_PAGE_TABLE * 1024; index < (sizeOfPageTables + startPageTableEntryIndex); index++) {
-		lpPageTable1Physical[index] = physicalAddressAndFlags;
-		physicalAddressAndFlags += 4096;
-	}
-	
-	physicalAddressAndFlags = (uint32_t)&lpPageTable1Physical[0];
-	physicalAddressAndFlags = physicalAddressAndFlags | 7;	//0b111 - Setting Page Table flags (Present: ON, Read/Write: ON, User/Supervisor: ON)
 
-	uint32_t entriesOfPageDirectory = 1024;
-	index = 0; 	// Setting index to 0 to be used with Page Directory
-	
-	for (index = 0; index < entriesOfPageDirectory; index++) {
-		lpPageDirectoryPhysical[index] = physicalAddressAndFlags;
-		physicalAddressAndFlags += 4096;
-	}
-
-	// Set virtual addressing via control register CR3 
-	// high 20 bits is Page directory Base Register i.e physical address of first page directory entry
-	__asm__ 
-	(
-		"lea ecx, [Page_Directory - 0xC0000000]\n" // 0xC0000000 = KERNEL_VIRTUAL_BASE
-		"mov cr3, ecx\n"
-	);	
-	
-	// Switch on paging via control register CR0
-	__asm__ 
-	(
-		"mov ecx, cr0\n"
-		"or ecx, 0x80000000\n"	// Set PG bit in CR0 to enable paging.
-		"mov cr0, ecx\n"
-	);
-
-	// At only this point we are in physical higher-half mode
-	// Jump to higher-half
-	__asm__
-	(
-		"lea ecx, [startInHigherHalf]\n"
-		"jmp ECX\n"
-		"StartInHigherHalf:\n"
-		"nop\n"
-	);
-
-	clearScreen(0x3, 0xF);	// DisplayColour can also be used for debugging
-	; // END - Set Virtual Memory
-
-	// BEGIN - Interrupt Descriptor Table setup
-	IDT_Entry_t* IDT_Ptr = (IDT_Entry_t*)IDT_CONTENTS;
-
-	int i = 0;
-	for (i = 0; i < 256; i++) {
-		uint32_t handlerPtr = (uint32_t)&CommonInterruptHandler(i);
-
-		IDT_Ptr[i].HandlerPtr_Low = (uint16_t) (handlerPtr & 0x0000FFFF);
-		IDT_Ptr[i].HandlerPtr_High = (uint16_t) ((handlerPtr >> 16) & 0x0000FFFF);
-		IDT_Ptr[i].Selector = 0x8;
-		IDT_Ptr[i].Reserved = 0x0;
-		IDT_Ptr[i].GateType = 0xE;
-		IDT_Ptr[i].StorageSegment = 0x0;
-		IDT_Ptr[i].DPL = 0x0;
-		IDT_Ptr[i].Present = 0x1;
-	}
-
-	IDT_Pointer_t* IDT_Ptr_Ptr = (IDT_Pointer_t*)IDT_POINTER;
-	IDT_Ptr_Ptr->TableSize = (uint16_t)((256 * sizeof(IDT_Entry_t)) - 1);
-	IDT_Ptr_Ptr->IDT_Ptr = IDT_Ptr;
-	
-	__asm__
-	(
-		"lea eax, [IDT_POINTER]\n"  // Load address of (/pointer to) IDT pointer structure
-		"lidt [eax]\n"						// Load IDT register with pointer to IDT pointer structure
-	);
-	
-	// END - Interrupt descriptor Table setup
-	
-	// BEGIN - PIC setup and remap
-	
-	// Remap IRQs 0-7    to    ISRs 32-39
-	// and   IRQs 8-15   to    ISRs 40-47
-	outb(0x20, 0x11);
-	outb(0xA0, 0x11);
-	
-	outb(0x21, 0x20);
-	outb(0xA1, 0x28);
-	
-	outb(0x21, 0x04);
-	outb(0xA1, 0x02);
-	
-	outb(0x21, 0x01);
-	outb(0xA1, 0x01);
-	
-	outb(0x21, 0xFF);
-	outb(0xA1, 0xFF);
-
-	STI
-		
-	// END - PIC setup and remap
-	// BEGIN - Configure PIT (The Timer)
-	CLI
-	
-	__asm__
-	(
-		"in al, 0x21\n"
-		"and al, 0xfc\n" // Also enables keyboard interrupt (IRQ 1)
-		"out 0x21, al\n"
-	);
-	
-	outb(0x43, 0x34);
-	outb(0x40, 0xFF);
-	outb(0x40, 0xFF);
-	
-	STI
-	// END - Configure PIT (The Timer)
-	
-	while (1)
-	{
-    	;		
-	}	 */
+	tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7));
+	_printf("Total mbi size 0x%x\n", (unsigned)tag - mbi_addr);
 }
