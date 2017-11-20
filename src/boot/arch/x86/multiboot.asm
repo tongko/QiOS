@@ -15,27 +15,29 @@ multiboot_header:
 		;  checksum 
 		dd		-(MULTIBOOT2_HEADER_MAGIC + GRUB_MULTIBOOT_ARCHITECTURE_I386 + (multiboot_header_end - multiboot_header))
 
-		; align	8
-; .address_tag_start:
+; 		align	8
+; address_tag_start:
 ; 		dw		MULTIBOOT_HEADER_TAG_ADDRESS
 ; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-; 		dd		.address_tag_end - .address_tag_start
+; 		dd		address_tag_end - address_tag_start
 ; 		;  header_addr 
-; 		dd		.multiboot_header
+; 		dd		multiboot_header
 ; 		;  load_addr 
 ; 		dd		_start
 ; 		;  load_end_addr 
-; 		dd		_end
+; 		dd		_gdt_flush.end
 ; 		;  bss_end_addr 
-; 		dd		_bss_end
-; .address_tag_end:
-; .entry_address_tag_start:
-; 		dw		MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
-; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-; 		dd		.entry_address_tag_end - .entry_address_tag_start
-; 		;  entry_addr 
-; 		dd		.multiboot_entry
-; .entry_address_tag_end:
+; 		dd		_end
+; address_tag_end:
+
+		align	8
+entry_address_tag_start:
+		dw		MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
+		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
+		dd		entry_address_tag_end - entry_address_tag_start
+		;  entry_addr 
+		dd		_start
+entry_address_tag_end:
 
 		align	8
 consoleFlags_tag_start:
@@ -53,14 +55,14 @@ moduleAlign_tag_start:
 moduleAlign_tag_end:
 
 ; 		align	8
-; .framebuffer_tag_start:
+; framebuffer_tag_start:
 ; 		dw		MULTIBOOT_HEADER_TAG_FRAMEBUFFER
 ; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-; 		dd		.framebuffer_tag_end - .framebuffer_tag_start
+; 		dd		framebuffer_tag_end - framebuffer_tag_start
 ; 		dd		1024
 ; 		dd		768
 ; 		dd		32
-; .framebuffer_tag_end:
+; framebuffer_tag_end:
 
 		align	8
 		dw		MULTIBOOT_HEADER_TAG_END
@@ -132,6 +134,8 @@ align 4
 kernel_stack_bottom:
 		resb	STACK_SIZE
 kernel_stack_top:
+
+_end:
 
 ; ;GLOBAL IDT_Contents:data
 ; ;GLOBAL IDT_Pointer:data

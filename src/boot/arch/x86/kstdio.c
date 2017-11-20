@@ -13,16 +13,31 @@ static __inline__ uint16_t vga_entry(char c, unsigned char color) {
 	return (uint16_t)c | (uint16_t)color << 8;
 }
 
-static char *itoa(uint32_t value, char *str, uint32_t base) {
-	char *p = str;
-	int i = 30;
+// static char *itoa(uint32_t value, char *str, uint32_t base) {
+// 	char *p = str;
+// 	int i = 0;
 
-	for (; value && i; --i, value /= base) {
-		p[i] = "0123456789abcdef"[value % base];
-	}
+// 	//	In kernel mode only support base 10 and 16 only.
+// 	if (base != 10 && base != 16) {
+// 		return p;
+// 	}
 
-	return p;
-}
+// 	if (!value) {
+// 		if (base == 10) {
+// 			p[0] = '0';
+// 		} else {
+// 			p = "00000000";
+// 		}
+
+// 		return p;
+// 	}
+
+// 	for (; value && i < 32; i++, value /= base) {
+// 		p[i] = "0123456789ABCDEF"[value % base];
+// 	}
+
+// 	return str;
+// }
 
 // void _disable_cursor(void) {
 // 	 _outb(0x3D4, 0x0A);
@@ -107,14 +122,14 @@ static void _putc(char c) {
 		    "push esi;\n"
 		    "push eax;\n"
 		    "push ecx;\n"
-		    "mov edi, 0xB8000;\n"
-		    "mov esi, 0xB80A0;\n"
-		    "mov ecx, 0x30C;\n"
-		    "rep movsw;\n"
-		    "mov edi, 0xB9680;\n"
-		    "xor eax, eax;\n"
-		    "mov ecx, 40;\n"
-		    "rep stosw;\n"
+		    "mov edi, 0xB8000;\n"  // dest idx to start of video
+		    "mov esi, 0xB80A0;\n"  // src idx to 2nd row
+		    "mov ecx, 0x780;\n"    // prepare to loop for 1920 times.
+		    "rep movsw;\n"         // loop
+		    "mov edi, 0xB8F00;\n"  // 25th row to dest idx
+		    "mov eax, 32;\n"       // space
+		    "mov ecx, 80;\n"       // prepare to loop 80 times
+		    "rep stosw;\n"         // loop
 		    "pop ecx;\n"
 		    "pop eax;\n"
 		    "pop esi;\n"
@@ -151,38 +166,42 @@ uint32_t _vsprintf(char *str, const char *format, va_list arg) {
 	while (*format != '\0') {
 		if (*format != '%') {
 			//	Normal character
-			i = strlen(p);
-			p[i] = *format;
-			p[i + 1] = '\0';
+			//i = strlen(p);
+			p[i++] = *format;
+			p[i] = '\0';
 		} else {
 			switch (*(format + 1)) {
 				case 'c':  // Char
 					c = (char)va_arg(arg, int);
-					i = strlen(p);
-					p[i] = c;
-					p[i + 1] = '\0';
+					//i = strlen(p);
+					p[i++] = c;
+					p[i] = '\0';
 					break;
 				case 's':  // String
 					s = va_arg(arg, char *);
 					strcat(p, s);
+					i = strlen(p);
 					break;
+				case 'u':  // Unsigned integer
 				case 'd':  // Integer
 				case 'i':
 					d = va_arg(arg, int);
 					char buff1[10] = {0};  // decimal max 10 digits.
 					strcat(p, itoa(d, buff1, 10));
+					i = strlen(p);
 					break;
 				case 'x':  // Hexadecimal number
 					d = va_arg(arg, uint32_t);
 					char buff2[8] = {0};
 					strcat(p, itoa(d, buff2, 16));
+					i = strlen(p);
 					break;
 				default:
 					// Print the % and the following character
-					i = strlen(p);
-					p[i] = *format;
-					p[i + 1] = *(format + 1);
-					p[i + 2] = '\0';
+					//i = strlen(p);
+					p[i++] = *format;
+					p[i++] = *(format + 1);
+					p[i] = '\0';
 					break;
 			}
 
@@ -196,7 +215,7 @@ uint32_t _vsprintf(char *str, const char *format, va_list arg) {
 }
 
 uint32_t _printf(const char *format, ...) {
-	char buffer[MAXLEN];
+	char buffer[MAXLEN] = {0};
 	va_list arg;
 	uint32_t i = 0;
 

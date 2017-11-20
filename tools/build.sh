@@ -27,10 +27,12 @@ done
 # Variables
 
 NASM=" -felf32 "
-CFLAGS=" -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -masm=intel "
+CFLAGS=" -std=gnu99 -ffreestanding -Wall -Wextra -Werror -masm=intel "
 if [ "$DEBUG" == 1 ]; then
 	NASM=$NASM"-gdwarf "
-	CFLAGS=$CFLAGS"-g "
+	CFLAGS=$CFLAGS"-g -O0"	# Debug symbol + no optimization
+else
+	CFLAGS=$CFLAGS"-O2 "
 fi
 
 # WORKSPACE is the directory where this script located.

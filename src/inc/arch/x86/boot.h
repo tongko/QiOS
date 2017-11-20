@@ -99,6 +99,10 @@ void timer_handler(uint32_t hz);
 //	Delay
 void delay(uint32_t milliseconds);
 
+//	Convert integer to character
+char *itoa(uint32_t value, char *str, int base);
+//	Reverse a given string.
+void reverse(char *begin, char *end);
 //	Compute the length of the given str
 uint32_t strlen(const char *str);
 //	Concatenate src to the end of dest.
@@ -116,5 +120,8 @@ void _enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
 uint32_t _printf(const char *format, ...);
 //	Print string with format to dest buffer.
 uint32_t _vsprintf(char *dest, const char *format, va_list);
+
+//	Print multiboot info
+void print_multiboot_info(uint32_t mbi_addr);
 
 #endif  //	__ARCH_X86_BOOT_H_
