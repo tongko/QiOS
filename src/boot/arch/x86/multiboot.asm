@@ -95,9 +95,9 @@ _start:
 		add		esp, 8
 
 		;	Halted
-		extern	_printf
+		extern	write_console
 		push	.halt_message
-		call	_printf
+		call	write_console
 .hang:	cli
  		hlt
  		jmp		.hang

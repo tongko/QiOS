@@ -1,7 +1,6 @@
 #ifndef __KSTDARG_H_
 #define __KSTDARG_H_
 
-#ifdef __KERNEL_
 // These functions are from the official GNU stdarg.h file
 typedef char *va_list;
 
@@ -20,5 +19,4 @@ extern void va_end(va_list);
 #define va_arg(AP, TYPE) (AP += __va_rounded_size(TYPE), \
 	                      *((TYPE *)(AP - __va_rounded_size(TYPE))))
 
-#endif  //	__KERNEL_
 #endif

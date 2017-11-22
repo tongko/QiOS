@@ -9,6 +9,6 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 WORKSPACE="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-qemu-system-i386 -hda "$WORKSPACE/../bin/disk.img" -daemonize -s -S
+qemu-system-i386 -hda "$WORKSPACE/../bin/disk.img" -cpu Nehalem -m 2048M -daemonize -s -S
 
 gdb "$WORKSPACE/../bin/boot/shos.bin" -ex "target remote :1234" --symbols="$WORKSPACE/../bin/shos.sym" --tui

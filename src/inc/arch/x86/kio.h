@@ -1,31 +1,33 @@
-// #ifndef		__ARCH_X86_KIO_H_
-// #define		__ARCH_X86_KIO_H_
+#ifndef __ARCH_X86_KIO_H_
+#define __ARCH_X86_KIO_H_
 
-// // inportb: Get a byte from the selected port
-// uint32_t inb(uint32_t port);
+#include <stdint.h>
 
-// // outportb: Send the selected byte to the selected port
-// void outb(uint32_t port, uint32_t val);
+// inportb: Get a byte from the selected port
+uint8_t _inb(uint16_t port);
 
-// // write_nmi: Write Non Maskable Interrupt
-// //void write_nmi(unsigned char nmi);
+// outportb: Send the selected byte to the selected port
+void _outb(uint16_t port, uint8_t val);
 
-// // enable_nmi: Enable Non Maskable Interrupt
-// //void enable_nmi(void);
+// write_nmi: Write Non Maskable Interrupt
+//void write_nmi(unsigned char nmi);
 
-// // sti: Enable Interrupts:
-// void sti();
+// enable_nmi: Enable Non Maskable Interrupt
+//void enable_nmi(void);
 
-// // cli: Disable Interrupts:
-// void cli();
+// sti: Enable Interrupts:
+void _sti();
 
-// // hlt: Halt the CPU:
-// void hlt();
+// cli: Disable Interrupts:
+void _cli();
 
-// // idle: Freeze the Computer:
-// void idle();
+// hlt: Halt the CPU:
+void _hlt();
 
-// // reboot: Reboot the Computer:
-// void reboot();
+// idle: Freeze the Computer:
+void _idle();
 
-// #endif	//	__ARCH_X86_KIO_H_
+// reboot: Reboot the Computer:
+void _reboot();
+
+#endif  //	__ARCH_X86_KIO_H_

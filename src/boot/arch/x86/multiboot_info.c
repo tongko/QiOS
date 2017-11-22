@@ -1,37 +1,37 @@
-#include "boot.h"
 #include "multiboot2.h"
+#include "kconsole.h"
 
 void print_multiboot_info(uint32_t mbi_addr) {
 	uint32_t size = *(uint32_t *)mbi_addr;
-	_printf("Announced mbi size 0x%d B\n", size);
+	write_console("Announced mbi size %d B\n", size);
 
 	struct multiboot_tag *tag;
 	for (tag = (struct multiboot_tag *)(mbi_addr + 8);
 	     tag->type != MULTIBOOT_TAG_TYPE_END;
 	     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
-		_printf("Tag 0x%x, Size 0x%x\n", tag->type, tag->size);
+		write_console("Tag 0x%x.2, Size 0x%x.16\n", tag->type, tag->size);
 		switch (tag->type) {
 			case MULTIBOOT_TAG_TYPE_CMDLINE:
-				_printf("-> Command line = %s\n",
+				write_console("-> Command line = %s\n",
 				        ((struct multiboot_tag_string *)tag)->string);
 				break;
 			case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
-				_printf("-> Boot loader name = %s\n",
+				write_console("-> Boot loader name = %s\n",
 				        ((struct multiboot_tag_string *)tag)->string);
 				break;
 			case MULTIBOOT_TAG_TYPE_MODULE:
-				_printf("-> Module at 0x%x-0x%x. Command line %s\n",
+				write_console("-> Module at 0x%x.16-0x%x.16. Command line %s\n",
 				        ((struct multiboot_tag_module *)tag)->mod_start,
 				        ((struct multiboot_tag_module *)tag)->mod_end,
 				        ((struct multiboot_tag_module *)tag)->cmdline);
 				break;
 			case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
-				_printf("-> mem_lower = %uKiB, mem_upper = %uKiB\n",
+				write_console("-> mem_lower = %uKiB, mem_upper = %uKiB\n",
 				        ((struct multiboot_tag_basic_meminfo *)tag)->mem_lower,
 				        ((struct multiboot_tag_basic_meminfo *)tag)->mem_upper);
 				break;
 			case MULTIBOOT_TAG_TYPE_BOOTDEV:
-				_printf("-> Boot device 0x%x, slice: %u, part: %u\n",
+				write_console("-> Boot device 0x%x.4, slice: %u, part: %u\n",
 				        ((struct multiboot_tag_bootdev *)tag)->biosdev,
 				        ((struct multiboot_tag_bootdev *)tag)->slice,
 				        ((struct multiboot_tag_bootdev *)tag)->part);
@@ -39,23 +39,23 @@ void print_multiboot_info(uint32_t mbi_addr) {
 			case MULTIBOOT_TAG_TYPE_MMAP: {
 				multiboot_memory_map_t *mmap;
 
-				_printf("-> Memory Map\n");
+				write_console("-> Memory Map\n");
 
 				for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
 				     (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
 				     mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size))
-					_printf(
+					write_console(
 					    //	For 32 bits only 32 bit address exists.
 					    //"\tbase_addr = 0x%x%x, length = 0x%x%x, type = 0x%x\n",
-					    "\tbase_addr = 0x%x, length=0x%x, type = 0x%x\n",
+					    "\tbase_addr = 0x%x.16, length=0x%x.16, type = 0x%x.2\n",
 					    (uint32_t)(mmap->addr & 0xffffffff),
 					    (uint32_t)(mmap->len & 0xffffffff),
 					    (uint32_t)mmap->type);
 				break;
 			}
-			case MULTIBOOT_TAG_TYPE_VBE: {
-				struct multiboot_tag_vbe *vbe = (struct multiboot_tag_vbe *)tag;
-			}
+			// case MULTIBOOT_TAG_TYPE_VBE: {
+			// 	struct multiboot_tag_vbe *vbe = (struct multiboot_tag_vbe *)tag;
+			// }
 
 			case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
 				multiboot_uint32_t color;
@@ -124,5 +124,5 @@ void print_multiboot_info(uint32_t mbi_addr) {
 	}
 
 	tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7));
-	_printf("Total mbi size 0x%x\n\n", (unsigned)tag - mbi_addr);
+	write_console("Total mbi size 0x%x\n\n", (unsigned)tag - mbi_addr);
 }

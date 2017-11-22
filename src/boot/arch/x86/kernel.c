@@ -13,35 +13,40 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
+#define __KERNEL_
+
 #include "boot.h"
+#include "kconsole.h"
 #include "multiboot2.h"
 
     static const unsigned char VERSION[] = "SHOS Version 0.0.1";
 static const unsigned char COPYRIGHT[] = "Sin Hing 2018 all rights reserved";
 
-static void _clear_screen() {
-	_set_color(2, 0);  //	Green foreground, black background
-	_clear();
+static void initilize_console() {
+	cursor_shape(0, 15);
+	CONSOLECOLOR cc = {2, 0};
+	init_console(&cc);
+	set_console_color(&cc);
+	clear();
 }
 
 /*  Check if MAGIC is valid and print the Multiboot information structure pointed by ADDR. */
 void _kernel_main(uint32_t magic, uint32_t mbi_addr) {
 	// Initialize screen
-	_enable_cursor(0, 15);  // Block shape cursor
-	_clear_screen();
+	initilize_console();
 
 	//	Am I booted by a Multiboot-compliant boot loader?
 	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-		_printf("Invalid magic number: 0x%x\n", magic);
+		write_console("Invalid magic number: 0x%x.8\n", magic);
 		return;
 	}
 
 	if (mbi_addr & 7) {
-		_printf("Unaligned MBI: 0x%x\n", mbi_addr);
+		write_console("Unaligned MBI: 0x%x.8\n", mbi_addr);
 		return;
 	}
 
-	_printf("%s\n%s\n\n", VERSION, COPYRIGHT);
+	write_console("%s\n%s\n\n", VERSION, COPYRIGHT);
 
 	print_multiboot_info(mbi_addr);
 }
