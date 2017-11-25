@@ -1,0 +1,460 @@
+
+bin/boot/shos.bin:     file format elf32-i386
+bin/boot/shos.bin
+architecture: i386, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0xc0100040
+
+Program Header:
+    LOAD off    0x00001000 vaddr 0xc0100000 paddr 0x00100000 align 2**12
+         filesz 0x00003d7c memsz 0x00003d7c flags r-x
+    LOAD off    0x00005000 vaddr 0xc0104000 paddr 0x00104000 align 2**12
+         filesz 0x00001400 memsz 0x001068e8 flags rw-
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .boot         000000bf  c0100000  00100000  00001000  2**3
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .text         00001d8c  c0101000  00101000  00002000  2**4
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .rodata       000000c0  c0103000  00103000  00004000  2**5
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  3 .eh_frame     00000844  c01030c0  001030c0  000040c0  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .rodata.str1.1 000001f3  c0103904  00103904  00004904  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  5 .rodata.str1.4 00000284  c0103af8  00103af8  00004af8  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  6 .data         00001400  c0104000  00104000  00005000  2**12
+                  CONTENTS, ALLOC, LOAD, DATA
+  7 .bss          001048e8  c0106000  00106000  00006400  2**5
+                  ALLOC
+  8 .comment      00000011  00000000  00000000  00006400  2**0
+                  CONTENTS, READONLY
+SYMBOL TABLE:
+c0100000 l    d  .boot	00000000 .boot
+c0101000 l    d  .text	00000000 .text
+c0103000 l    d  .rodata	00000000 .rodata
+c01030c0 l    d  .eh_frame	00000000 .eh_frame
+c0103904 l    d  .rodata.str1.1	00000000 .rodata.str1.1
+c0103af8 l    d  .rodata.str1.4	00000000 .rodata.str1.4
+c0104000 l    d  .data	00000000 .data
+c0106000 l    d  .bss	00000000 .bss
+00000000 l    d  .comment	00000000 .comment
+00000000 l    df *ABS*	00000000 /home/tongko/projects/shos/tools/../src/boot/arch/x86/multiboot.asm
+00008000 l       *ABS*	00000000 MULTIBOOT_SEARCH
+00000008 l       *ABS*	00000000 MULTIBOOT_HEADER_ALIGN
+e85250d6 l       *ABS*	00000000 MULTIBOOT2_HEADER_MAGIC
+36d76289 l       *ABS*	00000000 MULTIBOOT2_BOOTLOADER_MAGIC
+00000000 l       *ABS*	00000000 GRUB_MULTIBOOT_ARCHITECTURE_I386
+00001000 l       *ABS*	00000000 MULTIBOOT_MOD_ALIGN
+00000008 l       *ABS*	00000000 MULTIBOOT_INFO_ALIGN
+00000008 l       *ABS*	00000000 MULTIBOOT_TAG_ALIGN
+00000000 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_END
+00000001 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_CMDLINE
+00000002 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME
+00000003 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_MODULE
+00000004 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_BASIC_MEMINFO
+00000005 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_BOOTDEV
+00000006 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_MMAP
+00000007 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_VBE
+00000008 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_FRAMEBUFFER
+00000009 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_ELF_SECTIONS
+0000000a l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_APM
+0000000b l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_EFI32
+0000000c l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_EFI64
+0000000d l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_SMBIOS
+0000000e l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_ACPI_OLD
+0000000f l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_ACPI_NEW
+00000010 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_NETWORK
+00000011 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_EFI_MMAP
+00000012 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_EFI_BS
+00000013 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_EFI32_IH
+00000014 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_EFI64_IH
+00000015 l       *ABS*	00000000 MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR
+00000000 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_END
+00000001 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_INFORMATION_REQUEST
+00000002 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_ADDRESS
+00000003 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
+00000004 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS
+00000005 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_FRAMEBUFFER
+00000006 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_MODULE_ALIGN
+00000007 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_EFI_BS
+00000008 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS_EFI32
+00000009 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS_EFI64
+0000000a l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_RELOCATABLE
+00000000 l       *ABS*	00000000 MULTIBOOT_ARCHITECTURE_I386
+00000004 l       *ABS*	00000000 MULTIBOOT_ARCHITECTURE_MIPS32
+00000001 l       *ABS*	00000000 MULTIBOOT_HEADER_TAG_OPTIONAL
+00000000 l       *ABS*	00000000 MULTIBOOT_LOAD_PREFERENCE_NONE
+00000001 l       *ABS*	00000000 MULTIBOOT_LOAD_PREFERENCE_LOW
+00000002 l       *ABS*	00000000 MULTIBOOT_LOAD_PREFERENCE_HIGH
+00000001 l       *ABS*	00000000 MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED
+00000002 l       *ABS*	00000000 MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED
+00000001 l       *ABS*	00000000 MULTIBOOT_MODULE_ALIGN_REQUIRED
+00100000 l       *ABS*	00000000 STACK_SIZE
+00000300 l       *ABS*	00000000 KERNEL_PAGE_NUMBER
+c0100000 l       .boot	00000000 multiboot_header
+c0100010 l       .boot	00000000 entry_address_tag_start
+c010001c l       .boot	00000000 entry_address_tag_end
+c0100020 l       .boot	00000000 consoleFlags_tag_start
+c010002c l       .boot	00000000 consoleFlags_tag_end
+c0100030 l       .boot	00000000 moduleAlign_tag_start
+c0100038 l       .boot	00000000 moduleAlign_tag_end
+c0100040 l       .boot	00000000 multiboot_header_end
+c0100068 l       .boot	00000000 _start.higher_half_loader
+c01000af l       .boot	00000000 _start.hang
+c01000b8 l       .boot	00000000 _start.halt_message
+c01000bf l       .boot	00000000 _start.end
+c0102310 l       .text	00000000 _gdt_flush.flush2
+c0102312 l       .text	00000000 _gdt_flush.end
+c0102320 l       .text	00000000 _tss_flush.end
+c010232c l       .text	00000000 _idt_load.end
+c020a8e8 l       .bss	00000000 _end
+00000000 l    df *ABS*	00000000 kstdio.c
+00000000 l    df *ABS*	00000000 kconsole.c
+c010a8e4 l     O .bss	00000002 _console_color
+c010a8e6 l     O .bss	00000002 _cursor_point
+00000000 l    df *ABS*	00000000 serial_port.c
+00000000 l    df *ABS*	00000000 kstdlib.c
+00000000 l    df *ABS*	00000000 /home/tongko/projects/shos/tools/../src/boot/arch/x86/asm_interrupt.asm
+c0102221 l       .text	00000000 common_interrupt_handler
+c010223f l       .text	00000000 interrupt_handler_with_return_value
+00000000 l    df *ABS*	00000000 kio.c
+00000000 l    df *ABS*	00000000 kernel.c
+c0103060 l     O .rodata	00000022 COPYRIGHT
+c0103084 l     O .rodata	00000013 VERSION
+00000000 l    df *ABS*	00000000 gdt.c
+00000000 l    df *ABS*	00000000 interrupts.c
+c0102530 l     F .text	000000a1 log_interrupt_details
+00000000 l    df *ABS*	00000000 idt.c
+00000000 l    df *ABS*	00000000 multiboot_info.c
+00000000 l    df *ABS*	00000000 kstring.c
+00000000 l    df *ABS*	00000000 paging.c
+00000000 l    df *ABS*	00000000 
+c0105400 l     O .data	00000000 _GLOBAL_OFFSET_TABLE_
+c0101900 g       .text	00000000 interrupt_handler_34
+c01021a3 g       .text	00000000 interrupt_handler_242
+c01015f0 g     F .text	0000005f init_serial_port
+c0102330 g     F .text	00000117 _kernel_main
+c0101a4d g       .text	00000000 interrupt_handler_71
+c0101dda g       .text	00000000 interrupt_handler_161
+c010191b g       .text	00000000 interrupt_handler_37
+c0101a68 g       .text	00000000 interrupt_handler_74
+c01016d0 g     F .text	00000060 serial_print
+c0101a95 g       .text	00000000 interrupt_handler_79
+c0101987 g       .text	00000000 interrupt_handler_49
+c0101cd2 g       .text	00000000 interrupt_handler_139
+c01017eb g       .text	00000000 interrupt_handler_3
+c0102ac0 g     F .text	00000035 _strcat
+c010180f g       .text	00000000 interrupt_handler_7
+c0102b00 g     F .text	0000005e _strcmp
+c0101ac2 g       .text	00000000 interrupt_handler_84
+c0101d26 g       .text	00000000 interrupt_handler_146
+c0102086 g       .text	00000000 interrupt_handler_218
+c010220f g       .text	00000000 interrupt_handler_254
+c0101f12 g       .text	00000000 interrupt_handler_187
+c0101d86 g       .text	00000000 interrupt_handler_154
+c0101bb5 g       .text	00000000 interrupt_handler_111
+c01021c7 g       .text	00000000 interrupt_handler_246
+c01012f0 g     F .text	00000017 set_console_color
+c0101000 g     F .text	00000265 _vsprintf
+c0101e16 g       .text	00000000 interrupt_handler_166
+c0101c0f g       .text	00000000 interrupt_handler_121
+c0101e76 g       .text	00000000 interrupt_handler_174
+c0101c72 g       .text	00000000 interrupt_handler_131
+c0102032 g       .text	00000000 interrupt_handler_211
+c0101570 g     F .text	00000072 cursor_shape
+c0101eee g       .text	00000000 interrupt_handler_184
+c0101e3a g       .text	00000000 interrupt_handler_169
+c0101c5a g       .text	00000000 interrupt_handler_129
+c0101c2a g       .text	00000000 interrupt_handler_124
+c0101806 g       .text	00000000 interrupt_handler_6
+c01014f0 g     F .text	00000072 write_console
+c010200e g       .text	00000000 interrupt_handler_208
+c01018c1 g       .text	00000000 interrupt_handler_27
+c0102c00 g     F .text	0000007f allocate_physical_page
+c0101ed6 g       .text	00000000 interrupt_handler_182
+c01019fc g       .text	00000000 interrupt_handler_62
+c0101e9a g       .text	00000000 interrupt_handler_177
+c0101cc6 g       .text	00000000 interrupt_handler_138
+c0101c96 g       .text	00000000 interrupt_handler_134
+c0101b5b g       .text	00000000 interrupt_handler_101
+c0101f36 g       .text	00000000 interrupt_handler_190
+c01019b4 g       .text	00000000 interrupt_handler_54
+c01019ab g       .text	00000000 interrupt_handler_53
+c0101c3c g       .text	00000000 interrupt_handler_126
+c0101867 g       .text	00000000 interrupt_handler_17
+c010185e g       .text	00000000 interrupt_handler_16
+c01020ce g       .text	00000000 interrupt_handler_224
+c010197e g       .text	00000000 interrupt_handler_48
+c01020aa g       .text	00000000 interrupt_handler_221
+c0101fd2 g       .text	00000000 interrupt_handler_203
+c0102290 g     F .text	00000002 _cli
+c0102bf0 g     F .text	0000000a physical_to_virtual
+c0101ab9 g       .text	00000000 interrupt_handler_83
+c0101f7e g       .text	00000000 interrupt_handler_196
+c0102146 g       .text	00000000 interrupt_handler_234
+c0101de6 g       .text	00000000 interrupt_handler_162
+c0101d3e g       .text	00000000 interrupt_handler_148
+c0102860 g     F .text	00000026 init_pic
+c0101d02 g       .text	00000000 interrupt_handler_143
+c0101f2a g       .text	00000000 interrupt_handler_189
+c01018a6 g       .text	00000000 interrupt_handler_24
+c01019d8 g       .text	00000000 interrupt_handler_58
+c01019cf g       .text	00000000 interrupt_handler_57
+c01017d0 g       .text	00000000 interrupt_handler_0
+c0101dc2 g       .text	00000000 interrupt_handler_159
+c0101f1e g       .text	00000000 interrupt_handler_188
+c0101833 g       .text	00000000 interrupt_handler_11
+c0101d9e g       .text	00000000 interrupt_handler_156
+c0101cea g       .text	00000000 interrupt_handler_141
+c0101b01 g       .text	00000000 interrupt_handler_91
+c0101af8 g       .text	00000000 interrupt_handler_90
+c0101a29 g       .text	00000000 interrupt_handler_67
+c0101fa2 g       .text	00000000 interrupt_handler_199
+c0101963 g       .text	00000000 interrupt_handler_45
+c0101b37 g       .text	00000000 interrupt_handler_97
+c0101b2e g       .text	00000000 interrupt_handler_96
+c01068e0 g     O .bss	00004000 page_bitmap
+c01030a0 g     O .rodata	00000002 KCODE_SELECTOR
+c0101ebe g       .text	00000000 interrupt_handler_180
+c0100000 g       .boot	00000000 kernel_virtual_start
+c0101a9e g       .text	00000000 interrupt_handler_80
+c0102218 g       .text	00000000 interrupt_handler_255
+c0102026 g       .text	00000000 interrupt_handler_210
+c0101eca g       .text	00000000 interrupt_handler_181
+c01020da g       .text	00000000 interrupt_handler_225
+c01017d9 g       .text	00000000 interrupt_handler_1
+c0101b6d g       .text	00000000 interrupt_handler_103
+c0101efa g       .text	00000000 interrupt_handler_185
+c0101d32 g       .text	00000000 interrupt_handler_147
+c01021d9 g       .text	00000000 interrupt_handler_248
+c0101fea g       .text	00000000 interrupt_handler_205
+c0101aef g       .text	00000000 interrupt_handler_89
+c0101b64 g       .text	00000000 interrupt_handler_102
+c0101be2 g       .text	00000000 interrupt_handler_116
+c0101d6e g       .text	00000000 interrupt_handler_152
+c0101bc7 g       .text	00000000 interrupt_handler_113
+c0102d00 g     F .text	00000051 page_in
+c0101e2e g       .text	00000000 interrupt_handler_168
+c0101f8a g       .text	00000000 interrupt_handler_197
+c010189d g       .text	00000000 interrupt_handler_23
+c0102116 g       .text	00000000 interrupt_handler_230
+c01020fe g       .text	00000000 interrupt_handler_228
+c0102450 g     F .text	0000004f init_tss
+c0101e46 g       .text	00000000 interrupt_handler_170
+c010204a g       .text	00000000 interrupt_handler_213
+c0101909 g       .text	00000000 interrupt_handler_35
+c0101b9a g       .text	00000000 interrupt_handler_108
+c0101a20 g       .text	00000000 interrupt_handler_66
+c0101cde g       .text	00000000 interrupt_handler_140
+c0101f72 g       .text	00000000 interrupt_handler_195
+c0101a56 g       .text	00000000 interrupt_handler_72
+c010201a g       .text	00000000 interrupt_handler_209
+c01020b6 g       .text	00000000 interrupt_handler_222
+c010193f g       .text	00000000 interrupt_handler_41
+c01018e5 g       .text	00000000 interrupt_handler_31
+c0103098 g     O .rodata	00000002 TSS_SELECTOR
+c01017fd g       .text	00000000 interrupt_handler_5
+c01021fd g       .text	00000000 interrupt_handler_252
+c0101490 g     F .text	00000056 set_cursor
+c0101d0e g       .text	00000000 interrupt_handler_144
+c0101730 g     F .text	00000033 _atoi
+c010206e g       .text	00000000 interrupt_handler_216
+c0101440 g     F .text	00000044 get_cursor
+c0101924 g       .text	00000000 interrupt_handler_38
+c0102b60 g     F .text	00000038 _memcpy
+c010192d g       .text	00000000 interrupt_handler_39
+c0101a7a g       .text	00000000 interrupt_handler_76
+c0101a71 g       .text	00000000 interrupt_handler_75
+c0106060 g     O .bss	00000068 tss_entry
+c0101bfd g       .text	00000000 interrupt_handler_119
+c01012c0 g     F .text	0000002f clear
+c01021eb g       .text	00000000 interrupt_handler_250
+c01018ca g       .text	00000000 interrupt_handler_28
+c01018dc g       .text	00000000 interrupt_handler_30
+c010216a g       .text	00000000 interrupt_handler_237
+c0101f4e g       .text	00000000 interrupt_handler_192
+c0101acb g       .text	00000000 interrupt_handler_85
+c0101a05 g       .text	00000000 interrupt_handler_63
+c0101d56 g       .text	00000000 interrupt_handler_150
+c0101c21 g       .text	00000000 interrupt_handler_123
+c0102260 g     F .text	00000006 _inb
+c0101d1a g       .text	00000000 interrupt_handler_145
+c0101882 g       .text	00000000 interrupt_handler_20
+c0101f06 g       .text	00000000 interrupt_handler_186
+c01021ac g       .text	00000000 interrupt_handler_243
+c0101b13 g       .text	00000000 interrupt_handler_93
+c0101fae g       .text	00000000 interrupt_handler_200
+c0101818 g       .text	00000000 interrupt_handler_8
+c0101e0a g       .text	00000000 interrupt_handler_165
+c0101c06 g       .text	00000000 interrupt_handler_120
+c0101770 g     F .text	00000059 _itoa
+c01022b0 g     F .text	00000003 _idle
+c010209e g       .text	00000000 interrupt_handler_220
+c010a8e0 g     O .bss	00000004 free_count
+c0100040 g       .boot	00000000 _start
+c01020f2 g       .text	00000000 interrupt_handler_227
+c0101936 g       .text	00000000 interrupt_handler_40
+00104000 g     O .data	00000004 PageDirectoryPhysicalAddress
+c0101650 g     F .text	0000003a serial_putc
+c0101d92 g       .text	00000000 interrupt_handler_155
+c0101bbe g       .text	00000000 interrupt_handler_112
+00100000 g       .boot	00000000 kernel_physical_start
+c0102890 g     F .text	00000010 pic_acknowledge
+c0101db6 g       .text	00000000 interrupt_handler_158
+c0101bd9 g       .text	00000000 interrupt_handler_115
+c01019bd g       .text	00000000 interrupt_handler_55
+c0101870 g       .text	00000000 interrupt_handler_18
+c0101990 g       .text	00000000 interrupt_handler_50
+c01030a2 g     O .rodata	00000002 NULL_SELECTOR
+c0102062 g       .text	00000000 interrupt_handler_215
+c0101845 g       .text	00000000 interrupt_handler_13
+c0101b91 g       .text	00000000 interrupt_handler_107
+c0101b52 g       .text	00000000 interrupt_handler_100
+c01027d0 g     F .text	00000084 init_idt
+c010218e g       .text	00000000 interrupt_handler_240
+c0101d7a g       .text	00000000 interrupt_handler_153
+c0101bac g       .text	00000000 interrupt_handler_110
+c0102318 g     F .text	00000008 _tss_flush
+c0101310 g     F .text	00000128 putc_console
+c0101951 g       .text	00000000 interrupt_handler_43
+c0101b25 g       .text	00000000 interrupt_handler_95
+c01024a0 g     F .text	0000008a init_gdt
+c0102ba0 g     F .text	0000004d _reverse
+c0101bf4 g       .text	00000000 interrupt_handler_118
+c01018af g       .text	00000000 interrupt_handler_25
+c01019ea g       .text	00000000 interrupt_handler_60
+c0102cc0 g     F .text	0000003c make_page_directory_entry
+c010212e g       .text	00000000 interrupt_handler_232
+c01019e1 g       .text	00000000 interrupt_handler_59
+c0102206 g       .text	00000000 interrupt_handler_253
+c01020c2 g       .text	00000000 interrupt_handler_223
+c010203e g       .text	00000000 interrupt_handler_212
+c0000000 g     O *ABS*	00000004 KERNEL_VIRTUAL_BASE
+c010183c g       .text	00000000 interrupt_handler_12
+c0101b0a g       .text	00000000 interrupt_handler_92
+c0101a32 g       .text	00000000 interrupt_handler_68
+c0101ee2 g       .text	00000000 interrupt_handler_183
+c0101690 g     F .text	0000003c serial_write_bytes
+c010196c g       .text	00000000 interrupt_handler_46
+c0101e82 g       .text	00000000 interrupt_handler_175
+c01018f7 g       .text	00000000 interrupt_handler_33
+c0101c7e g       .text	00000000 interrupt_handler_132
+c010309e g     O .rodata	00000002 KDATA_SELECTOR
+c0101b7f g       .text	00000000 interrupt_handler_105
+c0101aa7 g       .text	00000000 interrupt_handler_81
+c0101a44 g       .text	00000000 interrupt_handler_70
+c0101d4a g       .text	00000000 interrupt_handler_149
+c0101c66 g       .text	00000000 interrupt_handler_130
+c0101e6a g       .text	00000000 interrupt_handler_173
+c0101ae6 g       .text	00000000 interrupt_handler_88
+c0101add g       .text	00000000 interrupt_handler_87
+c0101f5a g       .text	00000000 interrupt_handler_193
+c0101ea6 g       .text	00000000 interrupt_handler_178
+c0101a8c g       .text	00000000 interrupt_handler_78
+c0102d60 g     F .text	0000002c virtual_to_physical
+c010a8e8 g     O .bss	00000004 kernel_stack_bottom
+c0102152 g       .text	00000000 interrupt_handler_235
+c01021b5 g       .text	00000000 interrupt_handler_244
+c0102182 g       .text	00000000 interrupt_handler_239
+c0101fba g       .text	00000000 interrupt_handler_201
+c0106000 g     O .bss	00000006 IDT_DESCRIPTION
+c0101cf6 g       .text	00000000 interrupt_handler_142
+c01021be g       .text	00000000 interrupt_handler_245
+c0101fc6 g       .text	00000000 interrupt_handler_202
+c01060e0 g     O .bss	00000800 idt
+c0101f96 g       .text	00000000 interrupt_handler_198
+c01025e0 g     F .text	000001e1 interrupt_handler
+c0101270 g     F .text	00000046 init_console
+c0101cba g       .text	00000000 interrupt_handler_137
+0020a8e8 g       .bss	00000000 kernel_physical_end
+c0101df2 g       .text	00000000 interrupt_handler_163
+c0101c33 g       .text	00000000 interrupt_handler_125
+c010207a g       .text	00000000 interrupt_handler_217
+c0102056 g       .text	00000000 interrupt_handler_214
+c0101912 g       .text	00000000 interrupt_handler_36
+c0101b76 g       .text	00000000 interrupt_handler_104
+c0101a5f g       .text	00000000 interrupt_handler_73
+c010210a g       .text	00000000 interrupt_handler_229
+c0101948 g       .text	00000000 interrupt_handler_42
+c0102320 g     F .text	0000000c _idt_load
+c0101ca2 g       .text	00000000 interrupt_handler_135
+c01018ee g       .text	00000000 interrupt_handler_32
+c0101daa g       .text	00000000 interrupt_handler_157
+c0101beb g       .text	00000000 interrupt_handler_117
+c0102c80 g     F .text	0000003d make_page_table_entry
+c01018b8 g       .text	00000000 interrupt_handler_26
+c01019f3 g       .text	00000000 interrupt_handler_61
+c0104000 g     O .data	00000004 PageDirectoryVirtualAddress
+c01017e2 g       .text	00000000 interrupt_handler_2
+c0102092 g       .text	00000000 interrupt_handler_219
+c0101b49 g       .text	00000000 interrupt_handler_99
+c0101e5e g       .text	00000000 interrupt_handler_172
+c010215e g       .text	00000000 interrupt_handler_236
+c010219a g       .text	00000000 interrupt_handler_241
+c010213a g       .text	00000000 interrupt_handler_233
+c0101d62 g       .text	00000000 interrupt_handler_151
+c0101a83 g       .text	00000000 interrupt_handler_77
+c01019a2 g       .text	00000000 interrupt_handler_52
+c0101855 g       .text	00000000 interrupt_handler_15
+c0101975 g       .text	00000000 interrupt_handler_47
+c0101a3b g       .text	00000000 interrupt_handler_69
+c01017f4 g       .text	00000000 interrupt_handler_4
+c0102002 g       .text	00000000 interrupt_handler_207
+c01018d3 g       .text	00000000 interrupt_handler_29
+c0101a0e g       .text	00000000 interrupt_handler_64
+c0101e22 g       .text	00000000 interrupt_handler_167
+c0101ab0 g       .text	00000000 interrupt_handler_82
+c0101eb2 g       .text	00000000 interrupt_handler_179
+c0106020 g     O .bss	00000030 gdt_entry
+c0101ba3 g       .text	00000000 interrupt_handler_109
+c0102176 g       .text	00000000 interrupt_handler_238
+c01019c6 g       .text	00000000 interrupt_handler_56
+c0101879 g       .text	00000000 interrupt_handler_19
+c020a8e8 g       .bss	00000000 kernel_virtual_end
+c01020e6 g       .text	00000000 interrupt_handler_226
+c010188b g       .text	00000000 interrupt_handler_21
+c01021d0 g       .text	00000000 interrupt_handler_247
+c0101b1c g       .text	00000000 interrupt_handler_94
+c0101f66 g       .text	00000000 interrupt_handler_194
+c0101bd0 g       .text	00000000 interrupt_handler_114
+c0101dce g       .text	00000000 interrupt_handler_160
+c01021e2 g       .text	00000000 interrupt_handler_249
+c01022c0 g     F .text	0000002f _reboot
+c010309c g     O .rodata	00000002 UCODE_SELECTOR
+c0102aa0 g     F .text	0000001e _strlen
+c0102280 g     F .text	00000002 _sti
+c0102122 g       .text	00000000 interrupt_handler_231
+c0101f42 g       .text	00000000 interrupt_handler_191
+c0101c18 g       .text	00000000 interrupt_handler_122
+c0106050 g     O .bss	00000006 GDT
+c0101cae g       .text	00000000 interrupt_handler_136
+c0101b40 g       .text	00000000 interrupt_handler_98
+c01022f0 g     F .text	40000022 _gdt_flush
+c0101c4e g       .text	00000000 interrupt_handler_128
+c0101999 g       .text	00000000 interrupt_handler_51
+c010184e g       .text	00000000 interrupt_handler_14
+c01022a0 g     F .text	00000002 _hlt
+c0101e52 g       .text	00000000 interrupt_handler_171
+c010182a g       .text	00000000 interrupt_handler_10
+c0101fde g       .text	00000000 interrupt_handler_204
+c0105000 g     O .data	00000400 interrupt_handler_addresses
+c010195a g       .text	00000000 interrupt_handler_44
+c0102270 g     F .text	0000000a _outb
+c0101b88 g       .text	00000000 interrupt_handler_106
+c0101ff6 g       .text	00000000 interrupt_handler_206
+c010309a g     O .rodata	00000002 UDATA_SELECTOR
+c0101821 g       .text	00000000 interrupt_handler_9
+c0101dfe g       .text	00000000 interrupt_handler_164
+c01028a0 g     F .text	000001fa print_multiboot_info
+c0101894 g       .text	00000000 interrupt_handler_22
+c0101e8e g       .text	00000000 interrupt_handler_176
+c01021f4 g       .text	00000000 interrupt_handler_251
+c0101c8a g       .text	00000000 interrupt_handler_133
+c0101ad4 g       .text	00000000 interrupt_handler_86
+c0101a17 g       .text	00000000 interrupt_handler_65
+c0101c45 g       .text	00000000 interrupt_handler_127
+
+

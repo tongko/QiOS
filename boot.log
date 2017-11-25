@@ -1,0 +1,16 @@
+Kernel loaded at: 0x00000000C020006ALoading kernel symbol table... [OK]
+Initializing GDT... [OK]
+Initializing IDT... [OK]
+Issuing test interrupt... --------------------
+Interrupt: INT_SOFTWARE
+error_code: 0
+
+Stack trace:
+C020265D : _idt_load.end
+C02027F5 : _kernel_main
+C0202600 : higher_half_loader
+--------------------
+[OK]
+Initializing PIC controller... [OK]
+Initializing page allocator... [OK]
+4294967070 free pages (16777215 MiB)

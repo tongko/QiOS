@@ -3,6 +3,7 @@
 
 DEBUG=0
 REBUILD=0
+REBUILDISO=0
 for args in $@
 do
 	if [ "$args" == "debug" ]; then
@@ -13,6 +14,9 @@ do
 	fi
 	if [ "$args" == "rebuild" ]; then
 		REBUILD=1
+	fi
+	if [ "$args" == "iso" ]; then
+		REBUILDISO=1
 	fi
 	if [ "$args" == "help" ]; then
 		echo -e "build.sh\nUsage: ./build.sh [debug] [verbose] [rebuild] [help]\n"
@@ -27,9 +31,9 @@ done
 # Variables
 
 NASM=" -felf32 "
-CFLAGS=" -std=gnu99 -ffreestanding -Wall -Wextra -Werror -masm=intel "
+CFLAGS=" -std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel "
 if [ "$DEBUG" == 1 ]; then
-	NASM=$NASM"-gdwarf "
+	NASM=$NASM"-g "
 	CFLAGS=$CFLAGS"-g -O0"	# Debug symbol + no optimization
 else
 	CFLAGS=$CFLAGS"-O2 "
@@ -53,9 +57,9 @@ OUTPUTTARGET="$OUTPUTDIR/boot/shos.bin"
 SYMBOLFILE="$OUTPUTDIR/boot/shos.sym"
 GRUBDIR="$OUTPUTDIR/boot/grub"
 DISKIMG="$OUTPUTDIR/disk.img"
-# ISODIR="$OUTPUTDIR"/isodir
-# ISOBOOT="$ISODIR"/boot
-# ISOGRUB="$ISOBOOT"/grub
+ISODIR="$OUTPUTDIR"/isodir
+ISOBOOT="$ISODIR"/boot
+ISOGRUB="$ISOBOOT"/grub
 LINKERSCRIPT="$SRCDIR"/linker.ld
 OBJLIST=" "
 
@@ -89,19 +93,30 @@ else
   exit -2
 fi
 
-if [ "$DEBUG" == 1 ]; then
-	objcopy --only-keep-debug "$OUTPUTTARGET" "$OUTPUTDIR"/shos.sym
-	if [ $? -ne 0 ]; then
-		exit -3
-	fi
-	chmod -x "$OUTPUTDIR"/shos.sym
-	if [ $? -ne 0 ]; then
-		exit -4
-	fi
+# if [ "$DEBUG" == 1 ]; then
+# 	objcopy --only-keep-debug "$OUTPUTTARGET" "$OUTPUTDIR"/shos.sym
+# 	if [ $? -ne 0 ]; then
+# 		exit -3
+# 	fi
+# 	chmod -x "$OUTPUTDIR"/shos.sym
+# 	if [ $? -ne 0 ]; then
+# 		exit -4
+# 	fi
+# fi
+
+# Build iso image.
+if [ "$REBUILDISO" == 1 ]; then
+	mkdir -p "$ISOGRUB"
+	cp "$OUTPUTTARGET" "$ISOBOOT"
+	cp "$SRCDIR/grub.cfg" "$ISOGRUB"
+	grub-mkrescue -o "$OUTPUTDIR/shos.iso" "$ISODIR"
+
+	#rm -rf "$ISODIR"
+	exit 0
 fi
 
-if [ "$REBUILD" == 1 ]; then
 # Setup Disk Image
+if [ "$REBUILD" == 1 ]; then
 	# Create disk image
 	dd if=/dev/zero of="$DISKIMG" bs=512 count=131072
 	if [ $? -ne 0 ]; then

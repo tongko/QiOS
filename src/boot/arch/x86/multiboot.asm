@@ -1,10 +1,44 @@
 [bits 32]
 
+extern kernel_virtual_start
+extern kernel_virtual_end
+extern kernel_physical_start
+extern kernel_physical_end
+extern _kernel_main											; C code starting point
+extern write_console
+
 %include 'src/inc/arch/x86/multiboot.inc'
 
+STACK_SIZE				equ 0x100000						; 1MB
+global KERNEL_VIRTUAL_BASE
+global PageDirectoryVirtualAddress
+global kernel_stack_bottom
+; This is the virtual base address of kernel space. It must be used to convert virtual
+; addresses into physical addresses until paging is enabled. Note that this is not
+; the virtual address where the kernel image itself is loaded -- just the amount that must
+; be subtracted from a virtual address to get a physical address.
+KERNEL_VIRTUAL_BASE		equ 0xC0000000						; 3GB
+KERNEL_PAGE_NUMBER		equ (KERNEL_VIRTUAL_BASE >> 22)		; Page directory index of kernel's 4MB PTE.
+
+section .data
+align 0x1000
+PageDirectoryVirtualAddress:
+		; This page directory entry identity-maps the first 4MB of the 32-bit physical address space.
+		; All bits are clear except the following:
+		; bit 7: PS The kernel page is 4MB.
+		; bit 1: RW The kernel page is read/write.
+		; bit 0: P  The kernel page is present.
+		; This entry must be here -- otherwise the kernel will crash immediately after paging is
+		; enabled because it can't fetch the next instruction! It's ok to unmap this page later.
+		dd		0x00000083
+		times	(KERNEL_PAGE_NUMBER - 1) dd 0               ; Pages before kernel space.
+		; This page directory entry defines a 4MB page containing the kernel.
+		dd		0x00000083
+		times	(1024 - KERNEL_PAGE_NUMBER - 1) dd 0		; Pages after the kernel image.
+
 section .multiboot
-		; Align to 32 bits boundry (i386 need to be align 4, 64 need to be align 8 for Multiboot2)
-		align	16
+		; Align to 64 bits boundry (need to be align 8 byte for Multiboot2)
+		align	8
 multiboot_header:
 		;  magic 
 		dd		MULTIBOOT2_HEADER_MAGIC
@@ -14,21 +48,6 @@ multiboot_header:
 		dd		multiboot_header_end - multiboot_header
 		;  checksum 
 		dd		-(MULTIBOOT2_HEADER_MAGIC + GRUB_MULTIBOOT_ARCHITECTURE_I386 + (multiboot_header_end - multiboot_header))
-
-; 		align	8
-; address_tag_start:
-; 		dw		MULTIBOOT_HEADER_TAG_ADDRESS
-; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-; 		dd		address_tag_end - address_tag_start
-; 		;  header_addr 
-; 		dd		multiboot_header
-; 		;  load_addr 
-; 		dd		_start
-; 		;  load_end_addr 
-; 		dd		_gdt_flush.end
-; 		;  bss_end_addr 
-; 		dd		_end
-; address_tag_end:
 
 		align	8
 entry_address_tag_start:
@@ -54,48 +73,72 @@ moduleAlign_tag_start:
 		dd		moduleAlign_tag_end - moduleAlign_tag_start
 moduleAlign_tag_end:
 
-; 		align	8
-; framebuffer_tag_start:
-; 		dw		MULTIBOOT_HEADER_TAG_FRAMEBUFFER
-; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-; 		dd		framebuffer_tag_end - framebuffer_tag_start
-; 		dd		1024
-; 		dd		768
-; 		dd		32
-; framebuffer_tag_end:
-
 		align	8
 		dw		MULTIBOOT_HEADER_TAG_END
 		dw		0
-		;dw		0
 		dd		8
 multiboot_header_end:
 
 section .boot
-global _start:function (_start.end - _start)
+    ; NOTE: Until paging is set up, the code must be position-independent and use physical
+    ; addresses, not virtual ones!
+global _start;:function ((_start.end - _start) - KERNEL_VIRTUAL_BASE)
 		align	8
 _start:
+		; Keep the magic before it mess up
+		mov		dword [MULTIBOOT2_MAGIC - KERNEL_VIRTUAL_BASE], eax
+		global PageDirectoryPhysicalAddress
+		PageDirectoryPhysicalAddress equ (PageDirectoryVirtualAddress - KERNEL_VIRTUAL_BASE) ; 0x104000
+		mov		ecx, (PageDirectoryPhysicalAddress)
+		mov		cr3, ecx									; Load Page Directory Base Register.
+
+		mov		ecx, cr4
+		or		ecx, 0x00000010								; Set PSE bit in CR4 to enable 4MB pages.
+		mov		cr4, ecx
+
+		mov		ecx, cr0
+		or		ecx, 0x80000000								; Set PG bit in CR0 to enable paging.
+		mov		cr0, ecx
+ 
+		; Start fetching instructions in kernel space.
+		; Since eip at this point holds the physical address of this command (approximately 0x00100000)
+		; we need to do a long jump to the correct virtual address of higher_half_loader which is
+		; approximately 0xC0100000.
+		lea		ecx, [higher_half_loader]
+		jmp		ecx
+
+section .text
+		align	8
+higher_half_loader:
 		cli
 
+		; Unmap the identity-mapped first 4MB of physical address space. It should not be needed
+		; anymore.
+		mov		dword [PageDirectoryVirtualAddress], 0
+		invlpg	[0]
+
 		;  Initialize the stack pointer. 
-		mov		esp, kernel_stack_top
+		mov		esp, kernel_stack_bottom + STACK_SIZE
 		
 		;  Reset EFLAGS. 
 		push	0
 		popfd
 
 		;  Push the pointer to the Multiboot information structure. 
+		add		ebx, KERNEL_VIRTUAL_BASE
 		push	ebx
 		;  Push the magic value. 
-		push	eax
+		push	dword [MULTIBOOT2_MAGIC] ;eax
+		push	kernel_physical_end
+		push	kernel_physical_start
+		push	kernel_virtual_end
+		push	kernel_virtual_start
 
-		extern	_kernel_main
  		;lea		eax, [_kernel_main - KERNEL_VIRTUAL_BASE]
 		call	_kernel_main
 		add		esp, 8
 
 		;	Halted
-		extern	write_console
 		push	.halt_message
 		call	write_console
 .hang:	cli
@@ -104,11 +147,10 @@ _start:
 
 		align	8
 .halt_message:
-		db		"Halted."
+		db		"Halted.", 0
 .end:
 
-section .text
-global _gdt_flush:function (_gdt_flush.end - _gdt_flush)
+global _gdt_flush:function ((_gdt_flush.end - _gdt_flush) - KERNEL_VIRTUAL_BASE)
 		align	8
 _gdt_flush:  ; Function to reload GDT 
 		enter  0, 0 
@@ -125,15 +167,42 @@ _gdt_flush:  ; Function to reload GDT
 
 		align	8
 .flush2: 
-    leave 
-      ret            ; Function end 
+	    leave 
+    	ret            ; Function end 
 .end:	; _gdt_flush End of function
+
+global _tss_flush:function (_tss_flush.end - _tss_flush)
+		align	8
+_tss_flush:
+		mov		ax, 0x2B		; Load the index of our TSS structure - The index is
+								; 0x28, as it is the 5th selector and each is 8 bytes
+								; long, but we set the bottom two bits (making 0x2B)
+								; so that it has an RPL of 3, not zero.
+		ltr		ax				; Load 0x2B into the task state register.
+		ret
+.end:	; _tss_flush End of function
+
+; load_idt - Loads the interrupt descriptor table (IDT).
+; stack: [ebp + 8] the address of the idt description structure
+;        [ebp    ] the return address
+global _idt_load:function (_idt_load.end - _idt_load)
+		align	8
+_idt_load:
+		enter	0, 0
+
+		mov		eax, [ebp+8]	; Param: address of the idt
+		lidt	[eax]			; Load IDT
+
+		leave
+		ret
+.end:
 
 section .bss
 align 4
+MULTIBOOT2_MAGIC:
+		resd	1
 kernel_stack_bottom:
 		resb	STACK_SIZE
-kernel_stack_top:
 
 _end:
 

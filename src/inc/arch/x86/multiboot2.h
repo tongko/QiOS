@@ -1,6 +1,7 @@
 #ifndef __ARCH_X86_MULTIBOOT2_H_
 #define __ARCH_X86_MULTIBOOT2_H_
 
+// The following was copied from: https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html#Specification
 /*  How many bytes from the start of the file we search for the header. */
 #define MULTIBOOT_SEARCH 32768
 #define MULTIBOOT_HEADER_ALIGN 8
@@ -65,6 +66,8 @@
 
 #define MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED 1
 #define MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED 2
+
+#ifndef ASM_FILE
 
 typedef unsigned char multiboot_uint8_t;
 typedef unsigned short multiboot_uint16_t;
@@ -150,7 +153,7 @@ struct multiboot_color {
 	multiboot_uint8_t blue;
 };
 
-typedef struct multiboot_mmap_entry {
+struct multiboot_mmap_entry {
 	multiboot_uint64_t addr;
 	multiboot_uint64_t len;
 #define MULTIBOOT_MEMORY_AVAILABLE 1
@@ -160,7 +163,8 @@ typedef struct multiboot_mmap_entry {
 #define MULTIBOOT_MEMORY_BADRAM 5
 	multiboot_uint32_t type;
 	multiboot_uint32_t zero;
-} multiboot_memory_map_t;
+};
+typedef struct multiboot_mmap_entry multiboot_memory_map_t;
 
 struct multiboot_tag {
 	multiboot_uint32_t type;
@@ -203,6 +207,7 @@ struct multiboot_tag_mmap {
 	multiboot_uint32_t entry_version;
 	struct multiboot_mmap_entry entries[0];
 };
+typedef struct multiboot_tag_mmap multiboot_tag_mmap_t;
 
 struct multiboot_vbe_info_block {
 	multiboot_uint8_t external_specification[512];
@@ -245,13 +250,11 @@ struct multiboot_tag_framebuffer {
 	struct multiboot_tag_framebuffer_common common;
 
 	union {
-		struct
-		{
+		struct {
 			multiboot_uint16_t framebuffer_palette_num_colors;
 			struct multiboot_color framebuffer_palette[0];
 		};
-		struct
-		{
+		struct {
 			multiboot_uint8_t framebuffer_red_field_position;
 			multiboot_uint8_t framebuffer_red_mask_size;
 			multiboot_uint8_t framebuffer_green_field_position;
@@ -350,4 +353,6 @@ struct multiboot_tag_load_base_addr {
 	multiboot_uint32_t load_base_addr;
 };
 
-#endif  //	__ARCH_X86_MULTIBOOT2_H_
+#endif /*  ! ASM_FILE */
+
+#endif /*  ! MULTIBOOT_HEADER */
