@@ -131,6 +131,9 @@ void set_cursor(LPPOINT lpPoint) {
 
 	_outb(0x3D4, 0x0E);
 	_outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+
+	_cursor_point.x = lpPoint->x;
+	_cursor_point.y = lpPoint->y;
 }
 
 void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {

@@ -5,26 +5,14 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "(gdb) Launch",
-			"type": "cppdbg",
-			"request": "launch",
-			"program": "enter program name, for example ${workspaceFolder}/a.out",
-			"args": [],
-			"stopAtEntry": false,
+			"name": "Attach to QEMU",
+			"type": "gdb",
+			"request": "attach",
+			"executable": "${workspaceFolder}/bin/boot/shos.bin",
+			"target": "localhost:1234",
+			"remote": true,
 			"cwd": "${workspaceFolder}",
-			"environment": [],
-			"externalConsole": true,
-			"MIMode": "gdb",
-			"miDebuggerServerAddress": "localhost:1234",
-			"debugServerPath": "qemu-system-i386",
-			"debugServerArgs": "-s ~/projects/shos/bin/disk.img",
-			"setupCommands": [
-				{
-					"description": "Enable pretty-printing for gdb",
-					"text": "-enable-pretty-printing",
-					"ignoreFailures": true
-				}
-			]
+			"preLaunchTask": "Debug"
 		}
 	]
 }

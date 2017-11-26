@@ -85,8 +85,6 @@ section .boot
 global _start;:function ((_start.end - _start) - KERNEL_VIRTUAL_BASE)
 		align	8
 _start:
-		; Keep the magic before it mess up
-		mov		dword [MULTIBOOT2_MAGIC - KERNEL_VIRTUAL_BASE], eax
 		global PageDirectoryPhysicalAddress
 		PageDirectoryPhysicalAddress equ (PageDirectoryVirtualAddress - KERNEL_VIRTUAL_BASE) ; 0x104000
 		mov		ecx, (PageDirectoryPhysicalAddress)
@@ -128,7 +126,7 @@ higher_half_loader:
 		add		ebx, KERNEL_VIRTUAL_BASE
 		push	ebx
 		;  Push the magic value. 
-		push	dword [MULTIBOOT2_MAGIC] ;eax
+		push	eax
 		push	kernel_physical_end
 		push	kernel_physical_start
 		push	kernel_virtual_end
@@ -199,8 +197,6 @@ _idt_load:
 
 section .bss
 align 4
-MULTIBOOT2_MAGIC:
-		resd	1
 kernel_stack_bottom:
 		resb	STACK_SIZE
 

@@ -12,7 +12,16 @@
 				"reveal": "always",
 				"focus": true,
 				"panel": "shared"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
 			}
+		},
+		{
+			"label": "Debug",
+			"type": "shell",
+			"command": "qemu-system-i386 -drive format=raw,file=${workspaceFolder}/bin/disk.img -m 2048M -daemonize -D qemu.log -d guest_errors -serial file:boot.log -s -S"
 		}
 	]
 }

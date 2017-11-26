@@ -87,8 +87,13 @@ void _kernel_main(struct kmemory_descriptor kernel_memory,
 	init_pic();
 	serial_print("[OK]\n");
 
+	POINT point = {0};
+	get_cursor(&point);
 	serial_print("Initializing page allocator... ");
 	uint32_t free_count = init_page_allocator(kernel_memory);
+	set_cursor(&point);
+	CONSOLECOLOR cc = {2, 0};
+	set_console_color(&cc);
 	serial_print("[OK]\n");
 	serial_print("%d free pages (%d MiB)\n", free_count, free_count / 256);
 	write_console("Available free memory: %d MiB (%d Pages)", free_count / 256, free_count);

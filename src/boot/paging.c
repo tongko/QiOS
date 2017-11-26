@@ -6,31 +6,58 @@ multiboot_tag_mmap_t *get_mmap_table(void);
 uint32_t free_count;
 uint32_t page_bitmap[BITMAP_SIZE];
 
-enum page_status_t { FREE,
-	                 USED };
-static void mark_page(uint32_t page_number, enum page_status_t status) {
+enum page_status_t { USED,
+	                 FREE };
+
+static void mark_free(uint32_t page_number) {
 	uint32_t index = page_number >> 5;
 	uint32_t bit = page_number & 0b11111;
 	uint32_t value = page_bitmap[index];
 	uint32_t flags_bit = 1 << bit;
 
-	if (status == FREE) {
-		//	check previous page status
-		if ((value & flags_bit) != FREE) {
-			free_count++;
-		}
-
-		value &= ~flags_bit;  // set the flags bit to FREE (0)
-	} else {
-		if ((value & flags_bit) == FREE) {
-			free_count--;
-		}
-
-		value |= flags_bit;  //	set the flags bit to USED (1)
+	if ((value & flags_bit) == 0) {
+		free_count++;
 	}
 
+	value |= flags_bit;
 	page_bitmap[index] = value;
 }
+
+static void mark_used(uint32_t page_number) {
+	uint32_t index = page_number >> 5;
+	uint32_t bit = page_number & 0b11111;
+	uint32_t value = page_bitmap[index];
+	uint32_t flags_bit = 1 << bit;
+
+	if ((value & flags_bit) == flags_bit) {
+		free_count--;
+	}
+
+	value &= ~flags_bit;
+	page_bitmap[index] = value;
+}
+
+// static void mark_page(uint32_t page_number, enum page_status_t status) {
+// 	uint32_t index = page_number >> 5;
+// 	uint32_t bit = page_number & 0b11111;
+// 	uint32_t value = page_bitmap[index];
+// 	uint32_t flags_bit = 1 << bit;
+
+// 	if (status == FREE) {
+// 		//	check previous page status
+// 		if ((value & flags_bit) != FREE) {
+// 			free_count++;
+// 			value |= flags_bit;  // set the flags bit to FREE (1)
+// 		}
+// 	} else {
+// 		if ((value & flags_bit) == FREE) {
+// 			free_count--;
+// 			value &= ~(flags_bit);  //	set the flags bit to USED (1)
+// 		}
+// 	}
+
+// 	page_bitmap[index] = value;
+// }
 
 static __inline__ uint32_t page_directory_offset(const void *vir_addr) {
 	return ((uint32_t)vir_addr) >> PAGE_OFFSET_BITS >> PAGE_TABLE_OFFSET_BITS;
@@ -67,9 +94,10 @@ static void *page_table_virtual_address(uint16_t page_table_number) {
 }
 
 static uint32_t round_up_to_nearest_page_start(uint32_t addr) {
+	// is the addr on start of 4K boundry?
 	if ((addr & 0xFFFFF000) != addr) {
-		addr &= 0xFFFFF000;
-		addr += 0x00001000;
+		addr &= 0xFFFFF000;  // align it to 4K boundry
+		addr += 0x00001000;  // add 4K so it become next page
 	}
 
 	return addr;
@@ -96,7 +124,7 @@ void *allocate_physical_page() {
 			for (uint8_t bit = 0; bit < 32; bit++) {
 				if ((page_bitmap[index] & (1 << bit)) != 0) {
 					uint32_t page_number = index * 32 + bit;
-					mark_page(page_number, USED);
+					mark_used(page_number);
 					void *page_start = (void *)(page_number << PAGE_OFFSET_BITS);
 					return page_start;
 				}
@@ -204,17 +232,17 @@ uint32_t init_page_allocator(struct kmemory_descriptor kmem) {
 	for (entry = mmap->entries;
 	     (multiboot_uint8_t *)entry < (multiboot_uint8_t *)mmap + mmap->size;
 	     entry = (multiboot_memory_map_t *)((unsigned long)entry + mmap->entry_size)) {
-		// for (uint32_t i = 0; i < num_entries; i++) {
+		//	Looks for avaialble memory
 		if (entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-			// Available
-			uint32_t first_addr = (uint32_t)entry->addr & 0xffffffff;
-			uint32_t one_past_last_addr = first_addr + ((uint32_t)entry->len & 0xffffffff);
-			uint32_t first_full_page = page_number(round_up_to_nearest_page_start(first_addr));
-			uint32_t one_past_last_full_page = page_number(round_down_to_nearest_page_start(one_past_last_addr));
+			// Available, but this is 32 bits, so we mask the address with 32 bits.
+			uint32_t entry_first_addr = (uint32_t)entry->addr & 0xffffffff;
+			uint32_t entry_last_addr = entry_first_addr + ((uint32_t)entry->len & 0xffffffff);
+			uint32_t entry_first_page = page_number(round_up_to_nearest_page_start(entry_first_addr));
+			uint32_t entry_last_page = page_number(round_down_to_nearest_page_start(entry_last_addr));
 
-			for (uint32_t i = first_full_page; i < one_past_last_full_page; i++) {
+			for (uint32_t i = entry_first_page; i < entry_last_page; i++) {
 				if (i > PAGE_SIZE_DWORDS) {  // First 4MB are where the kernel lives
-					mark_page(i, FREE);
+					mark_free(i);
 				}
 			}
 		} else {
@@ -228,7 +256,7 @@ uint32_t init_page_allocator(struct kmemory_descriptor kmem) {
 	uint32_t one_past_last_partial_page = page_number(round_up_to_nearest_page_start(kmem.kernel_physical_end));
 
 	for (uint32_t i = first_partial_page; i < one_past_last_partial_page; i++) {
-		mark_page(i, USED);
+		mark_used(i);
 	}
 
 	return free_count;
