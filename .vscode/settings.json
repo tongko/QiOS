@@ -1,15 +1,9 @@
 {
 	"editor.detectIndentation": false,
 	"editor.insertSpaces": false,
-	"C_Cpp.intelliSenseEngine": "Tag Parser",
+	"C_Cpp.intelliSenseEngine": "Default",
 	"files.associations": {
-		"tty.h": "c",
-		"stddef.h": "c",
-		"stdint.h": "c",
-		"cstdint": "c",
-		"stdio.h": "c",
-		"stdbool.h": "c",
-		"kstring.h": "c"
+		"*.h": "c"
 	},
 	"editor.formatOnSave": true,
 	"C_Cpp.clang_format_style": "{BasedOnStyle: Google, IndentWidth: 4, IndentCaseLabels: true, TabWidth: 4, UseTab: ForIndentation, ColumnLimit: 0}",
