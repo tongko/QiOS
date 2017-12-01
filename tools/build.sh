@@ -49,6 +49,7 @@ done
 WORKSPACE="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 SRCDIR="$WORKSPACE/../src"
+SRCBOOT="$SRCDIR/boot"
 INCDIR1="$SRCDIR/inc"
 INCDIR2="$SRCDIR/inc/arch/x86"
 OBJDIR="$WORKSPACE/../obj"
@@ -64,7 +65,7 @@ LINKERSCRIPT="$SRCDIR"/linker.ld
 OBJLIST=" "
 
 # Compiling all source file
-for f in $(find $SRCDIR -name '*.c' -or -name '*.asm'); do
+for f in $(find $SRCBOOT -name '*.c' -or -name '*.asm'); do
 	filename=$(basename "$f")
 	ext="${filename##*.}"
 	target="$OBJDIR"/${filename%.*}.o

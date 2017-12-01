@@ -13,6 +13,16 @@
 			"remote": true,
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "Debug"
+		},
+		{
+			"name": "Launch arch.x86.boot",
+			"type": "gdb",
+			"request": "attach",
+			"executable": "${workspaceFolder}/src/arch/x86/boot/kernel.elf",
+			"target": "localhost:1234",
+			"remote": true,
+			"cwd": "${workspaceFolder}/src/arch/x86/boot",
+			"preLaunchTask": "Debug for arch.x86.boot"
 		}
 	]
 }

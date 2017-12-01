@@ -19,9 +19,28 @@
 			}
 		},
 		{
+			"label": "Build arch.x86.boot",
+			"type": "shell",
+			"command": "cd ${workspaceFolder}/src/arch/x86/boot/ && make",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
 			"label": "Debug",
 			"type": "shell",
-			"command": "qemu-system-i386 -drive format=raw,file=${workspaceFolder}/bin/disk.img -m 2048M -daemonize -D qemu.log -d guest_errors -serial file:boot.log -s -S"
+			"command": "qemu-system-i386 -cdrom ${workspaceFolder}/bin/boot.iso -m 2048M -daemonize -D qemu.log -d guest_errors -serial file:boot.log -s -S"
+		},
+		{
+			"label": "Debug for arch.x86.boot",
+			"type": "shell",
+			"command": "qemu-system-i386 -cdrom ${workspaceFolder}/src/arch/x86/boot/boot.iso -m 2048M -daemonize -D qemu.log -d guest_errors -serial file:boot.log -s -S"
 		}
 	]
 }

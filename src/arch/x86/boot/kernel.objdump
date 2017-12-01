@@ -1,0 +1,12 @@
+
+kernel.elf:     file format elf32-i386
+
+/home/tongko/projects/qios/src/arch/x86/boot/load.asm:
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 127 addr 0xc0401010 */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 129 addr 0xc0401011 */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 131 addr 0xc0401016 */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 132 addr 0xc0401018 */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 135 addr 0xc0401019 */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 139 addr 0xc040101e */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 140 addr 0xc040101f */
+/* file /home/tongko/projects/qios/src/arch/x86/boot/load.asm line 141 addr 0xc0401020 */
