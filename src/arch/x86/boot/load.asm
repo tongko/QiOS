@@ -103,10 +103,6 @@ start:
 _start:
 		cli
 
-		; init gdt
-		extern	early_init_gdt
-		call	early_init_gdt
-
 		; Deal with paging in C code.
 		extern	kernel_virtual_end
 		push	kernel_virtual_end
@@ -132,11 +128,14 @@ higher_half_entry:
 
 		mov		esp, kstack_top					; Intialize kernel stack
 
-		push	0								; Reset EFLAGS
-		popfd
+		; push	0								; Reset EFLAGS
+		; popfd
 
 		extern	_kmain							; Enter C code kernel
+		push	ebx								; Multiboot2 info
+		push	eax								; Magic number
 		call	_kmain
+		add		esp, 4
 
 		; kernel should never return, but just in case...
 .hang:
@@ -151,6 +150,7 @@ halt_message:
 _edata:
 
 SECTION .bss
+GLOBAL kstack_bottom
 		align	4
 kstack_bottom:
 		KSTACK_SIZE	equ	0x100000				; 1 MiB Stack

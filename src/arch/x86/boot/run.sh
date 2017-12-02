@@ -2,6 +2,7 @@
 # Script for running debug mode
 DEBUG=0
 ISO=0
+QEMU=qemu-system-i386
 for args in $@
 do
 	if [ "$args" == "debug" ]; then
@@ -32,19 +33,19 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 WORKSPACE="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-IMAGE="drive format=raw,file=$WORKSPACE/./disk.img"
+IMAGE="drive format=raw,file=$WORKSPACE/bin/disk.img"
 if [ "$ISO" == 1 ]; then
-	IMAGE="cdrom $WORKSPACE/./boot.iso"
+	IMAGE="cdrom $WORKSPACE/bin/boot.iso"
 fi
 
 if [ "$DEBUG" == 1 ]; then
 	echo "Run debug mode..."
 	#qemu-system-i386 -drive format=raw,file="$WORKSPACE/../bin/disk.img" -m 2048M -daemonize\
-	qemu-system-i386 -${IMAGE} -m 2048M -daemonize\
+	${QEMU} -${IMAGE} -machine q35 -m 2048M -daemonize -cpu qemu32,pae,acpi,pat \
 	-D qemu.log -d guest_errors -serial file:boot.log -s -S
-	gdb "$WORKSPACE/./kernel.elf" -ex "target remote :1234" --tui # --symbols="$WORKSPACE/../bin/shos.sym"
+	gdb "$WORKSPACE/bin/kernel.elf" -ex "target remote :1234" --tui # --symbols="$WORKSPACE/../bin/shos.sym"
 else
 	echo "Run normal..."
-	qemu-system-i386 -${IMAGE} -m 2048M -daemonize\
+	${QEMU} -${IMAGE} -machine q35 -m 2048M -daemonize -cpu qemu32,pae,acpi,pat \
 	-D qemu.log -d guest_errors -serial file:./boot.log #-cpu Nehalem
 fi

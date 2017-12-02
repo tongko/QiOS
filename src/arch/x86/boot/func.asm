@@ -16,7 +16,7 @@
 ;-------------------------------------------------------------------------------
 [bits 32]
 
-SECTION .boot
+SECTION .text
 
 GLOBAL _gdt_flush
 		align	8
@@ -49,3 +49,29 @@ _tss_flush:
 		ltr		ax				; Load 0x2B into the task state register.
 		ret
 .end:	; _tss_flush End of function
+
+GLOBAL _probe_cpuid
+		align	8
+_probe_cpuid:
+		enter	0, 0
+		push	ebx
+		push	ecx
+		push	edx
+
+		; probing CPUID support
+		pushfd                               ;Save EFLAGS
+		pushfd                               ;Store EFLAGS again for invert test
+		xor		dword [esp],0x00200000       ;Invert the ID bit in stored EFLAGS
+		popfd                                ;Load stored EFLAGS (with ID bit inverted)
+		pushfd                               ;Store EFLAGS again (ID bit may or may not be inverted)
+		pop		ecx                          ;eax = modified EFLAGS (ID bit may or may not be inverted)
+		xor		ecx,[esp]                    ;eax = whichever bits were changed
+		popfd                                ;Restore original EFLAGS
+		and		ecx,0x00200000               ;ecx = zero if ID bit can't be changed, else non-zero
+
+		pop		edx
+		pop		ecx
+		pop		ebx
+		leave
+		ret
+.end:

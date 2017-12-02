@@ -10,8 +10,10 @@
 #ifndef __BOOT_H_
 #define __BOOT_H_
 
+#include <multiboot/multiboot2.h>
+#include <stdint.h>
 #define _need_SIZE_T
 #include "ktypedef.h"
-//#include "paging.h"
+#include "paging.h"
 
 #endif  //	__BOOT_H_

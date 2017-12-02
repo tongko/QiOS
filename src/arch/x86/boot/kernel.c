@@ -24,7 +24,7 @@
 
 #include "boot.h"
 
-void _kmain(void) {
+void _kmain(uint32_t magic, uint32_t mbi_addr) {
 	while (1) {
 	}
 }

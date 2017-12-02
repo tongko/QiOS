@@ -11,6 +11,7 @@
 #define __KTYPEDEF_H_
 
 #include <stdint.h>
+#include "attribs.h"
 
 #ifdef _need_SIZE_T
 typedef uint32_t size_t;

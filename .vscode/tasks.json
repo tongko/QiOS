@@ -19,9 +19,9 @@
 			}
 		},
 		{
-			"label": "Build arch.x86.boot",
+			"label": "Rebuild arch.x86.boot",
 			"type": "shell",
-			"command": "cd ${workspaceFolder}/src/arch/x86/boot/ && make",
+			"command": "make -C ${workspaceFolder}/src/arch/x86/boot/ -w -r -R clean all",
 			"presentation": {
 				"echo": true,
 				"reveal": "always",
@@ -33,14 +33,34 @@
 			]
 		},
 		{
+			"label": "Build arch.x86.boot",
+			"type": "shell",
+			"command": "make -C ${workspaceFolder}/src/arch/x86/boot/ -w -r -R",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"label": "Clean arch.x86.boot",
+			"type": "shell",
+			"command": "make clean -C ${workspaceFolder}/src/arch/x86/boot/ -w -r -R"
+		},
+		{
 			"label": "Debug",
 			"type": "shell",
-			"command": "qemu-system-i386 -cdrom ${workspaceFolder}/bin/boot.iso -m 2048M -daemonize -D qemu.log -d guest_errors -serial file:boot.log -s -S"
+			"command": "qemu-system-i386 -machine q35 -cdrom ${workspaceFolder}/bin/boot.iso -m 2048M -daemonize -cpu qemu32,pae,acpi,pat -D qemu.log -d guest_errors -serial file:boot.log -s -S"
 		},
 		{
 			"label": "Debug for arch.x86.boot",
 			"type": "shell",
-			"command": "qemu-system-i386 -cdrom ${workspaceFolder}/src/arch/x86/boot/boot.iso -m 2048M -daemonize -D qemu.log -d guest_errors -serial file:boot.log -s -S"
+			"command": "qemu-system-i386 -machine q35 -cdrom ${workspaceFolder}/src/arch/x86/boot/bin/boot.iso -m 2048M -daemonize -cpu qemu32,pae,acpi,pat -D qemu.log -d guest_errors -serial file:boot.log -s -S",
+			"problemMatcher": []
 		}
 	]
 }

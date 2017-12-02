@@ -4,6 +4,7 @@
 			"name": "Linux",
 			"includePath": [
 				"${workspaceRoot}/../../opt/cross/lib/gcc/i686-elf/7.2.0/include",
+				"${workspaceRoot}/src/include",
 				"${workspaceRoot}/src/inc"
 			],
 			"defines": [],
@@ -11,6 +12,7 @@
 			"browse": {
 				"path": [
 					"${workspaceRoot}/../../opt/cross/lib/gcc/i686-elf/7.2.0/include",
+					"${workspaceRoot}/src/include",
 					"${workspaceRoot}/src/inc"
 				],
 				"limitSymbolsToIncludedHeaders": true,

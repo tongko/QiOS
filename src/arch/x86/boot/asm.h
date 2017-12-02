@@ -11,10 +11,21 @@
 #define __ASM_H_
 
 #include <stdint.h>
+#include "attribs.h"
 
 #define asm(x...) __asm__ __volatile__(x)
 
-static inline __attribute__((section(".boot"))) uint32_t get_cr0(void) {
+static __inline__ void sti(void) {
+	asm("sti\n"
+	    "nop\n");
+}
+
+static __inline__ void cli(void) {
+	asm("cli\n"
+	    "nop\n");
+}
+
+static __inline__ uint32_t __early get_cr0(void) {
 	uint32_t ret;
 	asm("mov %0, cr0"
 	    : "=r"(ret));
@@ -22,11 +33,11 @@ static inline __attribute__((section(".boot"))) uint32_t get_cr0(void) {
 	return ret;
 }
 
-static inline void __attribute__((section(".boot"))) set_cr0(uint32_t val) {
+static __inline__ void __early set_cr0(uint32_t val) {
 	asm("mov cr0, %0" ::"r"(val));
 }
 
-static inline uint32_t __attribute__((section(".boot"))) get_cr3(void) {
+static __inline__ uint32_t __early get_cr3(void) {
 	uint32_t ret;
 	asm("mov %0, cr3"
 	    : "=r"(ret));
@@ -34,11 +45,11 @@ static inline uint32_t __attribute__((section(".boot"))) get_cr3(void) {
 	return ret;
 }
 
-static inline void __attribute__((section(".boot"))) set_cr3(uint32_t val) {
+static __inline__ void __early set_cr3(uint32_t val) {
 	asm("mov cr3, %0" ::"r"(val));
 }
 
-static inline uint32_t __attribute__((section(".boot"))) get_cr4(void) {
+static __inline__ uint32_t __early get_cr4(void) {
 	uint32_t ret;
 	asm("mov %0, cr4"
 	    : "=r"(ret));
@@ -46,7 +57,7 @@ static inline uint32_t __attribute__((section(".boot"))) get_cr4(void) {
 	return ret;
 }
 
-static inline void __attribute__((section(".boot"))) set_cr4(uint32_t val) {
+static __inline__ void __early set_cr4(uint32_t val) {
 	asm("mov cr4, %0" ::"r"(val));
 }
 
