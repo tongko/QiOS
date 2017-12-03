@@ -11,9 +11,14 @@
 #define __BOOT_H_
 
 #include <multiboot/multiboot2.h>
+#include <stdarg.h>
 #include <stdint.h>
-#define _need_SIZE_T
 #include "ktypedef.h"
 #include "paging.h"
+
+//	Kernel output
+int32_t printf(const char *format, ...);
+//	Write string to buffer
+int vsprintf(char *str, const char *format, va_list arg);
 
 #endif  //	__BOOT_H_

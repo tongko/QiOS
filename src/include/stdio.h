@@ -5,27 +5,14 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
- * 																			   *
  * ****************************************************************************/
-#ifndef __KTYPEDEF_H_
-#define __KTYPEDEF_H_
+#ifndef __STDIO_H_
+#define __STDIO_H_
 
-#include <attribs.h>
-#include <stdint.h>
+#define __need_size_t
+#define __need_NULL
+#include <stddef.h>
 
-#ifdef _need_SIZE_T
-typedef uint32_t size_t;
-#undef _need_SIZE_T
-#endif  // _need_SIZE_T
+#include <stdarg.h>
 
-#ifdef _need_NULL
-#define NULL (void *)0;
-#undef _need_NULL
-#endif  // _need_NULL
-
-//	type represent virtual address
-typedef uint32_t vaddr_t;
-//	type represent physical address
-typedef uint32_t paddr_t;
-
-#endif  // __KTYPEDEF_H_
+#endif  //	__STDIO_H_

@@ -7,7 +7,9 @@
 				"${workspaceRoot}/src/include",
 				"${workspaceRoot}/src/inc"
 			],
-			"defines": [],
+			"defines": [
+				"__i386__"
+			],
 			"intelliSenseMode": "clang-x64",
 			"browse": {
 				"path": [
