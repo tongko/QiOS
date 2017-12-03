@@ -6,18 +6,9 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#ifndef __STDIO_H_
-#define __STDIO_H_
+#ifndef __TYPES_H_
+#define __TYPES_H_
 
-#include <stdint.h>
-#include <sys/types.h>
+typedef unsigned char *sysstr_t;
 
-#define __need_size_t
-#define __need_NULL
-#include <stddef.h>
-
-#include <stdarg.h>
-
-int32_t printf(const sysstr_t format, ...);
-
-#endif  //	__STDIO_H_
+#endif  //	__TYPES_H_
