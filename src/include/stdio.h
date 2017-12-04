@@ -18,6 +18,6 @@
 
 #include <stdarg.h>
 
-int32_t printf(const sysstr_t format, ...);
+int32_t printf(const unsigned char *format, ...);
 
 #endif  //	__STDIO_H_

@@ -17,8 +17,8 @@
 #include "paging.h"
 
 //	Kernel output
-int32_t printf(const char *format, ...);
+int32_t printf(const unsigned char *format, ...);
 //	Write string to buffer
-int vsprintf(char *str, const char *format, va_list arg);
+int vsprintf(unsigned char *str, const unsigned char *format, va_list arg);
 
 #endif  //	__BOOT_H_

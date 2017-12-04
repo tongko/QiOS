@@ -1,8 +1,8 @@
 #ifndef __GDT_H_
 #define __GDT_H_
 
+#include <stddef.h>
 #include <stdint.h>
-#define _need_SIZE_T
 #include "ktypedef.h"
 
 // A struct describing a Task State Segment.
