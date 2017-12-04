@@ -25,6 +25,18 @@ static __inline__ void cli(void) {
 	    "nop\n");
 }
 
+static __inline__ uint8_t _inb(uint16_t port) {
+	uint8_t ret_val;
+	__asm__ __volatile__("in %0,%1"
+	                     : "=a"(ret_val)
+	                     : "d"(port));
+	return ret_val;
+}
+
+static __inline__ void _outb(uint16_t port, uint8_t val) {
+	__asm__ __volatile__("out %1,%0" ::"a"(val), "d"(port));
+}
+
 static __inline__ uint32_t __early get_cr0(void) {
 	uint32_t ret;
 	asm("mov %0, cr0"

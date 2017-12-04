@@ -13,16 +13,6 @@
 #include <attribs.h>
 #include <stdint.h>
 
-#ifdef _need_SIZE_T
-typedef uint32_t size_t;
-#undef _need_SIZE_T
-#endif  // _need_SIZE_T
-
-#ifdef _need_NULL
-#define NULL (void *)0;
-#undef _need_NULL
-#endif  // _need_NULL
-
 //	type represent virtual address
 typedef uint32_t vaddr_t;
 //	type represent physical address

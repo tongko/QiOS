@@ -19,12 +19,13 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #endif /* _PTRDIFF_T_DECLARED */
 
 /* This is the unsigned integral type and is the result of the sizeof keyword. */
+#ifndef __SIZE_T_DECLARED
+#define __SIZE_T_DECLARED
 #ifndef __SIZE_TYPE__
 #define __SIZE_TYPE__ long unsigned int
 #endif
-#if !(defined(__GNUG__) && defined(size_t))
 typedef __SIZE_TYPE__ size_t;
-#endif /* !(defined (__GNUG__) && defined (size_t)) */
+#endif
 
 /* This is an integral type of the size of a wide character constant. */
 #ifndef __WCHAR_TYPE__

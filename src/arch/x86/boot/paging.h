@@ -10,6 +10,7 @@
 #ifndef __PAGING_H_
 #define __PAGING_H_
 
+#include <stddef.h>
 #include "ktypedef.h"
 
 #define ENTRY_MASK 0xFFFFFFFFFF000UL  // 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 0000 0000 0000

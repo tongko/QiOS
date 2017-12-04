@@ -11,7 +11,7 @@ QEMU=qemu-system-i386
 GCC=i686-elf-gcc
 
 CFLAGS=-std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -g -O0 \
-			-I ../../../include -D __need___va_list __i386__ _need_SIZE_T
+			-I ../../../include 
 
 
 ASFLAGS=-felf32 -g
