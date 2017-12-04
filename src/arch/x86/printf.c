@@ -8,4 +8,5 @@
  * ****************************************************************************/
 #include <stdio.h>
 
-int32_t printf(const sysstr_t format, ...) {}
+int32_t printf(const sysstr_t format, ...) {
+}

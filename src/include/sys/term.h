@@ -35,11 +35,11 @@ typedef struct cursor_info {
 } cursor_info_t;
 
 typedef struct term_api {
-	const term_color_t (*get_color)(void);
+	const term_color_t *(*get_color)(void);
 	void (*set_color)(const term_color_t *color);
-	const cursor_info_t (*get_cursor_info)(void);
+	const cursor_info_t *(*get_cursor_info)(void);
 	void (*set_cursor_info)(const cursor_info_t *info);
-	const cursor_point_t (*set_cursor_point)(const cursor_point_t *point);
+	const cursor_point_t *(*set_cursor_point)(const cursor_point_t *point);
 	void (*putc)(char c);
 	void (*putc_at)(char c, const cursor_point_t *point);
 	void (*puts)(const string_t *s);
