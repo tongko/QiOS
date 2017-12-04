@@ -11,8 +11,10 @@ QEMU=qemu-system-i386
 GCC=i686-elf-gcc
 
 CFLAGS=-std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -g -O0 \
-			-I ../../../include 
+			-I ../../../include \
+			-funsigned-char 
 
+LDFLAGS=-ffreestanding -O2 -nostdlib -lgcc --verbose 
 
 ASFLAGS=-felf32 -g
 
@@ -29,7 +31,7 @@ obj/%.o : %.asm
 	$(NASM) $(ASFLAGS) -o $@ $<
 
 bin/kernel.elf : $(OBJ)
-	$(GCC) -T link.ld -o $@ -ffreestanding -O2 -nostdlib -lgcc --verbose $^ # Link to make an executable for the kernel.
+	$(GCC) -T link.ld -o $@ $(LDFLAGS) $^ # Link to make an executable for the kernel.
 	grub-file --is-x86-multiboot2 $@
 
 bin/boot.iso : bin/kernel.elf grub.cfg

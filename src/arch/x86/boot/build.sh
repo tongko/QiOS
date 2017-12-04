@@ -32,7 +32,7 @@ done
 # Variables
 
 NASM=" -f elf "
-CFLAGS=" -std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel "
+CFLAGS=" -std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -funsigned-char -I ../../../include "
 if [ "$DEBUG" == 1 ]; then
 	NASM=$NASM" -g "
 	CFLAGS=$CFLAGS"-g -O0"	# Debug symbol + no optimization
