@@ -50,4 +50,6 @@ is given in type.
 */
 #define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)
 
+#define MAXLEN 1024
+
 #endif  //	__STDDEF_H_

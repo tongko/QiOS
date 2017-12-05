@@ -24,7 +24,9 @@
 
 #include "boot.h"
 
-void _kmain() {  //uint32_t magic, uint32_t mbi_addr) {
+void _kmain() {       //uint32_t magic, uint32_t mbi_addr) {
+	init_term(NULL);  // use default term implementation
+
 	while (1) {
 	}
 }

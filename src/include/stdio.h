@@ -18,6 +18,8 @@
 
 #include <stdarg.h>
 
-int32_t printf(const unsigned char *format, ...);
+int32_t sprintf(unsigned char *str, const char *format, ...);
+int32_t vsprintf(string_t *str, const string_t *format, va_list arg);
+int32_t printf(const string_t *format, ...);
 
 #endif  //	__STDIO_H_

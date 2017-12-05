@@ -5,21 +5,35 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
+ * 																			   *
  * ****************************************************************************/
+#include <stdlib.h>
+#include <string.h>
 
-#ifndef __BOOT_H_
-#define __BOOT_H_
+int32_t __inline__ abs(int32_t x) {
+	int32_t y = x >> 31;
+	return (x ^ y) - y;
+}
 
-#include <multiboot/multiboot2.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <sys/term.h>
-#include "ktypedef.h"
-#include "paging.h"
+unsigned char *itoa(uint32_t value, unsigned char *str, int base) {
+	//	Validate base
+	if (base < 2 || base > 16) {
+		*str = '\0';
+		return str;
+	}
 
-//	Kernel output
-int32_t printf(const unsigned char *format, ...);
-//	Write string to buffer
-int vsprintf(unsigned char *str, const unsigned char *format, va_list arg);
+	unsigned char *p = str;
+	uint32_t quotient = value;
 
-#endif  //	__BOOT_H_
+	//	Conversion. Number is reversed.
+	do {
+		const uint32_t tmp = quotient / base;
+		*p++ = "0123456789ABCDEF"[quotient - (tmp * base)];
+		quotient = tmp;
+	} while (quotient);
+
+	*p = '\0';
+	reverse(str);
+
+	return str;
+}

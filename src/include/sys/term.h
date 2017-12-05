@@ -22,24 +22,24 @@ typedef struct cursor_point {
 	uint32_t y;
 } cursor_point_t;
 
-enum enum_cursor_shape {
-	hidden = 0,
-	underscore = 1,
-	half_block = 2,
-	block = 3
-};
+typedef enum enum_cursor_shape {
+	crshape_hidden = 0,
+	crshape_underscore = 1,
+	crshape_half_block = 2,
+	crshape_block = 3
+} enum_crshape_t;
 
 typedef struct cursor_info {
-	enum_cursor_shape shape;
+	enum_crshape_t shape;
 	cursor_point_t point;
 } cursor_info_t;
 
 typedef struct term_api {
-	const term_color_t (*get_color)(void);
+	const term_color_t *(*get_color)(void);
 	void (*set_color)(const term_color_t *color);
-	const cursor_info_t (*get_cursor_info)(void);
+	const cursor_info_t *(*get_cursor_info)(void);
 	void (*set_cursor_info)(const cursor_info_t *info);
-	const cursor_point_t (*set_cursor_point)(const cursor_point_t *point);
+	const cursor_point_t *(*set_cursor_point)(const cursor_point_t *point);
 	void (*putc)(char c);
 	void (*putc_at)(char c, const cursor_point_t *point);
 	void (*puts)(const string_t *s);
