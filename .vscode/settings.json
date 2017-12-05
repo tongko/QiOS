@@ -6,9 +6,10 @@
 		"*.h": "c"
 	},
 	"editor.formatOnSave": true,
-	"C_Cpp.clang_format_style": "{BasedOnStyle: Google, IndentWidth: 4, IndentCaseLabels: true, TabWidth: 4, UseTab: ForIndentation, ColumnLimit: 0}",
 	"[c]": {
 		"editor.autoIndent": false
 	},
-	"clang-format.language.c.enable": true
+	"clang-format.executable": "clang-format",
+	"clang-format.language.c.enable": true,
+	"clang-format.language.c.style": "{BasedOnStyle: Google, IndentWidth: 4, IndentCaseLabels: true, TabWidth: 4, UseTab: ForIndentation, ColumnLimit: 0}"
 }

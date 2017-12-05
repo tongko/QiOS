@@ -1,0 +1,7 @@
+[
+	{
+		"directory": "${workspaceRoot}/src/arch/x86/boot",
+		"command": "i686_elf_gcc -std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -g -O0 -I ../../../include -funsigned-char -c -o term.o term.c",
+		"file": "term.c"
+	}
+]

@@ -1,15 +1,16 @@
 /*-- QiOS ---------------------------------------------------------------------*
  *                                                                             *
- *	Copyright (C) 2017, 2018 Liew Tze Wei                                      *
+ *	Copyright (C) 2017, 2018 Liew Tze Wei *
  *                                                                             *
- * 	This file is part of the QiOS kernel, and is made available under the      *
+ * 	This file is part of the QiOS kernel, and is made available under the *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
 #ifndef __STDDEF_H_
 #define __STDDEF_H_
 
-/* This is the signed integral type and is the result of subtracting two pointers. */
+/* This is the signed integral type and is the result of subtracting two
+ * pointers. */
 #ifndef _PTRDIFF_T_DECLARED
 #define _PTRDIFF_T_DECLARED
 #ifndef __PTRDIFF_TYPE__
@@ -43,9 +44,9 @@ typedef __WCHAR_TYPE__ wchar_t;
 #endif /* C++ */
 
 /*
-This results in a constant integer of type size_t which is the offset 
-in bytes of a structure member from the beginning of the structure. 
-The member is given by member-designator, and the name of the structure 
+This results in a constant integer of type size_t which is the offset
+in bytes of a structure member from the beginning of the structure.
+The member is given by member-designator, and the name of the structure
 is given in type.
 */
 #define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)

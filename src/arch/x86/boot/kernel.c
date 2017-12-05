@@ -1,19 +1,22 @@
 /*-- QiOS ---------------------------------------------------------------------*
  *                                                                             *
- *	Copyright (C) 2017, 2018 Liew Tze Wei                                      *
+ *	Copyright (C) 2017, 2018 Liew Tze Wei *
  *                                                                             *
- * 	This file is part of the QiOS kernel, and is made available under the      *
+ * 	This file is part of the QiOS kernel, and is made available under the *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************
  * 																			   *
- *  kernel.c																   *
- *  Everything about kernel.												   *
+ *  kernel.c
+ **
+ *  Everything about kernel.
+ **
  * 																			   *
  * ---------------------------------------------------------------------------*/
 /* Check if the compiler thinks we are targeting the wrong operating system. */
 #ifdef __linux__
-#error "You are not using a cross-compiler, you will most certainly run into trouble"
+#error                                                                         \
+    "You are not using a cross-compiler, you will most certainly run into trouble"
 #endif
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
