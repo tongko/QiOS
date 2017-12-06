@@ -14,7 +14,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#ifndef ISDIGIT
 #define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
+#endif
 
 size_t strlen(const unsigned char *str);
 string_t *makestr(string_t *str1, const unsigned char *str2);

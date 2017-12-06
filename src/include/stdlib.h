@@ -12,6 +12,11 @@
 
 #include <stdint.h>
 
+#ifndef ISDIGIT
+#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
+#endif
+
 int abs(int x);
-unsigned char *itoa(uint32_t value, unsigned char *str, int base);
+size_t itoa(uint32_t value, unsigned char *str, int base);
+uint32_t atoi(unsigned char *str);
 #endif  // __STDLIB_H_
