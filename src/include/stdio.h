@@ -18,10 +18,8 @@
 
 #include <stdarg.h>
 
-struct FILE;
+uint32_t sprintf(char *str, const char *format, ...);
+uint32_t vsprintf(char *str, const char *format, va_list arg);
+uint32_t printf(const char *format, ...);
 
-int32_t sprintf(unsigned char *str, const char *format, ...);
-int32_t vsprintf(string_t *str, const string_t *format, va_list arg);
-int32_t printf(const string_t *format, ...);
-
-#endif //	__STDIO_H_
+#endif  //	__STDIO_H_

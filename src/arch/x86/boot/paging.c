@@ -8,7 +8,7 @@
  * 																			   *
  * ****************************************************************************/
 #include "paging.h"
-#include "asm.h"
+#include "../asm.h"
 
 uint64_t __earlydata *last_page_dir;
 uint64_t __earlydata *last_page_tab;

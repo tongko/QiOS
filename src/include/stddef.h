@@ -51,6 +51,8 @@ is given in type.
 */
 #define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)
 
+#define INT_MIN	-2147483647
+#define INT_MAX	2147483647
 #define MAXLEN 1024
 
 #endif  //	__STDDEF_H_

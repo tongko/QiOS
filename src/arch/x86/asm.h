@@ -10,8 +10,8 @@
 #ifndef __ASM_H_
 #define __ASM_H_
 
+#include <attribs.h>
 #include <stdint.h>
-#include "attribs.h"
 
 #define asm(x...) __asm__ __volatile__(x)
 

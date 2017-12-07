@@ -12,15 +12,16 @@
 #include <elf32.h>
 #include <multiboot/multiboot2.h>
 #include <stdint.h>
+#include <sys/types.h>
 
-struct mbiapi {
-	multiboot_tag_mmap (*get_mmap)(void);
+typedef struct {
+	multiboot_tag_mmap_t *(*get_mmap)(void);
 	void (*load_mb2i)(uint32_t mb2_addr);
-	void (*print_mb2i)(sysstr_t buffer);
-	elf32_section_header_t (*get_elf_sec_hdr)(sysstr_t sec_name);
+	void (*print_mb2i)(char *buffer);
+	elf32_section_header_t *(*get_elf_sec_hdr)(const char *sec_name);
 } mbiapi_t;
 
-mbiapi_t __mbiapi;
+mbiapi_t mbiapi;
 
 void init_mb_info(mbiapi_t *api);
 

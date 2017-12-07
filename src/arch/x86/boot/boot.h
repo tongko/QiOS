@@ -10,16 +10,15 @@
 #ifndef __BOOT_H_
 #define __BOOT_H_
 
+#include <multiboot/mb_info.h>
 #include <multiboot/multiboot2.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/term.h>
+#include "../serial_port.h"
+#include "gdt.h"
 #include "ktypedef.h"
 #include "paging.h"
-
-//	Kernel output
-int32_t printf(const unsigned char *format, ...);
-//	Write string to buffer
-int vsprintf(unsigned char *str, const unsigned char *format, va_list arg);
 
 #endif  //	__BOOT_H_

@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include <stddef.h>
+
 #ifndef MAX
 #define MAX(x, y) (x > y ? x : y)
 #endif  //	MAX
@@ -25,6 +27,6 @@
 #endif  //	ISDIGIT
 
 int abs(int x);
-size_t itoa(uint32_t value, unsigned char *str, int base);
-uint32_t atoi(unsigned char *str);
+size_t itoa(uint32_t value, char *str, int base, const char *digit_str);
+uint32_t atoi(char *str);
 #endif  // __STDLIB_H_

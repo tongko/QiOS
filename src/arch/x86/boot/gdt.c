@@ -1,5 +1,5 @@
 #include "gdt.h"
-#include "asm.h"
+#include "../asm.h"
 
 extern void _gdt_flush(void *, uint32_t d);  // definition in func.asm
 extern void _tss_flush(void);                // definition in func.asm

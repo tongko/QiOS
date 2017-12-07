@@ -1,12 +1,15 @@
 /*-- QiOS ---------------------------------------------------------------------*
  *                                                                             *
- *	Copyright (C) 2017, 2018 Liew Tze Wei *
+ *	Copyright (C) 2017, 2018 Liew Tze Wei                                      *
  *                                                                             *
- * 	This file is part of the QiOS kernel, and is made available under the *
+ * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#include <stdio.h>
+#ifndef __VERSION_H_
+#define __VERSION_H_
 
-int32_t printf(const sysstr_t format, ...) {
-}
+#define WELCOME_STR "QiOS Version 0.0.1\n"
+#define COPYRIGHT "Copyright (C) 2017, 2018 Liew Tze Wei"
+
+#endif  //	__VERSION_H_

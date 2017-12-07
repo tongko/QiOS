@@ -9,7 +9,7 @@
  * ****************************************************************************/
 #include <string.h>
 
-size_t strlen(const unsigned char *str) {
+size_t strlen(const char *str) {
 	size_t i;
 	for (i = 0; *(str++) != '\0'; str++, i++) {
 	}
@@ -17,34 +17,34 @@ size_t strlen(const unsigned char *str) {
 	return i;
 }
 
-string_t *makestr(string_t *str1, const unsigned char *str2) {
-	if (!str1) {
-		return NULL;
-	}
+// string_t *makestr(string_t *str1, const char *str2) {
+// 	if (!str1) {
+// 		return NULL;
+// 	}
 
-	str1->length = strlen(str2);
-	str1->value = str2;
+// 	str1->length = strlen(str2);
+// 	str1->value = str2;
 
-	return str1;
-}
+// 	return str1;
+// }
 
-string_t *_strcat(string_t *dest, const string_t *src) {
-	unsigned char *p = dest->value;
-	while (*p) {
-		p++;
-	}
+// string_t *_strcat(string_t *dest, const string_t *src) {
+// 	char *p = dest->value;
+// 	while (*p) {
+// 		p++;
+// 	}
 
-	unsigned char *s = src->value;
-	while (*s) {
-		*(p++) = *(s++);
-	}
+// 	char *s = src->value;
+// 	while (*s) {
+// 		*(p++) = *(s++);
+// 	}
 
-	*p = '\0';
-	return dest;
-}
+// 	*p = '\0';
+// 	return dest;
+// }
 
-unsigned char *strcat(unsigned char *dest, const unsigned char *src) {
-	unsigned char *p = dest;
+char *strcat(char *dest, const char *src) {
+	char *p = dest;
 	while (*(p++)) {
 	}
 	p--;
@@ -57,26 +57,26 @@ unsigned char *strcat(unsigned char *dest, const unsigned char *src) {
 	return dest;
 }
 
-int _strcmp(const string_t *str1, const string_t *str2) {
-	int result = 0;
-	unsigned char *s1, *s2;
+// int _strcmp(const string_t *str1, const string_t *str2) {
+// 	int result = 0;
+// 	char *s1, *s2;
 
-	for (; *s1 && *s2; s1++, s2++) {
-		if (*s1 == *s2) {
-			continue;
-		}
+// 	for (; *s1 && *s2; s1++, s2++) {
+// 		if (*s1 == *s2) {
+// 			continue;
+// 		}
 
-		if (*s1 > *s2) {
-			return 1;
-		}
+// 		if (*s1 > *s2) {
+// 			return 1;
+// 		}
 
-		result = -1;
-	}
+// 		result = -1;
+// 	}
 
-	return result;
-}
+// 	return result;
+// }
 
-int strcmp(const unsigned char *str1, const unsigned char *str2) {
+int strcmp(const char *str1, const char *str2) {
 	int result = 0;
 
 	for (; *str1 != '\0' && *str2 != '\0'; str1++, str2++) {
@@ -112,8 +112,8 @@ void *memcpy(void *dest, const void *src, size_t n) {
 			*(sd++) = *(ss++);
 		}
 	} else {
-		unsigned char *d = (unsigned char *)dest;
-		unsigned char *s = (unsigned char *)src;
+		char *d = (char *)dest;
+		char *s = (char *)src;
 		while (i < n) {
 			*(d++) = *(s++);
 		}
@@ -122,22 +122,22 @@ void *memcpy(void *dest, const void *src, size_t n) {
 	return dest;
 }
 
-void _reverse(string_t *str) {
-	size_t len = str->value;
-	unsigned char *s = str->value;
-	unsigned char *e = str->value[len - 1];
-	unsigned char aux;
+// void _reverse(string_t *str) {
+// 	size_t len = str->value;
+// 	char *s = str->value;
+// 	char *e = str->value[len - 1];
+// 	char aux;
 
-	for (; s > e; e--, s++) {
-		aux = *s;
-		*s = *e;
-		*e = aux;
-	}
-}
+// 	for (; s > e; e--, s++) {
+// 		aux = *s;
+// 		*s = *e;
+// 		*e = aux;
+// 	}
+// }
 
-void reverse(unsigned char *str) {
+void reverse(char *str) {
 	size_t len = _strlen(str);
-	unsigned char aux;
+	char aux;
 	int i, j;
 
 	for (i = len - 1, j = 0; i > j; i--, j++) {
@@ -147,17 +147,17 @@ void reverse(unsigned char *str) {
 	}
 }
 
-unsigned char *strchr(const unsigned char *s, int c_in) {
-	const unsigned char *char_ptr;
+char *strchr(const char *s, int c_in) {
+	const char *char_ptr;
 	const unsigned long int *longword_ptr;
 	unsigned long int longword, magic_bits, charmask;
-	unsigned char c;
+	char c;
 
 	c = (unsigned char)c_in;
 
 	/* Handle the first few characters by reading one character at a time.
      Do this until CHAR_PTR is aligned on a longword boundary.  */
-	for (char_ptr = (const unsigned char *)s;
+	for (char_ptr = (const char *)s;
 	     ((unsigned long int)char_ptr & (sizeof(longword) - 1)) != 0;
 	     ++char_ptr)
 		if (*char_ptr == c)
@@ -247,7 +247,7 @@ unsigned char *strchr(const unsigned char *s, int c_in) {
 			/* Which of the bytes was C or zero?
              If none of them were, it was a misfire; continue the search.  */
 
-			const unsigned char *cp = (const unsigned char *)(longword_ptr - 1);
+			const char *cp = (const char *)(longword_ptr - 1);
 
 			if (*cp == c)
 				return cp;

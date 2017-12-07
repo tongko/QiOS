@@ -9,9 +9,11 @@
 #ifndef __TYPES_H_
 #define __TYPES_H_
 
+#include <stddef.h>
+
 typedef struct string {
 	size_t length;
-	unsigned char *value;
+	char *value;
 } string_t;
 
 #endif  //	__TYPES_H_

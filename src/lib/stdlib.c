@@ -7,22 +7,23 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#include <stdlib.h>
 #include <string.h>
+
+#include <stdlib.h>
 
 int32_t __inline__ abs(int32_t x) {
 	int32_t y = x >> 31;
 	return (x ^ y) - y;
 }
 
-size_t itoa(uint32_t value, unsigned char *str, int base, const unsigned char *digit_str) {
+size_t itoa(uint32_t value, char *str, int base, const char *digit_str) {
 	//	Validate base
 	if (base < 2 || base > 16) {
 		*str = '\0';
 		return str;
 	}
 
-	unsigned char *p = str;
+	char *p = str;
 	uint32_t quotient = value;
 	size_t sz = 0;
 

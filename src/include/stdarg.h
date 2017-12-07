@@ -11,7 +11,7 @@
 #define __STDARG_H_
 
 // These functions are from the official GNU stdarg.h file
-typedef unsigned char *va_list;
+typedef char *va_list;
 
 // Amount of space required in an argument list for an arg of type TYPE.
 // TYPE may alternatively be an expression whose type is used.
@@ -20,7 +20,7 @@ typedef unsigned char *va_list;
 	(((sizeof(TYPE) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
 
 #define va_start(AP, LASTARG) \
-	(AP = ((unsigned char *)&(LASTARG) + __va_rounded_size(LASTARG)))
+	(AP = ((char *)&(LASTARG) + __va_rounded_size(LASTARG)))
 
 extern void va_end(va_list);
 #define va_end(AP)  //  Does Nothing
