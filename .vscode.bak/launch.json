@@ -1,0 +1,28 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Attach to QEMU",
+			"type": "gdb",
+			"request": "attach",
+			"executable": "${workspaceFolder}/bin/boot/shos.bin",
+			"target": "localhost:1234",
+			"remote": true,
+			"cwd": "${workspaceFolder}",
+			"preLaunchTask": "Debug"
+		},
+		{
+			"name": "Launch arch.x86.boot",
+			"type": "gdb",
+			"request": "attach",
+			"executable": "${workspaceFolder}/src/arch/x86/boot/kernel.elf",
+			"target": "localhost:1234",
+			"remote": true,
+			"cwd": "${workspaceFolder}/src/arch/x86/boot",
+			"preLaunchTask": "Debug for arch.x86.boot"
+		}
+	]
+}
