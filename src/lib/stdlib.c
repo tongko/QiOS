@@ -15,7 +15,7 @@ int32_t __inline__ abs(int32_t x) {
 	return (x ^ y) - y;
 }
 
-size_t itoa(uint32_t value, unsigned char *str, int base) {
+size_t itoa(uint32_t value, unsigned char *str, int base, const unsigned char *digit_str) {
 	//	Validate base
 	if (base < 2 || base > 16) {
 		*str = '\0';
@@ -29,7 +29,7 @@ size_t itoa(uint32_t value, unsigned char *str, int base) {
 	//	Conversion. Number is reversed.
 	do {
 		const uint32_t tmp = quotient / base;
-		*p++ = "0123456789ABCDEF"[quotient - (tmp * base)];
+		*p++ = digit_str[quotient - (tmp * base)];
 		quotient = tmp;
 		sz++;
 	} while (quotient);

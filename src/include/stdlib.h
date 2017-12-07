@@ -12,9 +12,17 @@
 
 #include <stdint.h>
 
+#ifndef MAX
+#define MAX(x, y) (x > y ? x : y)
+#endif  //	MAX
+
+#ifndef MIN
+#define MIN(x, y) (x < y ? x : y)
+#endif  //	MIN
+
 #ifndef ISDIGIT
 #define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
-#endif
+#endif  //	ISDIGIT
 
 int abs(int x);
 size_t itoa(uint32_t value, unsigned char *str, int base);

@@ -14,14 +14,36 @@
 			sptr++;                                  \
 	} while (0)
 
-#define PRINT_CHAR(C)    \
-	do {                 \
-		value[i++] = C;  \
-		value[i] = '\0'; \
-		ptr++;           \
+#define PRINT_CHAR(C)  \
+	do {               \
+		*value++ = C;  \
+		*value = '\0'; \
+		i++;           \
 	} while (0)
 
+#define BASE(x)            \
+	do {                   \
+		switch ((char)x) { \
+			case 'x':      \
+			case 'X':      \
+				base = 16; \
+				break;     \
+			case 'o':      \
+				base = 8;  \
+				break;     \
+			case 't':      \
+				base = 2;  \
+				break;     \
+			default:       \
+				base = 10; \
+				break;     \
+		}                  \
+	} while (0)
+
+#define DIGIT_STR(x) (x == 'X' ? "0123456789ABCDEF" : "0123456789abcdef")
+
 typedef struct format_specifier {
+	char s;      // Specifier
 	int32_t lj;  // left justified
 	int32_t fz;  //	zero pad
 	int32_t hx;  //	0x leading
@@ -29,9 +51,20 @@ typedef struct format_specifier {
 	int32_t pw;
 } format_specifier_t;
 
-static int32_t print_hex(unsigned char *dest, uint32_t value, format_specifier_t *format) {
+static int32_t print_number(unsigned char *dest, uint32_t value, format_specifier_t *format) {
+	size_t len;
+	if (format->hx && (format->s == 'X' || format->s == 'x')) {
+		len += 2;  // for "0x"
+	}
+
 	unsigned char buf1[32] = {0};
-	size_t len = itoa(value, buf1, 16);
+	int32_t base;
+	BASE(format->s);
+	len += itoa(value, buf1, base, DIGIT_STR(format->s));
+	int32_t max_width = MAX(format->fw, format->pw);
+	if (max_width < len) {
+		max_width = len;
+	}
 	int32_t paddspace = format->fw - len;
 	if (paddspace < 0) {
 		paddspace = 0;
@@ -40,68 +73,82 @@ static int32_t print_hex(unsigned char *dest, uint32_t value, format_specifier_t
 	if (paddzero < 0) {
 		paddzero = 0;
 	}
-	int32_t fixed_width = paddspace > 0 ? format->fw : len;
-	if (paddzero > fixed_width) {
-		fixed_width = paddzero;
-	}
 	int32_t i, j = 0;
-	unsigned char buf2[32] = {0};
-	for (i = 0; i < paddzero + len; i++) {
-		buf2[i] = i < paddzero ? '0' : buf1[j++];
+	unsigned char buf2[max_width];
+	if (format->pw >= format->fw) {
+		//	precision greater than fixed width
+		if (format->hx && (format->s == 'X' || format->s == 'x')) {
+			*dest++ = '0';
+			*dest++ = format->s;
+			*dest = '\0';
+		}
+		for (i = 0; i < max_width; i++) {
+			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
+			*dest = '\0';
+		}
+
+		return max_width;
 	}
 
 	if (format->lj) {
-		if (format->hx) {
-			*dest++ = '0';
-			*dest++ = 'x';
-			fixed_width -= 2;
+		for (i = 0; i < format->pw; i++) {
+			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
+			*dest = '\0';
 		}
-		for (i = 0; i < fixed_width; i++) {
-			*dest++ = i < paddzero + len ? buf2[i] : ' ';
+		for (i = 0; i < paddspace - format->pw; i++) {
+			*dest++ = ' ';
+			*dest = '\0';
 		}
+
 	} else {
-		for (i = 0; i < fixed_width; i++) {
+		for (i = 0; i < paddspace - format->pw; i++) {
+			*dest++ = ' ';
+			*dest = '\0';
+		}
+		for (i = 0; i < format->pw; i++) {
+			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
+			*dest = '\0';
 		}
 	}
+
+	return max_width;
 }
 
-static int32_t print_int(unsigned char *dest, uint32_t value, format_specifier_t *format) {
-	unsigned char buf1[32] = {0};
-	size_t len = itoa(value, buf1, 10);
-	int32_t paddspace = format->fw - len;
-	int32_t paddzero = format->pw - len;
+static int32_t print_string(unsigned char *dest, const unsigned char *str, format_specifier_t *format) {
+	size_t len = strlen(str);
+	size_t c_to_print = MIN(len, format->pw);  // number of characters to print
+	int32_t i;
 
-	if (paddspace > 0 || paddzero > 0) {  // shorter than min width
-		if (paddzero >= paddspace) {
-			for (int32_t i = 0; i < paddzero + len; i++) {
-				*dest++ = i >= paddzero ? buf1[i - paddzero] : '0';
-			}
-		} else {
-			unsigned char buf2[32] = {0};
-			int32_t i, j = 0;
-			for (i = 0; i < paddzero + len; i++) {
-				buf2[i] = i < paddzero ? '0' : buf1[j++];
-			}
-
-			if (format->lj) {  // left-justified
-				for (i = 0; i < format->fw; i++) {
-					*dest++ = i < paddzero + len ? buf2[i] : ' ';
-				}
-			} else {  // right justified (default)
-				for (i = 0; i < format->fw; i++) {
-					*dest++ = i < format->fw - (paddzero + len) ? ' ' : buf2[i];
-				}
-			}
+	if (c_to_print >= format->fw) {
+		//	c to print is larger than width, justification not consider
+		if (c_to_print == 0) {
+			return 0;
 		}
 
-		return format->fw > format->pw ? format->fw : format->pw;
+		for (i = 0; i < c_to_print; i++) {
+			*dest++ = *str++;
+			*dest = '\0';
+		}
+
+		return c_to_print;
 	}
 
-	for (int32_t i = 0; i < len; i++) {
-		*dest++ = buf1[i];
+	//	c to print is shorter than width, process justification
+	if (format->lj) {
+		//	left justified. print c_to_print, then spaces
+		for (i = 0; i < format->fw; i++) {
+			*dest++ = i < c_to_print ? *str++ : ' ';
+			*dest = '\0';
+		}
+	} else {
+		//	default - right justified.
+		for (i = 0; i < format->fw; i++) {
+			*dest++ = i < format->fw - c_to_print ? ' ' : *str++;
+			*dest = '\0';
+		}
 	}
 
-	return len;
+	return format->fw;
 }
 /*
 	vsprintf - sends formatted output to a string using an argument list passed to it.
@@ -179,17 +226,16 @@ int32_t vsprintf(string_t *str, const string_t *format, va_list arg) {
 	const char *ptr = format;
 	unsigned char *value = str->value;
 	unsigned char specifier[128];
-	int32_t total_printed = 0;
 	int32_t i = 0;
 
 	while (*ptr != '\0') {
 		if (*ptr != '%') { /* While we have regular characters, print them.  */
-			value[i++] = *ptr++;
-			value[i] = '\0';
-		} else { /* We got a format specifier! */
+			do {
+				PRINT_CHAR(*ptr++);
+			} while (*ptr != '%' && ptr);
+		} else {
+			/* We got a format specifier! */
 			unsigned char *sptr = specifier;
-			int32_t wide_width = 0, short_width = 0;
-
 			*sptr++ = *ptr++; /* Copy the % and move forward.  */
 
 			fmt_spcf.lj = 0;
@@ -231,62 +277,24 @@ int32_t vsprintf(string_t *str, const string_t *format, va_list arg) {
 				}
 			}
 
-			switch (*ptr) {
+			fmt_spcf.s = *ptr;
+			switch (*ptr++) {
 				case 'd':
-				case 'i': {
-					const uint32_t v = abs(va_arg(arg, uint32_t));
-					i += print_int(&value[i], v, &fmt_spcf);
-				}
+				case 'i':
 				case 'u':
 				case 'x':
-				case 'X':
-				case 'c': {
-					/* Short values are promoted to int, so just copy it
-                   as an int and trust the C library printf to cast it
-                   to the right width.  */
-					if (short_width)
-						PRINT_TYPE(int);
-					else {
-						switch (wide_width) {
-							case 0:
-								PRINT_TYPE(int);
-								break;
-							case 1:
-								PRINT_TYPE(long);
-								break;
-							case 2:
-							default:
-#if defined(__GNUC__) || defined(HAVE_LONG_LONG)
-								PRINT_TYPE(long long);
-#else
-								PRINT_TYPE(long); /* Fake it and hope for the best.  */
-#endif
-								break;
-						} /* End of switch (wide_width) */
-					}     /* End of else statement */
-				}         /* End of integer case */
-				break;
-				case 'f':
-				case 'e':
-				case 'E':
-				case 'g':
-				case 'G': {
-					if (wide_width == 0)
-						PRINT_TYPE(double);
-					else {
-#if defined(__GNUC__) || defined(HAVE_LONG_DOUBLE)
-						PRINT_TYPE(long double);
-#else
-						PRINT_TYPE(double); /* Fake it and hope for the best.  */
-#endif
-					}
+				case 'X': {
+					const uint32_t v = va_arg(arg, uint32_t);
+					i += print_number(value, v, &fmt_spcf);
 				} break;
-				case 's':
-					PRINT_TYPE(char *);
-					break;
-				case 'p':
-					PRINT_TYPE(void *);
-					break;
+				case 'c': {
+					unsigned char c = va_arg(arg, char);
+					PRINT_CHAR(c);
+				} break;
+				case 's': {
+					const char *s = va_arg(arg, char *);
+					print_string(value, s, &fmt_spcf);
+				} break;
 				case '%':
 					PRINT_CHAR('%');
 					break;
@@ -296,5 +304,5 @@ int32_t vsprintf(string_t *str, const string_t *format, va_list arg) {
 		}     /* End of else statement */
 	}
 
-	return total_printed;
+	return i;
 }

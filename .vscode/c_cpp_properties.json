@@ -6,8 +6,8 @@
 				"${I686_ELF}/lib/gcc/i686-elf/7.2.0/include",
 				"${I686_ELF}/lib/gcc/i686-elf/7.2.0/include-fixed",
 				"${workspaceRoot}/src/include",
-				"${workspaceRoot}/src/include",
-				"${workspaceRoot}/src/inc"
+				"${workspaceRoot}/src/inc",
+				"${workspaceRoot}/src/arch/x86/boot"
 			],
 			"intelliSenseMode": "clang-x64",
 			"browse": {
@@ -21,7 +21,7 @@
 				"limitSymbolsToIncludedHeaders": false,
 				"databaseFilename": "${workspaceRoot}/.vscode/browse.c.db"
 			},
-			"compileCommands": ".vscode/compile_commands.json",
+			"compileCommands": "${workspaceRoot}/.vscode/compile_commands.json",
 			"defines": [
 				"__DBL_MIN_EXP__=(-1021)",
 				"__FLT32X_MAX_EXP__=1024",
@@ -345,6 +345,31 @@
 				"__ATOMIC_ACQ_REL=4",
 				"__ATOMIC_RELEASE=3"
 			]
+		},
+		{
+			"name": "Win32",
+			"includePath": [
+				"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
+				"${workspaceRoot}/src/include",
+				"${workspaceRoot}/src/inc",
+				"${workspaceRoot}/src/arch/x86/boot"
+			],
+			"defines": [
+				"_DEBUG",
+				"UNICODE",
+				"__inline__=inline"
+			],
+			"intelliSenseMode": "msvc-x64",
+			"browse": {
+				"path": [
+					"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
+					"${workspaceRoot}/src/include",
+					"${workspaceRoot}/src/inc",
+					"${workspaceRoot}/src/arch/x86/boot"
+				],
+				"limitSymbolsToIncludedHeaders": true,
+				"databaseFilename": "${workspaceRoot}/.vscode/browse.c.db"
+			}
 		}
 	],
 	"version": 3
