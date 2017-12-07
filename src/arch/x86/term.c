@@ -162,36 +162,54 @@ static void putc_at(char c, const cursor_point_t *point) {
 	putc(c);
 }
 
-static void puts(const string_t *s) {
+static void puts(const char *s) {
 	if (!s) {
 		return;
 	}
 
-	for (uint32_t i = 0; i < s->length; i++) {
-		putc(s->value[i]);
+	for (uint32_t i = 0; i < strlen(s); i++) {
+		putc(s[i]);
 	}
+}
+
+static void clear() {
+	for (int32_t i = 0; i < 2000; i++) {
+		putc(' ');
+	}
+}
+
+void term_default_config() {
+	term_color_t color = {0x03, 0x00};  // green, black
+	term_api.set_color(&color);
+	cursor_point_t point = {0, 0};                // 0, 0
+	cursor_info_t info = {crshape_block, point};  // enable cursor block
+	term_api.set_cursor_info(&info);
+
+	term_api.clear();
 }
 
 void init_term(term_api_t *api) {
 	if (api) {
-		term.get_color = api->get_color;
-		term.set_color = api->set_color;
-		term.get_cursor_info = api->get_cursor_info;
-		term.set_cursor_info = api->set_cursor_info;
-		term.set_cursor_point = api->set_cursor_point;
-		term.putc = api->putc;
-		term.putc_at = api->putc_at;
-		term.puts = api->puts;
+		term_api.get_color = api->get_color;
+		term_api.set_color = api->set_color;
+		term_api.get_cursor_info = api->get_cursor_info;
+		term_api.set_cursor_info = api->set_cursor_info;
+		term_api.set_cursor_point = api->set_cursor_point;
+		term_api.putc = api->putc;
+		term_api.putc_at = api->putc_at;
+		term_api.puts = api->puts;
+		term_api.clear = api->clear;
 
 		return;
 	}
 
-	term.get_color = get_color;
-	term.set_color = set_color;
-	term.get_cursor_info = get_cursor_info;
-	term.set_cursor_info = set_cursor_info;
-	term.set_cursor_point = set_cursor_point;
-	term.putc = putc;
-	term.putc_at = putc_at;
-	term.puts = puts;
+	term_api.get_color = get_color;
+	term_api.set_color = set_color;
+	term_api.get_cursor_info = get_cursor_info;
+	term_api.set_cursor_info = set_cursor_info;
+	term_api.set_cursor_point = set_cursor_point;
+	term_api.putc = putc;
+	term_api.putc_at = putc_at;
+	term_api.puts = puts;
+	term_api.clear = clear;
 }
