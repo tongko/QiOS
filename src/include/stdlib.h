@@ -26,7 +26,7 @@
 #define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
 #endif  //	ISDIGIT
 
-int abs(int x);
+int32_t abs(int32_t x);
 size_t itoa(uint32_t value, char *str, int base, const char *digit_str);
-uint32_t atoi(char *str);
+uint32_t atoi(const char *str);
 #endif  // __STDLIB_H_

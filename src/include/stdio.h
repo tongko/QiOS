@@ -10,13 +10,10 @@
 #define __STDIO_H_
 
 #include <stdint.h>
-#include <sys/types.h>
-
-#define __need_size_t
-#define __need_NULL
-#include <stddef.h>
 
 #include <stdarg.h>
+
+#include <stddef.h>
 
 uint32_t sprintf(char *str, const char *format, ...);
 uint32_t vsprintf(char *str, const char *format, va_list arg);

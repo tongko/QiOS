@@ -4,6 +4,10 @@
 extern void _gdt_flush(void *, uint32_t d);  // definition in func.asm
 extern void _tss_flush(void);                // definition in func.asm
 
+__attribute__((aligned(8), section(".bootdata"))) gdt_entry_t gdt_entry[6];
+__attribute__((aligned(8), section(".bootdata"))) gdt_t gdt_ptr;
+__attribute__((aligned(128), section(".bootdata"))) tss_entry_t tss_entry;
+
 const uint16_t NULL_SELECTOR = 0x0;
 const uint16_t KCODE_SELECTOR = sizeof(gdt_entry_t) * KCODE_INDEX;
 const uint16_t KDATA_SELECTOR = sizeof(gdt_entry_t) * KDATA_INDEX;
@@ -27,7 +31,7 @@ void init_tss(void *kernel_stack_bottom, size_t stack_size) {
 	_tss_flush();
 }
 
-void early_init_gdt(void) {
+void init_gdt(void) {
 	//	Setup the GDT pointer and limit, always (sizeof(GDTENTRY) * entry count) - 1
 	gdt_ptr.limit = sizeof(gdt_entry) - 1;
 	gdt_ptr.base_ptr = (uint32_t)gdt_entry;

@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/term.h>
-#include "../serial_port.h"
+#include "../comm/serial_port.h"
 #include "gdt.h"
 #include "ktypedef.h"
 #include "paging.h"

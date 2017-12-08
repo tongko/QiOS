@@ -1,45 +1,25 @@
-# This file makes use of automatic variables
-# https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html#Automatic-Variables
-
-# https://en.wikipedia.org/wiki/Netwide_Assembler
-NASM=nasm
-
-# https://en.wikipedia.org/wiki/QEMU
-# Virtual machine
 QEMU=qemu-system-i386
-
 GCC=i686-elf-gcc
+LDFLAGS=-ffreestanding -O2 -nostdlib -lgcc --verbose
+OBJ = $(wildcard obj/*.o)
 
-CFLAGS=-std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -g -O0 \
-			-I src/include
-
-LDFLAGS=-ffreestanding -O2 -nostdlib -lgcc --verbose 
-
-ASFLAGS=-felf32 -g
-
-CSRC := $(shell find src/ -type f -name '*.c')
-ASRC := $(shell find src/ -type f -name '*.asm')
-OBJ := $(patsubst %.c,obj/%.o,$(notdir $(CSRC)))
-OBJ += $(patsubst %.asm,obj/%.o,$(notdir $(ASRC)))
-
-.PHONY: all clean
+.PHONY: all clean compile bin/kernel.elf bin/boot.iso run debug
 all:bin/boot.iso
 
-obj/%.o : $(CSRC)
-	$(GCC) -c $< -o $@ $(CFLAGS) 
+compile:
+	+$(MAKE) -C src/lib
+	+$(MAKE) -C src/arch/x86
 
-obj/%.o : $(ASRC)
-	$(NASM) $(ASFLAGS) -o $@ $<
-
-bin/kernel.elf : $(OBJ)
-	$(GCC) -T src/link.ld -o $@ $(LDFLAGS) $^ # Link to make an executable for the kernel.
+bin/kernel.elf : compile
+	# Link to make an executable for the kernel.
+	$(GCC) -T src/link.ld -o $@ $(LDFLAGS) $(OBJ)
 	grub-file --is-x86-multiboot2 $@
 
 bin/boot.iso : bin/kernel.elf src/grub.cfg
-	mkdir -p bin/iso/boot/grub              # create the folder structure
-	cp bin/kernel.elf bin/iso/boot/             # copy the kernel
-	cp src/grub.cfg bin/iso/boot/grub           # copy the grub configuration file
-	grub-mkrescue -o $@ bin/iso
+	@mkdir -p bin/iso/boot/grub              # create the folder structure
+	@cp bin/kernel.elf bin/iso/boot/             # copy the kernel
+	@cp src/grub.cfg bin/iso/boot/grub           # copy the grub configuration file
+	@grub-mkrescue -o $@ bin/iso
 
 run: bin/boot.iso
 	# view contents of register with `p $$eax`
@@ -50,6 +30,8 @@ debug: bin/boot.iso bin/kernel.elf
 	gdb bin/kernel.elf -ex "target remote :1234" --tui
 
 clean:
+	+$(MAKE) -C src/lib clean
+	+$(MAKE) -C src/arch/x86 clean
 	rm -f *.dmp *.objdump *.log
 	rm -rf obj/*
 	rm -rf bin/*

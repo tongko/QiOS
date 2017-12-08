@@ -26,9 +26,10 @@ uint64_t __align(0x200000) __earlydata page_tab[ENTRY_SIZE];
 #define __getp(x, y) (paddr_t)((x & ENTRY_MASK) | __pfn(y))
 
 void map_page(vaddr_t from, size_t count, paddr_t physical) {
+	size_t c = count;
 	// Page schema for 32 bits PAE set, PSE unset:
 	//	2 | 9 | 9 | 12
-	for (; count > 0; from += 0x1000, physical += 0x1000, count -= 0x1000) {
+	for (; c > 0; from += 0x1000, physical += 0x1000, c -= 0x1000) {
 		uint32_t p = (from & PDPTR_MASK) >> 30;
 		// check PDPTEi
 		uint64_t pdpte = page_dir_ptr_tab[p];
@@ -69,9 +70,12 @@ void early_init_paging(kernel_mem_info_t kmem_info) {
 	last_page_dir = page_dir;
 	last_page_tab = page_tab;
 
-	// identity map first 4MiB
-	uint32_t offset = kmem_info.physical_end - kmem_info.physical_start;
-	map_page((vaddr_t)0, offset + 0x100000, (paddr_t)0);
+	// identity map 0 - kernel end
+	uint32_t offset = kmem_info.physical_end - kmem_info.physical_start + 0x100000;
+	// round up to nearest page boundry
+	uint32_t remainder = offset % 0x1000;
+	offset = remainder ? offset + 0x1000 - remainder : offset;
+	map_page((vaddr_t)0, offset, (paddr_t)0);
 	if (virt_to_phys(0x180000) != 0x180000) {
 		while (1) {
 		}  // error
@@ -85,6 +89,9 @@ void early_init_paging(kernel_mem_info_t kmem_info) {
 	// pg_dir[507] = (uint64_t)(uint32_t)&page_dir_ptr_tab;                  // map the PDPT to the directory
 
 	//	map higher half to page, start from 0xC0100000
+	offset = kmem_info.physical_end - kmem_info.physical_start;
+	remainder = offset % 0x1000;
+	offset = remainder ? offset + 0x1000 - remainder : offset;
 	map_page((vaddr_t)KERNEL_VIRTUAL_BASE, offset, kmem_info.physical_start);
 	if (virt_to_phys(KERNEL_VIRTUAL_BASE) != kmem_info.physical_start) {
 		while (1) {

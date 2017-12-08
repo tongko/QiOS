@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-int32_t __inline__ abs(int32_t x) {
+__inline__ int32_t abs(int32_t x) {
 	int32_t y = x >> 31;
 	return (x ^ y) - y;
 }
@@ -20,7 +20,7 @@ size_t itoa(uint32_t value, char *str, int base, const char *digit_str) {
 	//	Validate base
 	if (base < 2 || base > 16) {
 		*str = '\0';
-		return str;
+		return 0;
 	}
 
 	char *p = str;

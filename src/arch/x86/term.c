@@ -9,8 +9,9 @@
 #include <sys/term.h>
 #include "asm.h"
 
+static term_api_t _api;
 static const uint32_t TERM_WIDTH = 80;
-static const uint32_t TERM_HEIGHT = 25;
+//static const uint32_t TERM_HEIGHT = 25;
 static __volatile__ uint32_t *_video_mem = (uint32_t *)0xB8000;
 static term_color_t _color;
 static cursor_info_t _info;
@@ -54,7 +55,8 @@ static void set_cursor_xy(uint32_t x, uint32_t y) {
 }
 
 void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
-	if (scanStart < 0) {
+	if (scanStart == 0 && scanEnd == 0) {
+		// Disable cursor
 		_outb(0x3D4, 0x0A);
 		_outb(0x3D5, 0x20);
 		return;
@@ -93,7 +95,7 @@ static void set_cursor_info(const cursor_info_t *info) {
 	_info.shape = info->shape;
 }
 
-static const cursor_point_t set_cursor_point(const cursor_point_t *point) {
+static void set_cursor_point(const cursor_point_t *point) {
 	if (!point) {
 		return;
 	}
@@ -180,36 +182,40 @@ static void clear() {
 
 void term_default_config() {
 	term_color_t color = {0x03, 0x00};  // green, black
-	term_api.set_color(&color);
+	_api.set_color(&color);
 	cursor_point_t point = {0, 0};                // 0, 0
 	cursor_info_t info = {crshape_block, point};  // enable cursor block
-	term_api.set_cursor_info(&info);
+	_api.set_cursor_info(&info);
 
-	term_api.clear();
+	_api.clear();
+}
+
+term_api_t term_api() {
+	return _api;
 }
 
 void init_term(term_api_t *api) {
 	if (api) {
-		term_api.get_color = api->get_color;
-		term_api.set_color = api->set_color;
-		term_api.get_cursor_info = api->get_cursor_info;
-		term_api.set_cursor_info = api->set_cursor_info;
-		term_api.set_cursor_point = api->set_cursor_point;
-		term_api.putc = api->putc;
-		term_api.putc_at = api->putc_at;
-		term_api.puts = api->puts;
-		term_api.clear = api->clear;
+		_api.get_color = api->get_color;
+		_api.set_color = api->set_color;
+		_api.get_cursor_info = api->get_cursor_info;
+		_api.set_cursor_info = api->set_cursor_info;
+		_api.set_cursor_point = api->set_cursor_point;
+		_api.putc = api->putc;
+		_api.putc_at = api->putc_at;
+		_api.puts = api->puts;
+		_api.clear = api->clear;
 
 		return;
 	}
 
-	term_api.get_color = get_color;
-	term_api.set_color = set_color;
-	term_api.get_cursor_info = get_cursor_info;
-	term_api.set_cursor_info = set_cursor_info;
-	term_api.set_cursor_point = set_cursor_point;
-	term_api.putc = putc;
-	term_api.putc_at = putc_at;
-	term_api.puts = puts;
-	term_api.clear = clear;
+	_api.get_color = get_color;
+	_api.set_color = set_color;
+	_api.get_cursor_info = get_cursor_info;
+	_api.set_cursor_info = set_cursor_info;
+	_api.set_cursor_point = set_cursor_point;
+	_api.putc = putc;
+	_api.putc_at = putc_at;
+	_api.puts = puts;
+	_api.clear = clear;
 }

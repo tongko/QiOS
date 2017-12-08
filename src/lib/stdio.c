@@ -8,9 +8,9 @@
  * ****************************************************************************/
 #include <stddef.h>
 
-#include <stdlib.h>
-
 #include <string.h>
+
+#include <stdlib.h>
 
 #include <sys/term.h>
 
@@ -340,7 +340,7 @@ uint32_t printf(const char *format, ...) {
 
 	uint32_t i = 0;
 	while (buffer[i] != '\0') {
-		term_api.putc(buffer[i++]);
+		term_api().putc(buffer[i++]);
 	}
 
 	return ret;

@@ -8,7 +8,10 @@
  * ****************************************************************************/
 #include "serial_port.h"
 #include <stdarg.h>
-#include "asm.h"
+#include <stdio.h>
+#include "../asm.h"
+
+static serial_port_api_t _api;
 
 /** serial_configure_baud_rate:
 *   Sets the speed of the data being sent. The default speed of a serial
@@ -54,7 +57,7 @@ static void putc(char c) {
 
 static void puts(const char *str, int32_t n) {
 	for (int32_t i = 0; i < n; i++) {
-		serial_putc(str[i]);
+		_api.putc(str[i]);
 	}
 }
 
@@ -64,16 +67,16 @@ static void print(const char *format, ...) {
 	int32_t i = 0;
 
 	va_start(arg, format);
-	_vsprintf(buffer, format, arg);
+	vsprintf(buffer, format, arg);
 	va_end(arg);
 
 	while (buffer[i] != '\0') {
-		serial_putc(buffer[i++]);
+		_api.putc(buffer[i++]);
 	}
 }
 
 void serial_default_config(void) {
-	configure_baud_rate(SERIAL_COM1, 2);
+	_api.init_baud_rate(SERIAL_COM1, 2);
 	/** serial_configure_line:
 *   Configures the line of the given serial port. The port is set to have a
 *   data length of 8 bits, no parity bits, one stop bit and break control
@@ -85,32 +88,36 @@ void serial_default_config(void) {
 	*  Content: | d | b | prty  | s | dl  |
 	*  Value:   | 0 | 0 | 0 0 0 | 0 | 1 1 | = 0x03
 	*/
-	set_register(SERIAL_LINE_COMMAND_PORT(SERIAL_COM1), 0x03);
+	_api.set_register(SERIAL_LINE_COMMAND_PORT(SERIAL_COM1), 0x03);
 	/* Bit:     | 7 6 | 5  | 4 | 3   | 2   | 1   | 0 |
     *  Content: | lvl | bs | r | dma | clt | clr | e |
     *  Value:   | 11  | 0  | 0 | 0   | 1   | 1   | 1 |
     */
-	set_register(SERIAL_FIFO_COMMAND_PORT(SERIAL_COM1), 0xC7);
+	_api.set_register(SERIAL_FIFO_COMMAND_PORT(SERIAL_COM1), 0xC7);
 	/* Bit:     | 7 | 6 | 5  | 4  | 3   | 2   | 1   | 0   |
     *  Content: | r | r | af | lb | ao2 | ao1 | rts | dtr |
     *  Value:   | 0 | 0 | 0  | 0  | 0   | 0   | 1   | 1   |
     */
-	set_register(SERIAL_MODEM_COMMAND_PORT(SERIAL_COM1), 0x03);
+	_api.set_register(SERIAL_MODEM_COMMAND_PORT(SERIAL_COM1), 0x03);
+}
+
+serial_port_api_t serial_port_api(){
+	return _api;
 }
 
 void init_serial_port(serial_port_api_t *api) {
 	if (api) {
-		serial_port_api.init_baud_rate = api->init_baud_rate;
-		serial_port_api.set_register = api->set_register;
-		serial_port_api.print = api->print;
-		serial_port_api.putc = api->putc;
-		serial_port_api.puts = api->puts;
+		_api.init_baud_rate = api->init_baud_rate;
+		_api.set_register = api->set_register;
+		_api.print = api->print;
+		_api.putc = api->putc;
+		_api.puts = api->puts;
 		return;
 	}
 
-	serial_port_api.init_baud_rate = init_baud_rate;
-	serial_port_api.set_register = set_register;
-	serial_port_api.print = print;
-	serial_port_api.putc = putc;
-	serial_port_api.puts = puts;
+	_api.init_baud_rate = init_baud_rate;
+	_api.set_register = set_register;
+	_api.print = print;
+	_api.putc = putc;
+	_api.puts = puts;
 }

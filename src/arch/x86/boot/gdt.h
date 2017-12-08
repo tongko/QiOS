@@ -6,7 +6,7 @@
 #include "ktypedef.h"
 
 // A struct describing a Task State Segment.
-typedef struct tss_entry {
+typedef struct {
 	uint32_t prev_tss;  // The previous TSS - if we used hardware task switching this would form a linked list.
 	uint32_t esp0;      // The stack pointer to load when we change to kernel mode.
 	uint32_t ss0;       // The stack segment to load when we change to kernel mode.
@@ -71,7 +71,7 @@ typedef struct tss_entry {
 *	Sz   : Size bit. If 0 the selector defines 16 bit protected mode. If 1 it defines 32 bit protected mode.
 *		   You can have both 16 bit and 32 bit selectors at once.
 */
-typedef struct gdt_entry {
+typedef struct {
 	uint16_t limit_low;   //	Bits 0-15 (Bits 0-15 of 20 bits)
 	uint16_t base_low;    //	Bits 16-31 (Bits 0-15 of 32 bits)
 	uint8_t base_middle;  //	Bits 32-39 (Bits 16-23 of 32 bits)
@@ -82,7 +82,7 @@ typedef struct gdt_entry {
 } __attribute__((packed)) gdt_entry_t;
 //	Special pointer which includes the limit: The max bytes taken up by the GDT, minus 1. Again, this
 //	NEEDS to be packed
-typedef struct gdt {
+typedef struct {
 	uint16_t limit;
 	uint32_t base_ptr;
 } __attribute__((packed)) gdt_t;
@@ -90,9 +90,6 @@ typedef struct gdt {
 // __attribute__((aligned(2), section(".bootdata"))) const uint16_t NULL_SELECTOR;
 // __attribute__((aligned(2), section(".bootdata"))) const uint16_t KCODE_SELECTOR;
 // __attribute__((aligned(2), section(".bootdata"))) const uint16_t KDATA_SELECTOR;
-__attribute__((aligned(8), section(".bootdata"))) gdt_entry_t gdt_entry[6];
-__attribute__((aligned(8), section(".bootdata"))) gdt_t gdt_ptr;
-__attribute__((aligned(128), section(".bootdata"))) tss_entry_t tss_entry;
 
 enum segment_selector_t {
 	NULL_DESCRIPTOR,  // Not used but has to be here
@@ -104,7 +101,7 @@ enum segment_selector_t {
 };
 
 //	Initialize GDT.
-__attribute__((section(".boot"))) void early_init_gdt(void);
+void init_gdt(void);
 //	Initialize TSS.
 void init_tss(void *kernel_stack_bottom, size_t stack_size);
 

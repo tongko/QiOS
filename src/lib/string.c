@@ -17,32 +17,6 @@ size_t strlen(const char *str) {
 	return i;
 }
 
-// string_t *makestr(string_t *str1, const char *str2) {
-// 	if (!str1) {
-// 		return NULL;
-// 	}
-
-// 	str1->length = strlen(str2);
-// 	str1->value = str2;
-
-// 	return str1;
-// }
-
-// string_t *_strcat(string_t *dest, const string_t *src) {
-// 	char *p = dest->value;
-// 	while (*p) {
-// 		p++;
-// 	}
-
-// 	char *s = src->value;
-// 	while (*s) {
-// 		*(p++) = *(s++);
-// 	}
-
-// 	*p = '\0';
-// 	return dest;
-// }
-
 char *strcat(char *dest, const char *src) {
 	char *p = dest;
 	while (*(p++)) {
@@ -56,25 +30,6 @@ char *strcat(char *dest, const char *src) {
 	*p = '\0';
 	return dest;
 }
-
-// int _strcmp(const string_t *str1, const string_t *str2) {
-// 	int result = 0;
-// 	char *s1, *s2;
-
-// 	for (; *s1 && *s2; s1++, s2++) {
-// 		if (*s1 == *s2) {
-// 			continue;
-// 		}
-
-// 		if (*s1 > *s2) {
-// 			return 1;
-// 		}
-
-// 		result = -1;
-// 	}
-
-// 	return result;
-// }
 
 int strcmp(const char *str1, const char *str2) {
 	int result = 0;
@@ -122,21 +77,8 @@ void *memcpy(void *dest, const void *src, size_t n) {
 	return dest;
 }
 
-// void _reverse(string_t *str) {
-// 	size_t len = str->value;
-// 	char *s = str->value;
-// 	char *e = str->value[len - 1];
-// 	char aux;
-
-// 	for (; s > e; e--, s++) {
-// 		aux = *s;
-// 		*s = *e;
-// 		*e = aux;
-// 	}
-// }
-
 void reverse(char *str) {
-	size_t len = _strlen(str);
+	size_t len = strlen(str);
 	char aux;
 	int i, j;
 
@@ -247,7 +189,7 @@ char *strchr(const char *s, int c_in) {
 			/* Which of the bytes was C or zero?
              If none of them were, it was a misfire; continue the search.  */
 
-			const char *cp = (const char *)(longword_ptr - 1);
+			char *cp = (char *)(longword_ptr - 1);
 
 			if (*cp == c)
 				return cp;

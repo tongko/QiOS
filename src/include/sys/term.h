@@ -39,15 +39,14 @@ typedef struct {
 	void (*set_color)(const term_color_t *color);
 	const cursor_info_t *(*get_cursor_info)(void);
 	void (*set_cursor_info)(const cursor_info_t *info);
-	const cursor_point_t *(*set_cursor_point)(const cursor_point_t *point);
+	void (*set_cursor_point)(const cursor_point_t *point);
 	void (*putc)(char c);
 	void (*putc_at)(char c, const cursor_point_t *point);
 	void (*puts)(const char *s);
 	void (*clear)(void);
 } term_api_t;
 
-term_api_t term_api;
-
+term_api_t term_api(void);
 void term_default_config(void);
 void init_term(term_api_t *api);
 
