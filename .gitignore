@@ -37,3 +37,4 @@ obj/
 
 *.log
 .vscode/
+grub/
