@@ -23,6 +23,12 @@
 ; %define AOUT_KLUDGE MULTIBOOT_AOUT_KLUDGE
 ; %endif
 
+SECTION .data
+		align	8
+halt_message:
+		db		"\nHalt.", 0
+_edata:
+
 SECTION .multiboot
 		align	8
 multiboot_header:
@@ -37,32 +43,7 @@ multiboot_header:
 		;  checksum 
 		dd		checksum
 
-; %ifndef __ELF__
-; 		align	8
-; address_tag_start:
-;         dw		MULTIBOOT_HEADER_TAG_ADDRESS
-;         dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-;         dd		address_tag_end - address_tag_start
-; 		;  header_addr 
-;         dd		multiboot_header
-;     	;  load_addr 
-;         dd		_start
-;         ;  load_end_addr 
-;         dd		_edata
-;         ;  bss_end_addr 
-;         dd		_end
-; address_tag_end:
-
-; 		align	8
-; entry_address_tag_start:
-;         dw		MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
-;         dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-;         dd		entry_address_tag_end - entry_address_tag_start
-;         ;  entry_addr 
-;         dd		_start
-; entry_address_tag_end:
-; %endif	;  __ELF__
-
+		align	8
 consoleFlags_tag_start:
 		dw		MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS
 		dw		MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED
@@ -70,15 +51,15 @@ consoleFlags_tag_start:
 		dd		MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED
 consoleFlags_tag_end:
 
-		align	8
-framebuffer_tag_start:
-		dw		MULTIBOOT_HEADER_TAG_FRAMEBUFFER
-		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
-		dd		framebuffer_tag_end - framebuffer_tag_start
-		dd		1024
-		dd		768
-		dd		32
-framebuffer_tag_end:
+; 		align	8
+; framebuffer_tag_start:
+; 		dw		MULTIBOOT_HEADER_TAG_FRAMEBUFFER
+; 		dw		MULTIBOOT_HEADER_TAG_OPTIONAL
+; 		dd		framebuffer_tag_end - framebuffer_tag_start
+; 		dd		1024
+; 		dd		768
+; 		dd		32
+; framebuffer_tag_end:
 
 		align	8
 moduleAlign_tag_start:
@@ -99,9 +80,18 @@ SECTION .boot
 GLOBAL start, _start
 
 start:
+		align	4
+mbr_magic:
+		dd		1
+		align	4
+mbr_addr:
+		dd		1
 		align	8
 _start:
 		cli
+		; Keep multiboot magic and address
+		mov		[mbr_magic], eax
+		mov		[mbr_addr], ebx
 
 		; Deal with paging in C code.
 		extern	kernel_virtual_end
@@ -131,23 +121,21 @@ higher_half_entry:
 		; push	0								; Reset EFLAGS
 		; popfd
 
+		push	dword [mbr_addr]				; Multiboot2 info
+		push	dword [mbr_magic]				; Magic number
 		extern	_kmain							; Enter C code kernel
-		push	ebx								; Multiboot2 info
-		push	eax								; Magic number
 		call	_kmain
 		add		esp, 4
 
 		; kernel should never return, but just in case...
+		;	Halted
+		push	halt_message
+		extern	printf
+		call	printf
 .hang:
 		cli
 		hlt
 		jmp		.hang
-
-SECTION .data
-		align	8
-halt_message:
-		db		"\nHalt.", 0
-_edata:
 
 SECTION .bss
 GLOBAL kstack_bottom

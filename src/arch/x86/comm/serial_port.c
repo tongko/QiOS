@@ -101,12 +101,12 @@ void serial_default_config(void) {
 	_api.set_register(SERIAL_MODEM_COMMAND_PORT(SERIAL_COM1), 0x03);
 }
 
-serial_port_api_t serial_port_api(){
+serial_port_api_t serial_port_api() {
 	return _api;
 }
 
 void init_serial_port(serial_port_api_t *api) {
-	if (api) {
+	if (api != NULL) {
 		_api.init_baud_rate = api->init_baud_rate;
 		_api.set_register = api->set_register;
 		_api.print = api->print;

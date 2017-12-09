@@ -22,10 +22,10 @@
 	do {                                             \
 		const int32_t v = abs(va_arg(arg, int32_t)); \
 		*(int32_t *)x = v;                           \
-		char buf[32];                       \
+		char buf[32];                                \
 		ptr++;        /* Go past the asterisk.  */   \
 		*sptr = '\0'; /* NULL terminate sptr.  */    \
-		itoa(v, buf, 10, DIGIT_STR('x'));                            \
+		itoa(v, buf, 10, DIGIT_STR('x'));            \
 		strcat(sptr, buf);                           \
 		while (*sptr)                                \
 			sptr++;                                  \
@@ -58,12 +58,12 @@
 	} while (0)
 
 typedef struct format_specifier {
-	char s;      // Specifier
+	char s;       // Specifier
 	uint32_t lj;  // left justified
 	uint32_t fz;  //	zero pad
 	uint32_t hx;  //	0x leading
-	uint32_t fw;
-	uint32_t pw;
+	int32_t fw;
+	int32_t pw;
 } format_specifier_t;
 
 static uint32_t print_number(char *dest, uint32_t value, format_specifier_t *format) {
@@ -76,19 +76,19 @@ static uint32_t print_number(char *dest, uint32_t value, format_specifier_t *for
 	uint32_t base;
 	BASE(format->s);
 	len += itoa(value, buf1, base, DIGIT_STR(format->s));
-	uint32_t max_width = MAX(format->fw, format->pw);
-	if (max_width < len) {
+	int32_t max_width = MAX(format->fw, format->pw);
+	if (max_width < (int32_t)len) {
 		max_width = len;
 	}
-	uint32_t paddspace = format->fw - len;
-	if (paddspace > INT_MAX) {
+	int32_t paddspace = format->fw - len;
+	if (paddspace < 0) {
 		paddspace = 0;
 	}
-	uint32_t paddzero = format->pw - len;
-	if (paddzero > INT_MAX) {
+	int32_t paddzero = format->pw - len;
+	if (paddzero < 0) {
 		paddzero = 0;
 	}
-	uint32_t i;
+	int32_t i;
 	if (format->pw >= format->fw) {
 		//	precision greater than fixed width
 		if (format->hx && (format->s == 'X' || format->s == 'x')) {
@@ -104,22 +104,23 @@ static uint32_t print_number(char *dest, uint32_t value, format_specifier_t *for
 		return max_width;
 	}
 
+	int32_t c_to_print = MAX(format->pw, (int32_t)len);
 	if (format->lj) {
-		for (i = 0; i < format->pw; i++) {
+		for (i = 0; i < c_to_print; i++) {
 			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
 			*dest = '\0';
 		}
-		for (i = 0; i < paddspace - format->pw; i++) {
+		for (i = 0; i < paddspace - paddzero; i++) {
 			*dest++ = ' ';
 			*dest = '\0';
 		}
 
 	} else {
-		for (i = 0; i < paddspace - format->pw; i++) {
+		for (i = 0; i < paddspace - paddzero; i++) {
 			*dest++ = ' ';
 			*dest = '\0';
 		}
-		for (i = 0; i < format->pw; i++) {
+		for (i = 0; i < c_to_print; i++) {
 			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
 			*dest = '\0';
 		}
@@ -130,16 +131,16 @@ static uint32_t print_number(char *dest, uint32_t value, format_specifier_t *for
 
 static uint32_t print_string(char *dest, const char *str, format_specifier_t *format) {
 	size_t len = strlen(str);
-	size_t c_to_print = MIN(len, format->pw);  // number of characters to print
-	uint32_t i;
+	size_t c_to_print = MIN(len, (uint32_t)format->pw);  // number of characters to print
+	int32_t i;
 
-	if (c_to_print >= format->fw) {
+	if ((int32_t)c_to_print >= format->fw) {
 		//	c to print is larger than width, justification not consider
 		if (c_to_print == 0) {
 			return 0;
 		}
 
-		for (i = 0; i < c_to_print; i++) {
+		for (i = 0; i < (int32_t)c_to_print; i++) {
 			*dest++ = *str++;
 			*dest = '\0';
 		}
@@ -151,13 +152,13 @@ static uint32_t print_string(char *dest, const char *str, format_specifier_t *fo
 	if (format->lj) {
 		//	left justified. print c_to_print, then spaces
 		for (i = 0; i < format->fw; i++) {
-			*dest++ = i < c_to_print ? *str++ : ' ';
+			*dest++ = i < (int32_t)c_to_print ? *str++ : ' ';
 			*dest = '\0';
 		}
 	} else {
 		//	default - right justified.
 		for (i = 0; i < format->fw; i++) {
-			*dest++ = i < format->fw - c_to_print ? ' ' : *str++;
+			*dest++ = i < format->fw - (int32_t)c_to_print ? ' ' : *str++;
 			*dest = '\0';
 		}
 	}
@@ -236,7 +237,7 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 		return 0;
 	}
 
-	format_specifier_t fmt_spcf;
+	format_specifier_t fmt_spcf = {'\0', 0, 0, 0, -1, -1};
 	const char *ptr = format;
 	char *value = str;
 	char specifier[128];
@@ -246,17 +247,22 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 		if (*ptr != '%') { /* While we have regular characters, print them.  */
 			do {
 				PRINT_CHAR(*ptr++);
-			} while (*ptr != '%' && ptr);
+			} while (*ptr != '%' && *ptr != '\0');
 		} else {
 			/* We got a format specifier! */
 			char *sptr = specifier;
 			*sptr++ = *ptr++; /* Copy the % and move forward.  */
 
-			fmt_spcf.lj = 0;
 			while (strchr("-#0", *ptr)) { /* Move past flags.  */
-				fmt_spcf.lj = *ptr == '-' ? 1 : fmt_spcf.lj;
-				fmt_spcf.fz = *ptr == '0' ? 1 : fmt_spcf.fz;
-				fmt_spcf.hx = *ptr == '#' ? 1 : fmt_spcf.hx;
+				if (*ptr == '-') {
+					fmt_spcf.lj = 1;
+				}
+				if (*ptr == '0') {
+					fmt_spcf.fz = 1;
+				}
+				if (*ptr == '#') {
+					fmt_spcf.hx = 1;
+				}
 				*sptr++ = *ptr++;
 			}
 
@@ -272,7 +278,9 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 					*sptr++ = *ptr++;
 				}
 
-				fmt_spcf.fw = atoi(fsbuf);
+				if (idx > 0) {
+					fmt_spcf.fw = atoi(fsbuf);
+				}
 			}
 
 			if (*ptr == '.') {
@@ -299,7 +307,9 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 				case 'x':
 				case 'X': {
 					const uint32_t v = va_arg(arg, uint32_t);
-					i += print_number(value, v, &fmt_spcf);
+					uint32_t x = print_number(value, v, &fmt_spcf);
+					value += x;
+					i += x;
 				} break;
 				case 'c': {
 					char c = va_arg(arg, char);
@@ -307,7 +317,9 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 				} break;
 				case 's': {
 					const char *s = va_arg(arg, char *);
-					print_string(value, s, &fmt_spcf);
+					uint32_t x = print_string(value, s, &fmt_spcf);
+					value += x;
+					i += x;
 				} break;
 				case '%':
 					PRINT_CHAR('%');
@@ -340,7 +352,7 @@ uint32_t printf(const char *format, ...) {
 
 	uint32_t i = 0;
 	while (buffer[i] != '\0') {
-		term_api().putc(buffer[i++]);
+		term_api()->putc(buffer[i++]);
 	}
 
 	return ret;

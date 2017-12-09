@@ -9,7 +9,7 @@
 #ifndef __VERSION_H_
 #define __VERSION_H_
 
-#define WELCOME_STR "QiOS Version 0.0.1\n"
+#define WELCOME_STR "QiOS Version 0.0.1"
 #define COPYRIGHT "Copyright (C) 2017, 2018 Liew Tze Wei"
 
 #endif  //	__VERSION_H_

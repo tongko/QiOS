@@ -12,7 +12,7 @@
 static term_api_t _api;
 static const uint32_t TERM_WIDTH = 80;
 //static const uint32_t TERM_HEIGHT = 25;
-static __volatile__ uint32_t *_video_mem = (uint32_t *)0xB8000;
+static __volatile__ uint16_t *_video_mem = (uint16_t *)0xB8000;
 static term_color_t _color;
 static cursor_info_t _info;
 
@@ -137,14 +137,14 @@ static void putc(char c) {
 		    "push esi;\n"
 		    "push eax;\n"
 		    "push ecx;\n"
-		    "mov edi, 0xC00B8000;\n"  // dest idx to start of video
-		    "mov esi, 0xC00B80A0;\n"  // src idx to 2nd row
-		    "mov ecx, 0x780;\n"       // prepare to loop for 1920 times.
-		    "rep movsw;\n"            // loop
-		    "mov edi, 0xC00B8F00;\n"  // 25th row to dest idx
-		    "mov eax, 32;\n"          // space
-		    "mov ecx, 80;\n"          // prepare to loop 80 times
-		    "rep stosw;\n"            // loop
+		    "mov edi, 0xB8000;\n"  // dest idx to start of video
+		    "mov esi, 0xB80A0;\n"  // src idx to 2nd row
+		    "mov ecx, 0x780;\n"    // prepare to loop for 1920 times.
+		    "rep movsw;\n"         // loop
+		    "mov edi, 0xB8F00;\n"  // 25th row to dest idx
+		    "mov eax, 32;\n"       // space
+		    "mov ecx, 80;\n"       // prepare to loop 80 times
+		    "rep stosw;\n"         // loop
 		    "pop ecx;\n"
 		    "pop eax;\n"
 		    "pop esi;\n"
@@ -178,10 +178,13 @@ static void clear() {
 	for (int32_t i = 0; i < 2000; i++) {
 		putc(' ');
 	}
+	//	place cursor to left top
+	cursor_point_t point = {0, 0};
+	_api.set_cursor_point(&point);
 }
 
 void term_default_config() {
-	term_color_t color = {0x03, 0x00};  // green, black
+	term_color_t color = {0x02, 0x00};  // green, black
 	_api.set_color(&color);
 	cursor_point_t point = {0, 0};                // 0, 0
 	cursor_info_t info = {crshape_block, point};  // enable cursor block
@@ -190,12 +193,12 @@ void term_default_config() {
 	_api.clear();
 }
 
-term_api_t term_api() {
-	return _api;
+term_api_t *term_api() {
+	return &_api;
 }
 
 void init_term(term_api_t *api) {
-	if (api) {
+	if (api != NULL) {
 		_api.get_color = api->get_color;
 		_api.set_color = api->set_color;
 		_api.get_cursor_info = api->get_cursor_info;

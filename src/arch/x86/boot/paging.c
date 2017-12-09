@@ -10,11 +10,15 @@
 #include "paging.h"
 #include "../asm.h"
 
+uint32_t __earlydata _magic;
+uint32_t __earlydata _addr;
 uint64_t __earlydata *last_page_dir;
 uint64_t __earlydata *last_page_tab;
-uint64_t __align(0x20) __earlydata page_dir_ptr_tab[4];
-uint64_t __align(0x4000) __earlydata page_dir[ENTRY_SIZE];  // must be aligned to page boundry
-uint64_t __align(0x200000) __earlydata page_tab[ENTRY_SIZE];
+uint64_t __earlydata page_dir_ptr_tab[4];
+uint64_t __align(0x1000) __earlydata page_dir[ENTRY_SIZE * 4];  // must be aligned to page boundry
+uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
+
+#define	ROUNDUP(x, y) (x % y ? x + (y - (x % y)) : x)
 
 #define __to_entry(x) ((uint64_t)((uint32_t)x & ENTRY_MASK))
 #define __tabn(x) (uint32_t)(((x & PT_MASK) >> 9) & ~3)
@@ -30,22 +34,22 @@ void map_page(vaddr_t from, size_t count, paddr_t physical) {
 	// Page schema for 32 bits PAE set, PSE unset:
 	//	2 | 9 | 9 | 12
 	for (; c > 0; from += 0x1000, physical += 0x1000, c -= 0x1000) {
-		uint32_t p = (from & PDPTR_MASK) >> 30;
-		// check PDPTEi
-		uint64_t pdpte = page_dir_ptr_tab[p];
-		if (!(pdpte & ENTRY_MASK)) {
-			page_dir_ptr_tab[p] = __to_entry(last_page_dir) | 1;
+		uint32_t p = (from & PDPTR_MASK) >> 30;  // _ptrn(from & PDPTR_MASK);
+		uint64_t pdpte_i = page_dir_ptr_tab[p];
+		// check PDPTEi, if P flag is not 1, or pdpte is zero
+		if (!(pdpte_i & 1) || !(pdpte_i & ENTRY_MASK)) {
+			pdpte_i = page_dir_ptr_tab[p] = __to_entry(last_page_dir) | 1;
 			last_page_dir += ENTRY_SIZE;
 		}
-		uint64_t *pg_dir_entry = __getd(page_dir_ptr_tab[p], from);
-		if (((uint64_t)*pg_dir_entry & ENTRY_MASK) == 0) {  //	page_table should not be place at 0
+		//	retrieve page dir entry base on dir first element and [from]
+		uint64_t *pg_dir_entry = __getd(pdpte_i, from);
+		//	Page table should not be zero
+		if (!(*pg_dir_entry & 1) || !(*pg_dir_entry & ENTRY_MASK)) {
 			*pg_dir_entry = __to_entry(last_page_tab) | 3;
 			last_page_tab += ENTRY_SIZE;
 		}
 		uint64_t *pg_tab_entry = __gett(*pg_dir_entry, from);
-		if (((uint64_t)*pg_tab_entry & ENTRY_MASK) == 0) {  //	page_tab should not be place at 0
-			*pg_tab_entry = __to_entry(physical) | 1;
-		}
+		*pg_tab_entry = __to_entry(physical) | 3;
 	}
 }
 
@@ -70,11 +74,11 @@ void early_init_paging(kernel_mem_info_t kmem_info) {
 	last_page_dir = page_dir;
 	last_page_tab = page_tab;
 
-	// identity map 0 - kernel end
-	uint32_t offset = kmem_info.physical_end - kmem_info.physical_start + 0x100000;
-	// round up to nearest page boundry
-	uint32_t remainder = offset % 0x1000;
-	offset = remainder ? offset + 0x1000 - remainder : offset;
+	// identity map first 11 MiB
+	uint32_t offset = 0xB00000;
+	// // round up to nearest page boundry
+	// uint32_t remainder = offset % 0x1000;
+	// offset = remainder ? offset + 0x1000 - remainder : offset;
 	map_page((vaddr_t)0, offset, (paddr_t)0);
 	if (virt_to_phys(0x180000) != 0x180000) {
 		while (1) {
@@ -89,13 +93,25 @@ void early_init_paging(kernel_mem_info_t kmem_info) {
 	// pg_dir[507] = (uint64_t)(uint32_t)&page_dir_ptr_tab;                  // map the PDPT to the directory
 
 	//	map higher half to page, start from 0xC0100000
-	offset = kmem_info.physical_end - kmem_info.physical_start;
-	remainder = offset % 0x1000;
-	offset = remainder ? offset + 0x1000 - remainder : offset;
-	map_page((vaddr_t)KERNEL_VIRTUAL_BASE, offset, kmem_info.physical_start);
+	offset = ROUNDUP((kmem_info.physical_end - kmem_info.physical_start), 4096);  // + 0x100000;
+	//	Round down to nearest page size
+	//	offset -= (offset % 4096);
+	// uint32_t remainder = offset % 0x1000;
+	// offset = remainder ? offset + (4096 - remainder) : offset;
+
+	vaddr_t kvb = (vaddr_t)ROUNDUP(KERNEL_VIRTUAL_BASE, 4096);
+	paddr_t pss = (paddr_t)ROUNDUP(kmem_info.physical_start, 4096);
+	// remainder = offset % 0x1000;
+	// offset = remainder ? offset - remainder : offset;
+	map_page(kvb, offset, pss);
 	if (virt_to_phys(KERNEL_VIRTUAL_BASE) != kmem_info.physical_start) {
 		while (1) {
 		}  //error
+	}
+
+	if (virt_to_phys(0xc0403c4c) != 0x00403c4c) {
+		while (1) {
+		}  // error
 	}
 
 	// move PDPTR to CR3
