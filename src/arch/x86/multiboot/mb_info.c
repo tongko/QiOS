@@ -232,8 +232,8 @@ static elf32_section_header_t *get_elf_sec_hdr(const char *sec_name) {
 	return NULL;
 }
 
-mbiapi_t mbi_info_api() {
-	return _api;
+mbiapi_t *mbi_info_api() {
+	return &_api;
 }
 
 void init_mb_info(mbiapi_t *api) {

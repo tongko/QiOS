@@ -21,7 +21,7 @@ typedef struct {
 	elf32_section_header_t *(*get_elf_sec_hdr)(const char *sec_name);
 } mbiapi_t;
 
-mbiapi_t mbi_info_api(void);
+mbiapi_t *mbi_info_api(void);
 void init_mb_info(mbiapi_t *api);
 
 #endif  //	__MULTIBOOT_H_

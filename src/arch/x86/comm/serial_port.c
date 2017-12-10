@@ -104,8 +104,8 @@ void serial_default_config(void) {
 	_api.set_register(SERIAL_MODEM_COMMAND_PORT(SERIAL_COM1), 0x03);
 }
 
-serial_port_api_t serial_port_api() {
-	return _api;
+serial_port_api_t *serial_port_api() {
+	return &_api;
 }
 
 void init_serial_port(serial_port_api_t *api) {

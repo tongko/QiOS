@@ -16,15 +16,21 @@
 
 #include <elf32.h>
 
-typedef struct symbol_table_descriptor {
+typedef struct {
 	bool present;
 	uint32_t count;
 	elf32_symbol_t *symbols;
 	char *string_table_addr;
 } symbol_table_descriptor_t;
 
-bool load_symbol_table(elf32_section_header_t *symbol_table,
-                       elf32_section_header_t *string_table);
-char *address_to_symbol_name(uint32_t symbol_addr);
+typedef struct {
+	bool (*load_symbol_table)(elf32_section_header_t *symb_tab,
+	                          elf32_section_header_t *string_table);
+	char *(*addr_to_symb_name)(uint32_t symb_addr);
+} symbol_api_t;
+
+symbol_api_t *symbol_table_api(void);
+bool symb_default_config(void);
+void init_symb_tab(symbol_api_t *api);
 
 #endif  //	__SYMBOL_TABLE_H_

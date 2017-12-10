@@ -1,3 +1,11 @@
+/*-- QiOS ---------------------------------------------------------------------*
+ *                                                                             *
+ *	Copyright (C) 2017, 2018 Liew Tze Wei                                      *
+ *                                                                             *
+ * 	This file is part of the QiOS kernel, and is made available under the      *
+ *  terms of The Unlicense (That means just do whatever you want with the code *
+ *  base).                                                                     *
+ * ****************************************************************************/
 #ifndef __GDT_H_
 #define __GDT_H_
 
@@ -80,6 +88,7 @@ typedef struct {
 	uint8_t flags_n_limits;  //	Bits 48-55
 	uint8_t base_high;       //	Bits 56-63 (Bits 24-31 of 32 bits)
 } __attribute__((packed)) gdt_entry_t;
+
 //	Special pointer which includes the limit: The max bytes taken up by the GDT, minus 1. Again, this
 //	NEEDS to be packed
 typedef struct {
@@ -87,9 +96,12 @@ typedef struct {
 	uint32_t base_ptr;
 } __attribute__((packed)) gdt_t;
 
-// __attribute__((aligned(2), section(".bootdata"))) const uint16_t NULL_SELECTOR;
-// __attribute__((aligned(2), section(".bootdata"))) const uint16_t KCODE_SELECTOR;
-// __attribute__((aligned(2), section(".bootdata"))) const uint16_t KDATA_SELECTOR;
+extern uint16_t NULL_SELECTOR;
+extern uint16_t KCODE_SELECTOR;
+extern uint16_t KDATA_SELECTOR;
+extern uint16_t UCODE_SELECTOR;
+extern uint16_t UDATA_SELECTOR;
+extern uint16_t TSS_SELECTOR;
 
 enum segment_selector_t {
 	NULL_DESCRIPTOR,  // Not used but has to be here

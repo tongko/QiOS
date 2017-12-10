@@ -25,6 +25,11 @@ static __inline__ void cli(void) {
 	    "nop\n");
 }
 
+static __inline__ void lidt(void *idt) {
+	asm("mov eax, %0\n"
+	    "lidt [eax]\n" ::"r"(idt));
+}
+
 static __inline__ uint8_t _inb(uint16_t port) {
 	uint8_t ret_val;
 	__asm__ __volatile__("in %0,%1"

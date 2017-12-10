@@ -5,24 +5,31 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
- * 																			   *
  * ****************************************************************************/
-#ifndef __ATTRIBS_H_
-#define __ATTRIBS_H_
+#ifndef __IDT_H_
+#define __IDT_H_
 
-#ifndef __sect
-#define __sect(S) __attribute__((section(#S)))
-#endif
+#include <attribs.h>
+#include <stdint.h>
 
-#define __early __sect(.early)
-#define __earlydata __sect(.earlydata)
+// a pointer to the interrupt descriptor table
+// passed by reference to the LIDT instruction
+typedef struct {
+	uint16_t limit;  // in bytes
+	uint32_t base;
+} __packed idt_desc_t;
 
-#ifndef __align
-#define __align(x) __attribute__((aligned(x)))
-#endif
+// See http://wiki.osdev.org/Interrupt_Descriptor_Table#Structure_IA-32
+typedef struct {
+	uint16_t offset_low;
+	uint16_t selector;
+	uint8_t zero;
+	uint8_t type_attr;
+	uint16_t offset_high;
+} __packed idt_desc_tab_t;
 
-#ifndef __packed
-#define __packed __attribute__((packed))
-#endif
+void init_idt();
+void pic_acknowledge();
+void init_pic();
 
-#endif  //	__ATTRIBS_H_
+#endif  // __IDT_H_

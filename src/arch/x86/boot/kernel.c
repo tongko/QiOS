@@ -30,31 +30,44 @@
 
 #define serial serial_port_api
 #define mbiapi mbi_info_api
+#define symbol symbol_table_api
 
 void _kmain(uint32_t magic, uint32_t mbi_addr) {
+	init_mb_info(NULL);
+	mbiapi()->load_mb2i(mbi_addr);
 	init_term(NULL);          // use default term implementation
 	term_default_config();    // default configuration
 	init_serial_port(NULL);   // use default serial_port implementation
 	serial_default_config();  // default configuration
 
 	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-		serial().print("Invalid magic number: %#.8x\n", magic);
+		serial()->print("Invalid magic number: %#.8x\n", magic);
 		printf("Invalid magic number: %#.8x\n", magic);
 		return;
 	}
 
 	printf("%s\n%s\n\n", WELCOME_STR, COPYRIGHT);
 
-	serial().print("Initialize GDT... ");
+	serial()->print("Loading kernel symbol table... ");
+	init_symb_tab(NULL);
+	if (symb_default_config()) {
+		printf("[OK]\n");
+	} else {
+		printf("Error loading kernel's symbols table...");
+	}
+
+	serial()->print("Initializing GDT... ");
 	init_gdt();
-	serial().print("[OK]\n");
+	serial()->print("[OK]\n");
+
+	serial()->print("Initializing IDT... ");
+	init_idt();
+	serial()->print("[OK]\n");
 
 	char buffer[4096];
-	init_mb_info(NULL);
-	mbiapi().load_mb2i(mbi_addr);
-	mbiapi().print_mb2i(buffer);
+	mbiapi()->print_mb2i(buffer);
 
-	serial().puts(buffer, (int32_t)strlen(buffer));
+	serial()->puts(buffer, (int32_t)strlen(buffer));
 	printf("\n%s", buffer);
 
 	while (1) {
