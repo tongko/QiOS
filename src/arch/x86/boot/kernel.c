@@ -54,8 +54,8 @@ void _kmain(uint32_t magic, uint32_t mbi_addr) {
 	mbiapi().load_mb2i(mbi_addr);
 	mbiapi().print_mb2i(buffer);
 
-	serial().print("%s", buffer);
-	printf("\n%s\n", buffer);
+	serial().puts(buffer, (int32_t)strlen(buffer));
+	printf("\n%s", buffer);
 
 	while (1) {
 	}

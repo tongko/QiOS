@@ -18,7 +18,8 @@ uint64_t __earlydata page_dir_ptr_tab[4];
 uint64_t __align(0x1000) __earlydata page_dir[ENTRY_SIZE * 4];  // must be aligned to page boundry
 uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
 
-#define	ROUNDUP(x, y) (x % y ? x + (y - (x % y)) : x)
+#define ROUNDUP(x, y) (x % y ? x + (y - (x % y)) : x)
+#define ROUNDDW(x, y) x - (x % y)
 
 #define __to_entry(x) ((uint64_t)((uint32_t)x & ENTRY_MASK))
 #define __tabn(x) (uint32_t)(((x & PT_MASK) >> 9) & ~3)
@@ -70,20 +71,25 @@ static paddr_t __early virt_to_phys(vaddr_t vaddr) {
 	return ret;
 }
 
-void early_init_paging(kernel_mem_info_t kmem_info) {
+void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
 	last_page_dir = page_dir;
 	last_page_tab = page_tab;
 
-	// identity map first 11 MiB
-	uint32_t offset = 0xB00000;
-	// // round up to nearest page boundry
-	// uint32_t remainder = offset % 0x1000;
-	// offset = remainder ? offset + 0x1000 - remainder : offset;
+	uint32_t ksize = kmem_info.physical_end - kmem_info.physical_start;
+	// identity map first 1 MiB + kernel size.
+	// round up to nearest page boundry
+	uint32_t offset = ROUNDUP(0x100000 + ksize, 4096);
 	map_page((vaddr_t)0, offset, (paddr_t)0);
-	if (virt_to_phys(0x180000) != 0x180000) {
+	if (virt_to_phys(0x130000) != 0x130000) {
 		while (1) {
 		}  // error
 	}
+
+	//	identity map multiboot info loaded address.
+	uint32_t mb2_loaded = ROUNDDW(mb2_addr, 4096);
+	uint32_t size = *((uint32_t *)((void *)mb2_addr));
+	offset = ROUNDUP(size, 4096);
+	map_page((vaddr_t)mb2_loaded, offset, (paddr_t)mb2_loaded);
 
 	// uint64_t *pg_dir = (uint64_t *)(uint32_t)(page_dir_ptr_tab[3] & ~1);  // get the page directory (you should 'and' the flags away)
 	// pg_dir[511] = (uint64_t)(uint32_t)page_dir;                           // map pd to itself
@@ -93,7 +99,7 @@ void early_init_paging(kernel_mem_info_t kmem_info) {
 	// pg_dir[507] = (uint64_t)(uint32_t)&page_dir_ptr_tab;                  // map the PDPT to the directory
 
 	//	map higher half to page, start from 0xC0100000
-	offset = ROUNDUP((kmem_info.physical_end - kmem_info.physical_start), 4096);  // + 0x100000;
+	offset = ROUNDUP((kmem_info.physical_end - kmem_info.physical_start) + 0xB00000, 4096);  // + 0x100000;
 	//	Round down to nearest page size
 	//	offset -= (offset % 4096);
 	// uint32_t remainder = offset % 0x1000;

@@ -22,13 +22,7 @@
 	do {                                             \
 		const int32_t v = abs(va_arg(arg, int32_t)); \
 		*(int32_t *)x = v;                           \
-		char buf[32];                                \
-		ptr++;        /* Go past the asterisk.  */   \
-		*sptr = '\0'; /* NULL terminate sptr.  */    \
-		itoa(v, buf, 10, DIGIT_STR('x'));            \
-		strcat(sptr, buf);                           \
-		while (*sptr)                                \
-			sptr++;                                  \
+		ptr++; /* Go past the asterisk.  */          \
 	} while (0)
 
 #define PRINT_CHAR(C)  \
@@ -67,66 +61,69 @@ typedef struct format_specifier {
 } format_specifier_t;
 
 static uint32_t print_number(char *dest, uint32_t value, format_specifier_t *format) {
+	char *p = dest;
 	size_t len = 0;
-	if (format->hx && (format->s == 'X' || format->s == 'x')) {
-		len += 2;  // for "0x"
-	}
 
 	char buf1[32] = {0};
 	uint32_t base;
 	BASE(format->s);
 	len += itoa(value, buf1, base, DIGIT_STR(format->s));
-	int32_t max_width = MAX(format->fw, format->pw);
-	if (max_width < (int32_t)len) {
-		max_width = len;
-	}
-	int32_t paddspace = format->fw - len;
-	if (paddspace < 0) {
-		paddspace = 0;
-	}
-	int32_t paddzero = format->pw - len;
-	if (paddzero < 0) {
-		paddzero = 0;
-	}
-	int32_t i;
+	int32_t max_width = MAX(MAX(format->fw, format->pw), (int32_t)len);
+	int32_t paddspace = MAX(format->fw - (int32_t)len, 0);
+	int32_t paddzero = MAX(format->pw - (int32_t)len, 0);
+	int32_t i = 0;
+	int32_t leading = 0;
 	if (format->pw >= format->fw) {
 		//	precision greater than fixed width
 		if (format->hx && (format->s == 'X' || format->s == 'x')) {
-			*dest++ = '0';
-			*dest++ = format->s;
-			*dest = '\0';
+			*p++ = '0';
+			*p++ = format->s;
+			*p = '\0';
+			leading = 2;
 		}
 		for (i = 0; i < max_width; i++) {
-			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
-			*dest = '\0';
+			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
+			*p = '\0';
 		}
 
-		return max_width;
+		return max_width + leading;
 	}
 
 	int32_t c_to_print = MAX(format->pw, (int32_t)len);
 	if (format->lj) {
+		if (format->hx && (format->s == 'X' || format->s == 'x')) {
+			*p++ = '0';
+			*p++ = format->s;
+			*p = '\0';
+			leading = 2;
+		}
 		for (i = 0; i < c_to_print; i++) {
-			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
-			*dest = '\0';
+			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
+			*p = '\0';
 		}
 		for (i = 0; i < paddspace - paddzero; i++) {
-			*dest++ = ' ';
-			*dest = '\0';
+			*p++ = ' ';
+			*p = '\0';
 		}
 
 	} else {
 		for (i = 0; i < paddspace - paddzero; i++) {
-			*dest++ = ' ';
-			*dest = '\0';
+			*p++ = ' ';
+			*p = '\0';
+		}
+		if (format->hx && (format->s == 'X' || format->s == 'x')) {
+			*p++ = '0';
+			*p++ = format->s;
+			*p = '\0';
+			leading = 2;
 		}
 		for (i = 0; i < c_to_print; i++) {
-			*dest++ = i < paddzero ? '0' : buf1[i - paddzero];
-			*dest = '\0';
+			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
+			*p = '\0';
 		}
 	}
 
-	return max_width;
+	return max_width + leading;
 }
 
 static uint32_t print_string(char *dest, const char *str, format_specifier_t *format) {
@@ -240,7 +237,6 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 	format_specifier_t fmt_spcf = {'\0', 0, 0, 0, -1, -1};
 	const char *ptr = format;
 	char *value = str;
-	char specifier[128];
 	uint32_t i = 0;
 
 	while (*ptr != '\0') {
@@ -249,9 +245,11 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 				PRINT_CHAR(*ptr++);
 			} while (*ptr != '%' && *ptr != '\0');
 		} else {
-			/* We got a format specifier! */
-			char *sptr = specifier;
-			*sptr++ = *ptr++; /* Copy the % and move forward.  */
+			/* We got a   format specifier! */
+			ptr++; /* move pass '%'. */
+			fmt_spcf.s = '\0';
+			fmt_spcf.lj = fmt_spcf.fz = fmt_spcf.hx = 0;
+			fmt_spcf.fw = fmt_spcf.pw = -1;
 
 			while (strchr("-#0", *ptr)) { /* Move past flags.  */
 				if (*ptr == '-') {
@@ -263,10 +261,10 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 				if (*ptr == '#') {
 					fmt_spcf.hx = 1;
 				}
-				*sptr++ = *ptr++;
+				ptr++;
 			}
 
-			char fsbuf[32];
+			char fsbuf[32] = {0};
 			uint32_t idx = 0;
 			if (*ptr == '*')
 				COPY_VA_INT(&(fmt_spcf.fw));
@@ -275,7 +273,8 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 				while (ISDIGIT(*ptr)) /* Handle explicit numeric value.  */
 				{
 					fsbuf[idx++] = *ptr;
-					*sptr++ = *ptr++;
+					fsbuf[idx] = '\0';
+					ptr++;
 				}
 
 				if (idx > 0) {
@@ -284,15 +283,21 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 			}
 
 			if (*ptr == '.') {
-				*sptr++ = *ptr++; /* Copy and go past the period.  */
+				ptr++; /* Copy and go past the period.  */
 				if (*ptr == '*')
 					COPY_VA_INT(&(fmt_spcf.pw));
 				else {
 					idx = 0;
+					//	reset fsbuf
+					while (idx < 32) {
+						fsbuf[idx++] = '\0';
+					}
+					idx = 0;
 					while (ISDIGIT(*ptr)) /* Handle explicit numeric value.  */
 					{
 						fsbuf[idx++] = *ptr;
-						*sptr++ = *ptr++;
+						fsbuf[idx] = '\0';
+						ptr++;
 					}
 
 					fmt_spcf.pw = atoi(fsbuf);
@@ -307,7 +312,9 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 				case 'x':
 				case 'X': {
 					const uint32_t v = va_arg(arg, uint32_t);
-					uint32_t x = print_number(value, v, &fmt_spcf);
+					char num_buff[32] = {0};
+					uint32_t x = print_number(num_buff, v, &fmt_spcf);
+					strcat(value, num_buff);
 					value += x;
 					i += x;
 				} break;
@@ -343,7 +350,7 @@ uint32_t sprintf(char *str, const char *format, ...) {
 }
 
 uint32_t printf(const char *format, ...) {
-	char buffer[1024] = {0};
+	char buffer[MAXLEN] = {0};
 
 	va_list arg;
 	va_start(arg, format);

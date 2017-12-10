@@ -50,64 +50,86 @@ static void print_mb2i(char *buffer) {
 		return;
 	}
 
+	char *p = buffer;
 	uint32_t size = *(uint32_t *)_mb2_info;
-	size_t total_printed = sprintf(buffer, "Announced mbi size %10d B\n", size);
-	buffer += total_printed;
+	size_t total_printed = sprintf(p, "Multiboot Info loaded at: %#.8x\n", (uint32_t)_mb2_info);
+	while (*p++) {
+	}
+	total_printed = sprintf(--p, "Announced mbi size %d Bytes.\n", size);
+	while (*p++) {
+	}
+	p--;
 
 	struct multiboot_tag *tag;
 	for (tag = (struct multiboot_tag *)(_mb2_info + 8);
 	     tag->type != MULTIBOOT_TAG_TYPE_END;
 	     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
-		total_printed += sprintf(buffer, "Tag %#.2x, Size %.16x\n", tag->type, tag->size);
-		buffer += total_printed;
+		total_printed += sprintf(p, "Tag %#.2x, Size %#.16x\n", tag->type, tag->size);
+		while (*p++) {
+		}
+		p--;
 		switch (tag->type) {
 			case MULTIBOOT_TAG_TYPE_CMDLINE:
-				total_printed += sprintf(buffer, "-> Command line = %s\n",
-				        ((struct multiboot_tag_string *)tag)->string);
-				buffer += total_printed;
+				total_printed += sprintf(p, "-> Command line = %s\n",
+				                         ((struct multiboot_tag_string *)tag)->string);
+				while (*p++) {
+				}
+				p--;
 				break;
 			case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME:
-				total_printed += sprintf(buffer, "-> Boot loader name = %s\n",
-				        ((struct multiboot_tag_string *)tag)->string);
-				buffer += total_printed;
+				total_printed += sprintf(p, "-> Boot loader name = %s\n",
+				                         ((struct multiboot_tag_string *)tag)->string);
+				while (*p++) {
+				}
+				p--;
 				break;
 			case MULTIBOOT_TAG_TYPE_MODULE:
-				total_printed += sprintf(buffer, "-> Module at %#.16x-%#.16x. Command line %s\n",
-				        ((struct multiboot_tag_module *)tag)->mod_start,
-				        ((struct multiboot_tag_module *)tag)->mod_end,
-				        ((struct multiboot_tag_module *)tag)->cmdline);
-				buffer += total_printed;
+				total_printed += sprintf(p, "-> Module at %#.16x-%#.16x. Command line %s\n",
+				                         ((struct multiboot_tag_module *)tag)->mod_start,
+				                         ((struct multiboot_tag_module *)tag)->mod_end,
+				                         ((struct multiboot_tag_module *)tag)->cmdline);
+				while (*p++) {
+				}
+				p--;
 				break;
 			case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
-				total_printed += sprintf(buffer, "-> mem_lower = %uKiB, mem_upper = %uKiB\n",
-				        ((struct multiboot_tag_basic_meminfo *)tag)->mem_lower,
-				        ((struct multiboot_tag_basic_meminfo *)tag)->mem_upper);
-				buffer += total_printed;
+				total_printed += sprintf(p, "-> mem_lower = %uKiB, mem_upper = %uKiB\n",
+				                         ((struct multiboot_tag_basic_meminfo *)tag)->mem_lower,
+				                         ((struct multiboot_tag_basic_meminfo *)tag)->mem_upper);
+				while (*p++) {
+				}
+				p--;
 				break;
 			case MULTIBOOT_TAG_TYPE_BOOTDEV:
-				total_printed += sprintf(buffer, "-> Boot device %#.4x, slice: %u, part: %u\n",
-				        ((struct multiboot_tag_bootdev *)tag)->biosdev,
-				        ((struct multiboot_tag_bootdev *)tag)->slice,
-				        ((struct multiboot_tag_bootdev *)tag)->part);
-				buffer += total_printed;
+				total_printed += sprintf(p, "-> Boot device %#.4x, slice: %u, part: %u\n",
+				                         ((struct multiboot_tag_bootdev *)tag)->biosdev,
+				                         ((struct multiboot_tag_bootdev *)tag)->slice,
+				                         ((struct multiboot_tag_bootdev *)tag)->part);
+				while (*p++) {
+				}
+				p--;
 				break;
 			case MULTIBOOT_TAG_TYPE_MMAP: {
 				multiboot_memory_map_t *mmap;
 
-				total_printed += sprintf(buffer, "-> Memory Map\n");
-				buffer += total_printed;
+				total_printed += sprintf(p, "-> Memory Map\n");
+				while (*p++) {
+				}
+				p--;
 				// int32_t count = 0;
 				for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
 				     (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
 				     mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size)) {
-					total_printed += sprintf(buffer,
-					        //	For 32 bits only 32 bit address exists.
-					        //"\tbase_addr = 0x%x%x, length = 0x%x%x, type = 0x%x\n",
-					        "\tbase_addr = %#.16x, length=%#.16x, type = %#.2x\n",
-					        (uint32_t)(mmap->addr & 0xffffffff),
-					        (uint32_t)(mmap->len & 0xffffffff),
-					        (uint32_t)mmap->type);
-					buffer += total_printed;
+					total_printed += sprintf(p,
+					                         //	For 32 bits only 32 bit address exists.
+					                         //"\tbase_addr = 0x%x%x, length = 0x%x%x, type = 0x%x\n",
+					                         "\tbase_addr = %#.16x, length=%#.16x, type = %#.2x\n",
+					                         (uint32_t)(mmap->addr & 0xffffffff),
+					                         (uint32_t)(mmap->len & 0xffffffff),
+					                         (uint32_t)mmap->type);
+					while (*p++) {
+					}
+					p--;
 				}
 				break;
 			}
@@ -182,8 +204,10 @@ static void print_mb2i(char *buffer) {
 	}
 
 	tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7));
-	total_printed += sprintf(buffer, "Total mbi size %u\n\n", (unsigned)tag - ((uint32_t)_mb2_info));
-	buffer += total_printed;
+	total_printed += sprintf(p, "Total mbi size %u\n", (unsigned)tag - ((uint32_t)_mb2_info));
+	while (*p++) {
+	}
+	p--;
 }
 
 static elf32_section_header_t *get_elf_sec_hdr(const char *sec_name) {

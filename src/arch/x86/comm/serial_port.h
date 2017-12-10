@@ -30,10 +30,6 @@
 */
 #define SERIAL_LINE_ENABLE_DLAB 0x80
 
-#ifndef MAXLEN
-#define MAXLEN 1024
-#endif
-
 typedef struct {
 	void (*init_baud_rate)(uint16_t com, uint16_t divisor);
 	void (*set_register)(uint16_t com, uint16_t value);

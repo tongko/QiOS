@@ -34,7 +34,7 @@ typedef struct kernel_mem_info {
 
 void __early id_paging(uint64_t *first_pg_entry, vaddr_t from, size_t count);
 void __early map_page(vaddr_t from, size_t count, paddr_t physical);
-void __early early_init_paging(kernel_mem_info_t kmem_info);
+void __early early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr);
 uint32_t __early debug(uint32_t eflags, uint32_t cpuid_enabled);
 
 #endif  //	__PAGING_H_
