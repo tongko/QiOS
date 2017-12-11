@@ -80,1568 +80,1815 @@ _probe_cpuid:
 ;	Interrupt Handler
 ;*****************************************************************
 
-extern interrupt_handler ; the C interrupt handler
-
-global interrupt_handler_0
-interrupt_handler_0:
+global _isr_0;  0: Divide By Zero Exception
+_isr_0:
+		cli
 		push	dword 0
 		push	dword 0
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_1
-interrupt_handler_1:
+global _isr_1;  1: Debug Exception
+_isr_1:
+		cli
 		push	dword 0
 		push	dword 1
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_2
-interrupt_handler_2:
+global _isr_2;  2: Non Maskable Interrupt Exception
+_isr_2:
+		cli
 		push	dword 0
 		push	dword 2
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_3
-interrupt_handler_3:
+global _isr_3;  3: Int 3 Exception
+_isr_3:
+		cli
 		push	dword 0
 		push	dword 3
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_4
-interrupt_handler_4:
+global _isr_4;  4: INTO Exception
+_isr_4:
+		cli
 		push	dword 0
 		push	dword 4
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_5
-interrupt_handler_5:
+global _isr_5;  5: Out of Bounds Exception
+_isr_5:
+		cli
 		push	dword 0
 		push	dword 5
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_6
-interrupt_handler_6:
+global _isr_6;  6: Invalid Opcode Exception
+_isr_6:
+		cli
 		push	dword 0
 		push	dword 6
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_7
-interrupt_handler_7:
+global _isr_7;  7: Coprocessor Not Available Exception
+_isr_7:
+		cli
 		push	dword 0
 		push	dword 7
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_8
-interrupt_handler_8:
-		push	dword 0
-		push	dword 8
-		jmp		common_interrupt_handler
+global _isr_8; Double Fault Exception (With Error Code!)
+_isr_8:
+		cli
+		push	dword 8				; Note that we DON'T push a value on the stack in this one!
+									; It pushes one already! Use this type of stub for exceptions
+									; that pop error codes!
+		jmp		fault_common_stub
 
-global interrupt_handler_9
-interrupt_handler_9:
+global _isr_9;  9: Coprocessor Segment Overrun Exception
+_isr_9:
+		cli
 		push	dword 0
 		push	dword 9
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_10
-interrupt_handler_10:
-		push	dword 0
+global _isr_10; 10: Bad TSS Exception (With Error Code!)
+_isr_10:
+		cli
 		push	dword 10
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_11
-interrupt_handler_11:
-		push	dword 0
+global _isr_11; 11: Segment Not Present Exception (With Error Code!)
+_isr_11:
+		cli
 		push	dword 11
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_12
-interrupt_handler_12:
-		push	dword 0
+global _isr_12; 12: Stack Fault Exception (With Error Code!)
+_isr_12:
+		cli
 		push	dword 12
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_13
-interrupt_handler_13:
-		push	dword 0
+global _isr_13; 13: General Protection Fault Exception (With Error Code!)
+_isr_13:
+		cli
 		push	dword 13
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_14
-interrupt_handler_14:
+global _isr_14; 14: Page Fault Exception (With Error Code!)
+_isr_14:
+		cli
   ; don't push an error code, the cpu will do that
 		push	dword 14
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_15
-interrupt_handler_15:
+global _isr_15; 15: Reserved Exception
+_isr_15:
+		cli
 		push	dword 0
 		push	dword 15
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_16
-interrupt_handler_16:
+global _isr_16; 16: Floating Point Exception
+_isr_16:
+		cli
 		push	dword 0
 		push	dword 16
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_17
-interrupt_handler_17:
+global _isr_17; 17: Alignment Check Exception
+_isr_17:
+		cli
 		push	dword 0
 		push	dword 17
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_18
-interrupt_handler_18:
+global _isr_18; 18: Machine Check Exception
+_isr_18:
+		cli
 		push	dword 0
 		push	dword 18
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_19
-interrupt_handler_19:
+; Interrup Service Routine 19-31 are reserved by Intel Processor.
+global _isr_19
+_isr_19:
+		cli
 		push	dword 0
 		push	dword 19
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_20
-interrupt_handler_20:
+global _isr_20
+_isr_20:
+		cli
 		push	dword 0
 		push	dword 20
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_21
-interrupt_handler_21:
+global _isr_21
+_isr_21:
+		cli
 		push	dword 0
 		push	dword 21
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_22
-interrupt_handler_22:
+global _isr_22
+_isr_22:
+		cli
 		push	dword 0
 		push	dword 22
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_23
-interrupt_handler_23:
+global _isr_23
+_isr_23:
+		cli
 		push	dword 0
 		push	dword 23
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_24
-interrupt_handler_24:
+global _isr_24
+_isr_24:
+		cli
 		push	dword 0
 		push	dword 24
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_25
-interrupt_handler_25:
+global _isr_25
+_isr_25:
+		cli
 		push	dword 0
 		push	dword 25
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_26
-interrupt_handler_26:
+global _isr_26
+_isr_26:
+		cli
 		push	dword 0
 		push	dword 26
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_27
-interrupt_handler_27:
+global _isr_27
+_isr_27:
+		cli
 		push	dword 0
 		push	dword 27
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_28
-interrupt_handler_28:
+global _isr_28
+_isr_28:
+		cli
 		push	dword 0
 		push	dword 28
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_29
-interrupt_handler_29:
+global _isr_29
+_isr_29:
+		cli
 		push	dword 0
 		push	dword 29
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_30
-interrupt_handler_30:
+global _isr_30
+_isr_30:
+		cli
 		push	dword 0
 		push	dword 30
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
 
-global interrupt_handler_31
-interrupt_handler_31:
+global _isr_31
+_isr_31:
+		cli
 		push	dword 0
 		push	dword 31
-		jmp		common_interrupt_handler
+		jmp		fault_common_stub
+; End Intel Processor Reserved.
 
-global interrupt_handler_32
-interrupt_handler_32:
+; Interrupt Service Routines 32-47 are IRQs
+global _isr_32 ; IRQ0
+_isr_32:
+		cli
 		push	dword 0
 		push	dword 32
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_33
-interrupt_handler_33:
+global _isr_33
+_isr_33:
+		cli
 		push	dword 0
 		push	dword 33
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_34
-interrupt_handler_34:
+global _isr_34
+_isr_34:
+		cli
 		push	dword 0
 		push	dword 34
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_35
-interrupt_handler_35:
+global _isr_35
+_isr_35:
+		cli
 		push	dword 0
 		push	dword 35
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_36
-interrupt_handler_36:
+global _isr_36
+_isr_36:
+		cli
 		push	dword 0
 		push	dword 36
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_37
-interrupt_handler_37:
+global _isr_37
+_isr_37:
+		cli
 		push	dword 0
 		push	dword 37
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_38
-interrupt_handler_38:
+global _isr_38
+_isr_38:
+		cli
 		push	dword 0
 		push	dword 38
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_39
-interrupt_handler_39:
+global _isr_39
+_isr_39:
+		cli
 		push	dword 0
 		push	dword 39
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_40
-interrupt_handler_40:
+global _isr_40
+_isr_40:
+		cli
 		push	dword 0
 		push	dword 40
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_41
-interrupt_handler_41:
+global _isr_41
+_isr_41:
+		cli
 		push	dword 0
 		push	dword 41
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_42
-interrupt_handler_42:
+global _isr_42
+_isr_42:
+		cli
 		push	dword 0
 		push	dword 42
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_43
-interrupt_handler_43:
+global _isr_43
+_isr_43:
+		cli
 		push	dword 0
 		push	dword 43
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_44
-interrupt_handler_44:
+global _isr_44
+_isr_44:
+		cli
 		push	dword 0
 		push	dword 44
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_45
-interrupt_handler_45:
+global _isr_45
+_isr_45:
+		cli
 		push	dword 0
 		push	dword 45
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_46
-interrupt_handler_46:
+global _isr_46
+_isr_46:
+		cli
 		push	dword 0
 		push	dword 46
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_47
-interrupt_handler_47:
+global _isr_47
+_isr_47:
+		cli
 		push	dword 0
 		push	dword 47
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_48
-interrupt_handler_48:
+global _isr_48
+_isr_48:
+		cli
 		push	dword 0
 		push	dword 48
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_49
-interrupt_handler_49:
+global _isr_49
+_isr_49:
+		cli
 		push	dword 0
 		push	dword 49
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_50
-interrupt_handler_50:
+global _isr_50
+_isr_50:
+		cli
 		push	dword 0
 		push	dword 50
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_51
-interrupt_handler_51:
+global _isr_51
+_isr_51:
+		cli
 		push	dword 0
 		push	dword 51
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_52
-interrupt_handler_52:
+global _isr_52
+_isr_52:
+		cli
 		push	dword 0
 		push	dword 52
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_53
-interrupt_handler_53:
+global _isr_53
+_isr_53:
+		cli
 		push	dword 0
 		push	dword 53
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_54
-interrupt_handler_54:
+global _isr_54
+_isr_54:
+		cli
 		push	dword 0
 		push	dword 54
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_55
-interrupt_handler_55:
+global _isr_55
+_isr_55:
+		cli
 		push	dword 0
 		push	dword 55
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_56
-interrupt_handler_56:
+global _isr_56
+_isr_56:
+		cli
 		push	dword 0
 		push	dword 56
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_57
-interrupt_handler_57:
+global _isr_57
+_isr_57:
+		cli
 		push	dword 0
 		push	dword 57
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_58
-interrupt_handler_58:
+global _isr_58
+_isr_58:
+		cli
 		push	dword 0
 		push	dword 58
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_59
-interrupt_handler_59:
+global _isr_59
+_isr_59:
+		cli
 		push	dword 0
 		push	dword 59
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_60
-interrupt_handler_60:
+global _isr_60
+_isr_60:
+		cli
 		push	dword 0
 		push	dword 60
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_61
-interrupt_handler_61:
+global _isr_61
+_isr_61:
+		cli
 		push	dword 0
 		push	dword 61
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_62
-interrupt_handler_62:
+global _isr_62
+_isr_62:
+		cli
 		push	dword 0
 		push	dword 62
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_63
-interrupt_handler_63:
+global _isr_63
+_isr_63:
+		cli
 		push	dword 0
 		push	dword 63
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_64
-interrupt_handler_64:
+global _isr_64
+_isr_64:
+		cli
 		push	dword 0
 		push	dword 64
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_65
-interrupt_handler_65:
+global _isr_65
+_isr_65:
+		cli
 		push	dword 0
 		push	dword 65
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_66
-interrupt_handler_66:
+global _isr_66
+_isr_66:
+		cli
 		push	dword 0
 		push	dword 66
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_67
-interrupt_handler_67:
+global _isr_67
+_isr_67:
+		cli
 		push	dword 0
 		push	dword 67
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_68
-interrupt_handler_68:
+global _isr_68
+_isr_68:
+		cli
 		push	dword 0
 		push	dword 68
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_69
-interrupt_handler_69:
+global _isr_69
+_isr_69:
+		cli
 		push	dword 0
 		push	dword 69
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_70
-interrupt_handler_70:
+global _isr_70
+_isr_70:
+		cli
 		push	dword 0
 		push	dword 70
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_71
-interrupt_handler_71:
+global _isr_71
+_isr_71:
+		cli
 		push	dword 0
 		push	dword 71
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_72
-interrupt_handler_72:
+global _isr_72
+_isr_72:
+		cli
 		push	dword 0
 		push	dword 72
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_73
-interrupt_handler_73:
+global _isr_73
+_isr_73:
+		cli
 		push	dword 0
 		push	dword 73
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_74
-interrupt_handler_74:
+global _isr_74
+_isr_74:
+		cli
 		push	dword 0
 		push	dword 74
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_75
-interrupt_handler_75:
+global _isr_75
+_isr_75:
+		cli
 		push	dword 0
 		push	dword 75
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_76
-interrupt_handler_76:
+global _isr_76
+_isr_76:
+		cli
 		push	dword 0
 		push	dword 76
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_77
-interrupt_handler_77:
+global _isr_77
+_isr_77:
+		cli
 		push	dword 0
 		push	dword 77
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_78
-interrupt_handler_78:
+global _isr_78
+_isr_78:
+		cli
 		push	dword 0
 		push	dword 78
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_79
-interrupt_handler_79:
+global _isr_79
+_isr_79:
+		cli
 		push	dword 0
 		push	dword 79
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_80
-interrupt_handler_80:
+global _isr_80
+_isr_80:
+		cli
 		push	dword 0
 		push	dword 80
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_81
-interrupt_handler_81:
+global _isr_81
+_isr_81:
+		cli
 		push	dword 0
 		push	dword 81
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_82
-interrupt_handler_82:
+global _isr_82
+_isr_82:
+		cli
 		push	dword 0
 		push	dword 82
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_83
-interrupt_handler_83:
+global _isr_83
+_isr_83:
+		cli
 		push	dword 0
 		push	dword 83
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_84
-interrupt_handler_84:
+global _isr_84
+_isr_84:
+		cli
 		push	dword 0
 		push	dword 84
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_85
-interrupt_handler_85:
+global _isr_85
+_isr_85:
+		cli
 		push	dword 0
 		push	dword 85
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_86
-interrupt_handler_86:
+global _isr_86
+_isr_86:
+		cli
 		push	dword 0
 		push	dword 86
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_87
-interrupt_handler_87:
+global _isr_87
+_isr_87:
+		cli
 		push	dword 0
 		push	dword 87
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_88
-interrupt_handler_88:
+global _isr_88
+_isr_88:
+		cli
 		push	dword 0
 		push	dword 88
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_89
-interrupt_handler_89:
+global _isr_89
+_isr_89:
+		cli
 		push	dword 0
 		push	dword 89
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_90
-interrupt_handler_90:
+global _isr_90
+_isr_90:
+		cli
 		push	dword 0
 		push	dword 90
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_91
-interrupt_handler_91:
+global _isr_91
+_isr_91:
+		cli
 		push	dword 0
 		push	dword 91
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_92
-interrupt_handler_92:
+global _isr_92
+_isr_92:
+		cli
 		push	dword 0
 		push	dword 92
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_93
-interrupt_handler_93:
+global _isr_93
+_isr_93:
+		cli
 		push	dword 0
 		push	dword 93
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_94
-interrupt_handler_94:
+global _isr_94
+_isr_94:
+		cli
 		push	dword 0
 		push	dword 94
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_95
-interrupt_handler_95:
+global _isr_95
+_isr_95:
+		cli
 		push	dword 0
 		push	dword 95
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_96
-interrupt_handler_96:
+global _isr_96
+_isr_96:
+		cli
 		push	dword 0
 		push	dword 96
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_97
-interrupt_handler_97:
+global _isr_97
+_isr_97:
+		cli
 		push	dword 0
 		push	dword 97
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_98
-interrupt_handler_98:
+global _isr_98
+_isr_98:
+		cli
 		push	dword 0
 		push	dword 98
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_99
-interrupt_handler_99:
+global _isr_99
+_isr_99:
+		cli
 		push	dword 0
 		push	dword 99
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_100
-interrupt_handler_100:
+global _isr_100
+_isr_100:
+		cli
 		push	dword 0
 		push	dword 100
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_101
-interrupt_handler_101:
+global _isr_101
+_isr_101:
+		cli
 		push	dword 0
 		push	dword 101
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_102
-interrupt_handler_102:
+global _isr_102
+_isr_102:
+		cli
 		push	dword 0
 		push	dword 102
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_103
-interrupt_handler_103:
+global _isr_103
+_isr_103:
+		cli
 		push	dword 0
 		push	dword 103
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_104
-interrupt_handler_104:
+global _isr_104
+_isr_104:
+		cli
 		push	dword 0
 		push	dword 104
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_105
-interrupt_handler_105:
+global _isr_105
+_isr_105:
+		cli
 		push	dword 0
 		push	dword 105
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_106
-interrupt_handler_106:
+global _isr_106
+_isr_106:
+		cli
 		push	dword 0
 		push	dword 106
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_107
-interrupt_handler_107:
+global _isr_107
+_isr_107:
+		cli
 		push	dword 0
 		push	dword 107
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_108
-interrupt_handler_108:
+global _isr_108
+_isr_108:
+		cli
 		push	dword 0
 		push	dword 108
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_109
-interrupt_handler_109:
+global _isr_109
+_isr_109:
+		cli
 		push	dword 0
 		push	dword 109
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_110
-interrupt_handler_110:
+global _isr_110
+_isr_110:
+		cli
 		push	dword 0
 		push	dword 110
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_111
-interrupt_handler_111:
+global _isr_111
+_isr_111:
+		cli
 		push	dword 0
 		push	dword 111
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_112
-interrupt_handler_112:
+global _isr_112
+_isr_112:
+		cli
 		push	dword 0
 		push	dword 112
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_113
-interrupt_handler_113:
+global _isr_113
+_isr_113:
+		cli
 		push	dword 0
 		push	dword 113
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_114
-interrupt_handler_114:
+global _isr_114
+_isr_114:
+		cli
 		push	dword 0
 		push	dword 114
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_115
-interrupt_handler_115:
+global _isr_115
+_isr_115:
+		cli
 		push	dword 0
 		push	dword 115
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_116
-interrupt_handler_116:
+global _isr_116
+_isr_116:
+		cli
 		push	dword 0
 		push	dword 116
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_117
-interrupt_handler_117:
+global _isr_117
+_isr_117:
+		cli
 		push	dword 0
 		push	dword 117
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_118
-interrupt_handler_118:
+global _isr_118
+_isr_118:
+		cli
 		push	dword 0
 		push	dword 118
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_119
-interrupt_handler_119:
+global _isr_119
+_isr_119:
+		cli
 		push	dword 0
 		push	dword 119
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_120
-interrupt_handler_120:
+global _isr_120
+_isr_120:
+		cli
 		push	dword 0
 		push	dword 120
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_121
-interrupt_handler_121:
+global _isr_121
+_isr_121:
+		cli
 		push	dword 0
 		push	dword 121
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_122
-interrupt_handler_122:
+global _isr_122
+_isr_122:
+		cli
 		push	dword 0
 		push	dword 122
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_123
-interrupt_handler_123:
+global _isr_123
+_isr_123:
+		cli
 		push	dword 0
 		push	dword 123
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_124
-interrupt_handler_124:
+global _isr_124
+_isr_124:
+		cli
 		push	dword 0
 		push	dword 124
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_125
-interrupt_handler_125:
+global _isr_125
+_isr_125:
+		cli
 		push	dword 0
 		push	dword 125
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_126
-interrupt_handler_126:
+global _isr_126
+_isr_126:
+		cli
 		push	dword 0
 		push	dword 126
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_127
-interrupt_handler_127:
+global _isr_127
+_isr_127:
+		cli
 		push	dword 0
 		push	dword 127
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_128
-interrupt_handler_128:
+global _isr_128
+_isr_128:
+		cli
 		push	dword 0
 		push	dword 128
 		jmp		interrupt_handler_with_return_value
 
-global interrupt_handler_129
-interrupt_handler_129:
+global _isr_129
+_isr_129:
+		cli
 		push	dword 0
 		push	dword 129
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_130
-interrupt_handler_130:
+global _isr_130
+_isr_130:
+		cli
 		push	dword 0
 		push	dword 130
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_131
-interrupt_handler_131:
+global _isr_131
+_isr_131:
+		cli
 		push	dword 0
 		push	dword 131
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_132
-interrupt_handler_132:
+global _isr_132
+_isr_132:
+		cli
 		push	dword 0
 		push	dword 132
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_133
-interrupt_handler_133:
+global _isr_133
+_isr_133:
+		cli
 		push	dword 0
 		push	dword 133
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_134
-interrupt_handler_134:
+global _isr_134
+_isr_134:
+		cli
 		push	dword 0
 		push	dword 134
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_135
-interrupt_handler_135:
+global _isr_135
+_isr_135:
+		cli
 		push	dword 0
 		push	dword 135
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_136
-interrupt_handler_136:
+global _isr_136
+_isr_136:
+		cli
 		push	dword 0
 		push	dword 136
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_137
-interrupt_handler_137:
+global _isr_137
+_isr_137:
+		cli
 		push	dword 0
 		push	dword 137
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_138
-interrupt_handler_138:
+global _isr_138
+_isr_138:
+		cli
 		push	dword 0
 		push	dword 138
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_139
-interrupt_handler_139:
+global _isr_139
+_isr_139:
+		cli
 		push	dword 0
 		push	dword 139
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_140
-interrupt_handler_140:
+global _isr_140
+_isr_140:
+		cli
 		push	dword 0
 		push	dword 140
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_141
-interrupt_handler_141:
+global _isr_141
+_isr_141:
+		cli
 		push	dword 0
 		push	dword 141
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_142
-interrupt_handler_142:
+global _isr_142
+_isr_142:
+		cli
 		push	dword 0
 		push	dword 142
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_143
-interrupt_handler_143:
+global _isr_143
+_isr_143:
+		cli
 		push	dword 0
 		push	dword 143
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_144
-interrupt_handler_144:
+global _isr_144
+_isr_144:
+		cli
 		push	dword 0
 		push	dword 144
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_145
-interrupt_handler_145:
+global _isr_145
+_isr_145:
+		cli
 		push	dword 0
 		push	dword 145
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_146
-interrupt_handler_146:
+global _isr_146
+_isr_146:
+		cli
 		push	dword 0
 		push	dword 146
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_147
-interrupt_handler_147:
+global _isr_147
+_isr_147:
+		cli
 		push	dword 0
 		push	dword 147
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_148
-interrupt_handler_148:
+global _isr_148
+_isr_148:
+		cli
 		push	dword 0
 		push	dword 148
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_149
-interrupt_handler_149:
+global _isr_149
+_isr_149:
+		cli
 		push	dword 0
 		push	dword 149
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_150
-interrupt_handler_150:
+global _isr_150
+_isr_150:
+		cli
 		push	dword 0
 		push	dword 150
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_151
-interrupt_handler_151:
+global _isr_151
+_isr_151:
+		cli
 		push	dword 0
 		push	dword 151
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_152
-interrupt_handler_152:
+global _isr_152
+_isr_152:
+		cli
 		push	dword 0
 		push	dword 152
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_153
-interrupt_handler_153:
+global _isr_153
+_isr_153:
+		cli
 		push	dword 0
 		push	dword 153
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_154
-interrupt_handler_154:
+global _isr_154
+_isr_154:
+		cli
 		push	dword 0
 		push	dword 154
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_155
-interrupt_handler_155:
+global _isr_155
+_isr_155:
+		cli
 		push	dword 0
 		push	dword 155
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_156
-interrupt_handler_156:
+global _isr_156
+_isr_156:
+		cli
 		push	dword 0
 		push	dword 156
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_157
-interrupt_handler_157:
+global _isr_157
+_isr_157:
+		cli
 		push	dword 0
 		push	dword 157
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_158
-interrupt_handler_158:
+global _isr_158
+_isr_158:
+		cli
 		push	dword 0
 		push	dword 158
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_159
-interrupt_handler_159:
+global _isr_159
+_isr_159:
+		cli
 		push	dword 0
 		push	dword 159
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_160
-interrupt_handler_160:
+global _isr_160
+_isr_160:
+		cli
 		push	dword 0
 		push	dword 160
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_161
-interrupt_handler_161:
+global _isr_161
+_isr_161:
+		cli
 		push	dword 0
 		push	dword 161
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_162
-interrupt_handler_162:
+global _isr_162
+_isr_162:
+		cli
 		push	dword 0
 		push	dword 162
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_163
-interrupt_handler_163:
+global _isr_163
+_isr_163:
+		cli
 		push	dword 0
 		push	dword 163
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_164
-interrupt_handler_164:
+global _isr_164
+_isr_164:
+		cli
 		push	dword 0
 		push	dword 164
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_165
-interrupt_handler_165:
+global _isr_165
+_isr_165:
+		cli
 		push	dword 0
 		push	dword 165
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_166
-interrupt_handler_166:
+global _isr_166
+_isr_166:
+		cli
 		push	dword 0
 		push	dword 166
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_167
-interrupt_handler_167:
+global _isr_167
+_isr_167:
+		cli
 		push	dword 0
 		push	dword 167
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_168
-interrupt_handler_168:
+global _isr_168
+_isr_168:
+		cli
 		push	dword 0
 		push	dword 168
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_169
-interrupt_handler_169:
+global _isr_169
+_isr_169:
+		cli
 		push	dword 0
 		push	dword 169
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_170
-interrupt_handler_170:
+global _isr_170
+_isr_170:
+		cli
 		push	dword 0
 		push	dword 170
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_171
-interrupt_handler_171:
+global _isr_171
+_isr_171:
+		cli
 		push	dword 0
 		push	dword 171
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_172
-interrupt_handler_172:
+global _isr_172
+_isr_172:
+		cli
 		push	dword 0
 		push	dword 172
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_173
-interrupt_handler_173:
+global _isr_173
+_isr_173:
+		cli
 		push	dword 0
 		push	dword 173
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_174
-interrupt_handler_174:
+global _isr_174
+_isr_174:
+		cli
 		push	dword 0
 		push	dword 174
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_175
-interrupt_handler_175:
+global _isr_175
+_isr_175:
+		cli
 		push	dword 0
 		push	dword 175
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_176
-interrupt_handler_176:
+global _isr_176
+_isr_176:
+		cli
 		push	dword 0
 		push	dword 176
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_177
-interrupt_handler_177:
+global _isr_177
+_isr_177:
+		cli
 		push	dword 0
 		push	dword 177
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_178
-interrupt_handler_178:
+global _isr_178
+_isr_178:
+		cli
 		push	dword 0
 		push	dword 178
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_179
-interrupt_handler_179:
+global _isr_179
+_isr_179:
+		cli
 		push	dword 0
 		push	dword 179
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_180
-interrupt_handler_180:
+global _isr_180
+_isr_180:
+		cli
 		push	dword 0
 		push	dword 180
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_181
-interrupt_handler_181:
+global _isr_181
+_isr_181:
+		cli
 		push	dword 0
 		push	dword 181
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_182
-interrupt_handler_182:
+global _isr_182
+_isr_182:
+		cli
 		push	dword 0
 		push	dword 182
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_183
-interrupt_handler_183:
+global _isr_183
+_isr_183:
+		cli
 		push	dword 0
 		push	dword 183
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_184
-interrupt_handler_184:
+global _isr_184
+_isr_184:
+		cli
 		push	dword 0
 		push	dword 184
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_185
-interrupt_handler_185:
+global _isr_185
+_isr_185:
+		cli
 		push	dword 0
 		push	dword 185
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_186
-interrupt_handler_186:
+global _isr_186
+_isr_186:
+		cli
 		push	dword 0
 		push	dword 186
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_187
-interrupt_handler_187:
+global _isr_187
+_isr_187:
+		cli
 		push	dword 0
 		push	dword 187
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_188
-interrupt_handler_188:
+global _isr_188
+_isr_188:
+		cli
 		push	dword 0
 		push	dword 188
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_189
-interrupt_handler_189:
+global _isr_189
+_isr_189:
+		cli
 		push	dword 0
 		push	dword 189
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_190
-interrupt_handler_190:
+global _isr_190
+_isr_190:
+		cli
 		push	dword 0
 		push	dword 190
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_191
-interrupt_handler_191:
+global _isr_191
+_isr_191:
+		cli
 		push	dword 0
 		push	dword 191
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_192
-interrupt_handler_192:
+global _isr_192
+_isr_192:
+		cli
 		push	dword 0
 		push	dword 192
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_193
-interrupt_handler_193:
+global _isr_193
+_isr_193:
+		cli
 		push	dword 0
 		push	dword 193
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_194
-interrupt_handler_194:
+global _isr_194
+_isr_194:
+		cli
 		push	dword 0
 		push	dword 194
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_195
-interrupt_handler_195:
+global _isr_195
+_isr_195:
+		cli
 		push	dword 0
 		push	dword 195
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_196
-interrupt_handler_196:
+global _isr_196
+_isr_196:
+		cli
 		push	dword 0
 		push	dword 196
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_197
-interrupt_handler_197:
+global _isr_197
+_isr_197:
+		cli
 		push	dword 0
 		push	dword 197
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_198
-interrupt_handler_198:
+global _isr_198
+_isr_198:
+		cli
 		push	dword 0
 		push	dword 198
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_199
-interrupt_handler_199:
+global _isr_199
+_isr_199:
+		cli
 		push	dword 0
 		push	dword 199
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_200
-interrupt_handler_200:
+global _isr_200
+_isr_200:
+		cli
 		push	dword 0
 		push	dword 200
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_201
-interrupt_handler_201:
+global _isr_201
+_isr_201:
+		cli
 		push	dword 0
 		push	dword 201
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_202
-interrupt_handler_202:
+global _isr_202
+_isr_202:
+		cli
 		push	dword 0
 		push	dword 202
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_203
-interrupt_handler_203:
+global _isr_203
+_isr_203:
+		cli
 		push	dword 0
 		push	dword 203
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_204
-interrupt_handler_204:
+global _isr_204
+_isr_204:
+		cli
 		push	dword 0
 		push	dword 204
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_205
-interrupt_handler_205:
+global _isr_205
+_isr_205:
+		cli
 		push	dword 0
 		push	dword 205
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_206
-interrupt_handler_206:
+global _isr_206
+_isr_206:
+		cli
 		push	dword 0
 		push	dword 206
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_207
-interrupt_handler_207:
+global _isr_207
+_isr_207:
+		cli
 		push	dword 0
 		push	dword 207
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_208
-interrupt_handler_208:
+global _isr_208
+_isr_208:
+		cli
 		push	dword 0
 		push	dword 208
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_209
-interrupt_handler_209:
+global _isr_209
+_isr_209:
+		cli
 		push	dword 0
 		push	dword 209
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_210
-interrupt_handler_210:
+global _isr_210
+_isr_210:
+		cli
 		push	dword 0
 		push	dword 210
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_211
-interrupt_handler_211:
+global _isr_211
+_isr_211:
+		cli
 		push	dword 0
 		push	dword 211
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_212
-interrupt_handler_212:
+global _isr_212
+_isr_212:
+		cli
 		push	dword 0
 		push	dword 212
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_213
-interrupt_handler_213:
+global _isr_213
+_isr_213:
+		cli
 		push	dword 0
 		push	dword 213
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_214
-interrupt_handler_214:
+global _isr_214
+_isr_214:
+		cli
 		push	dword 0
 		push	dword 214
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_215
-interrupt_handler_215:
+global _isr_215
+_isr_215:
+		cli
 		push	dword 0
 		push	dword 215
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_216
-interrupt_handler_216:
+global _isr_216
+_isr_216:
+		cli
 		push	dword 0
 		push	dword 216
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_217
-interrupt_handler_217:
+global _isr_217
+_isr_217:
+		cli
 		push	dword 0
 		push	dword 217
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_218
-interrupt_handler_218:
+global _isr_218
+_isr_218:
+		cli
 		push	dword 0
 		push	dword 218
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_219
-interrupt_handler_219:
+global _isr_219
+_isr_219:
+		cli
 		push	dword 0
 		push	dword 219
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_220
-interrupt_handler_220:
+global _isr_220
+_isr_220:
+		cli
 		push	dword 0
 		push	dword 220
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_221
-interrupt_handler_221:
+global _isr_221
+_isr_221:
+		cli
 		push	dword 0
 		push	dword 221
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_222
-interrupt_handler_222:
+global _isr_222
+_isr_222:
+		cli
 		push	dword 0
 		push	dword 222
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_223
-interrupt_handler_223:
+global _isr_223
+_isr_223:
+		cli
 		push	dword 0
 		push	dword 223
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_224
-interrupt_handler_224:
+global _isr_224
+_isr_224:
+		cli
 		push	dword 0
 		push	dword 224
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_225
-interrupt_handler_225:
+global _isr_225
+_isr_225:
+		cli
 		push	dword 0
 		push	dword 225
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_226
-interrupt_handler_226:
+global _isr_226
+_isr_226:
+		cli
 		push	dword 0
 		push	dword 226
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_227
-interrupt_handler_227:
+global _isr_227
+_isr_227:
+		cli
 		push	dword 0
 		push	dword 227
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_228
-interrupt_handler_228:
+global _isr_228
+_isr_228:
+		cli
 		push	dword 0
 		push	dword 228
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_229
-interrupt_handler_229:
+global _isr_229
+_isr_229:
+		cli
 		push	dword 0
 		push	dword 229
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_230
-interrupt_handler_230:
+global _isr_230
+_isr_230:
+		cli
 		push	dword 0
 		push	dword 230
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_231
-interrupt_handler_231:
+global _isr_231
+_isr_231:
+		cli
 		push	dword 0
 		push	dword 231
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_232
-interrupt_handler_232:
+global _isr_232
+_isr_232:
+		cli
 		push	dword 0
 		push	dword 232
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_233
-interrupt_handler_233:
+global _isr_233
+_isr_233:
+		cli
 		push	dword 0
 		push	dword 233
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_234
-interrupt_handler_234:
+global _isr_234
+_isr_234:
+		cli
 		push	dword 0
 		push	dword 234
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_235
-interrupt_handler_235:
+global _isr_235
+_isr_235:
+		cli
 		push	dword 0
 		push	dword 235
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_236
-interrupt_handler_236:
+global _isr_236
+_isr_236:
+		cli
 		push	dword 0
 		push	dword 236
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_237
-interrupt_handler_237:
+global _isr_237
+_isr_237:
+		cli
 		push	dword 0
 		push	dword 237
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_238
-interrupt_handler_238:
+global _isr_238
+_isr_238:
+		cli
 		push	dword 0
 		push	dword 238
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_239
-interrupt_handler_239:
+global _isr_239
+_isr_239:
+		cli
 		push	dword 0
 		push	dword 239
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_240
-interrupt_handler_240:
+global _isr_240
+_isr_240:
+		cli
 		push	dword 0
 		push	dword 240
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_241
-interrupt_handler_241:
+global _isr_241
+_isr_241:
+		cli
 		push	dword 0
 		push	dword 241
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_242
-interrupt_handler_242:
+global _isr_242
+_isr_242:
+		cli
 		push	dword 0
 		push	dword 242
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_243
-interrupt_handler_243:
+global _isr_243
+_isr_243:
+		cli
 		push	dword 0
 		push	dword 243
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_244
-interrupt_handler_244:
+global _isr_244
+_isr_244:
+		cli
 		push	dword 0
 		push	dword 244
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_245
-interrupt_handler_245:
+global _isr_245
+_isr_245:
+		cli
 		push	dword 0
 		push	dword 245
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_246
-interrupt_handler_246:
+global _isr_246
+_isr_246:
+		cli
 		push	dword 0
 		push	dword 246
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_247
-interrupt_handler_247:
+global _isr_247
+_isr_247:
+		cli
 		push	dword 0
 		push	dword 247
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_248
-interrupt_handler_248:
+global _isr_248
+_isr_248:
+		cli
 		push	dword 0
 		push	dword 248
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_249
-interrupt_handler_249:
+global _isr_249
+_isr_249:
+		cli
 		push	dword 0
 		push	dword 249
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_250
-interrupt_handler_250:
+global _isr_250
+_isr_250:
+		cli
 		push	dword 0
 		push	dword 250
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_251
-interrupt_handler_251:
+global _isr_251
+_isr_251:
+		cli
 		push	dword 0
 		push	dword 251
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_252
-interrupt_handler_252:
+global _isr_252
+_isr_252:
+		cli
 		push	dword 0
 		push	dword 252
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_253
-interrupt_handler_253:
+global _isr_253
+_isr_253:
+		cli
 		push	dword 0
 		push	dword 253
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_254
-interrupt_handler_254:
+global _isr_254
+_isr_254:
+		cli
 		push	dword 0
 		push	dword 254
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-global interrupt_handler_255
-interrupt_handler_255:
+global _isr_255
+_isr_255:
+		cli
 		push	dword 0
 		push	dword 255
-		jmp		common_interrupt_handler
+		jmp		isr_common_handler
 
-common_interrupt_handler:               ; the common parts of the generic interrupt handler
+; This is our common ISR stub. It saves the processor state, sets
+; up for kernel mode segments, calls the C-level fault handler,
+; and finally restores the stack frame.
+fault_common_stub:               ; the common parts of the generic interrupt handler
 		; save the registers
-		push	eax
-		push	ebx
-		push	ecx
-		push	edx
-		push	esi
-		push	edi
-		push	ebp
+		pushad
+
 		mov		eax, cr2
 		push	eax
 
 		; call the C function
-		call	interrupt_handler
+		extern	fault_handler ; the C interrupt handler
+		call	fault_handler
 
 		; restore the registers
 		add		esp, 4 ; cr2
-		pop		ebp
-		pop		edi
-		pop		esi
-		pop		edx
-		pop		ecx
-		pop		ebx
-		pop		eax
+		popad
 
 		; pop error_code and interrupt_number off the stack
 		add		esp, 8
@@ -1651,17 +1898,13 @@ common_interrupt_handler:               ; the common parts of the generic interr
 .end:
 
 interrupt_handler_with_return_value:
-		push	eax
-		push	ebx
-		push	ecx
-		push	edx
-		push	esi
-		push	edi
-		push	ebp
+		pushad
+
 		mov		eax, cr2
 		push	eax
 
 		; call the C function
+		extern	
 		call	interrupt_handler
 
 		; restore the registers
@@ -1678,5 +1921,27 @@ interrupt_handler_with_return_value:
 		add		esp, 12
 
 		; return to the code that got interrupted
+		iret
+.end:
+
+irq_common_handler:
+		; save the registers
+		pushad
+
+		mov		eax, cr2
+		push	eax
+
+		; call the C function
+		extern	irq_handler ; the C interrupt handler
+		call	irq_handler
+
+		; restore the registers
+		add		esp, 4 ; cr2
+		popad
+
+		; pop error_code and interrupt_number off the stack
+		add		esp, 8
+
+  		; return to the code that got interrupted
 		iret
 .end:
