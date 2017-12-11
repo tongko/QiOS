@@ -10,7 +10,7 @@
 #include "asm.h"
 #include "func.h"
 #include "gdt.h"
-#include "interrupts.h"
+#include "interrupts.h" 
 
 #define PIC1 0x20 /* IO base address for master PIC */
 #define PIC2 0xA0 /* IO base address for slave PIC */
@@ -305,20 +305,16 @@ void init_idt() {
 	idt_descriptor.limit = sizeof(idt) - 1;
 	idt_descriptor.base = (uint32_t)idt;
 
-	uint16_t selector = KCODE_SELECTOR;
-	uint8_t type_attr = 0b10001110;
-	uint8_t user_type_attr = 0b11101110;
-
 	for (int i = 0; i < 256; i++) {
 		if (i < 32) {
 			idt_set_gate(i, interrupt_handler_addresses[i], KCODE_SELECTOR,
-			             0x10001110, 0);
+			             0x8E, 0);
 		} else if (i == INT_SYSCALL) {
 			idt_set_gate(i, interrupt_handler_addresses[INT_SYSCALL], KCODE_SELECTOR,
-			             0x11101110, 0);
+			             0xEE, 0);
 		} else {
 			idt_set_gate(i, interrupt_handler_addresses[i], KCODE_SELECTOR,
-			             0x10001110, 0);
+			             0, 0);     // Not present
 		}
 	}
 
@@ -326,8 +322,8 @@ void init_idt() {
 }
 
 void init_pic() {
-	_outb(PIC1_DATA, 0b11111101);  // Only enable keyboard (irc 1)
-	_outb(PIC2_DATA, 0b11111111);  // Don't enable any interrupts on slave pic (irc 8-15)
+	_outb(PIC1_DATA, 0xFD);  // Only enable keyboard (irc 1)
+	_outb(PIC2_DATA, 0xFF);  // Don't enable any interrupts on slave pic (irc 8-15)
 	sti();
 }
 
