@@ -21,12 +21,23 @@ typedef struct {
 
 // See http://wiki.osdev.org/Interrupt_Descriptor_Table#Structure_IA-32
 typedef struct {
-	uint16_t offset_low;
-	uint16_t selector;
-	uint8_t zero;
-	uint8_t type_attr;
-	uint16_t offset_high;
-} __packed idt_desc_tab_t;
+	union {
+		struct {
+			uint16_t reserved0;
+			uint16_t selector;
+			uint8_t reserved1;
+			uint8_t type_attr;
+			uint16_t reserved2;
+		} __packed task_gate;
+		struct {
+			uint16_t offset_low;
+			uint16_t selector;
+			uint8_t zero;
+			uint8_t type_attr;
+			uint16_t offset_high;
+		} __packed intr_or_trap;
+	};
+} idt_desc_tab_t;
 
 void init_idt();
 void pic_acknowledge();
