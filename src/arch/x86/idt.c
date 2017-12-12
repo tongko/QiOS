@@ -10,7 +10,7 @@
 #include "asm.h"
 #include "func.h"
 #include "gdt.h"
-#include "interrupts.h"
+#include "interrupts.h" 
 
 idt_desc_t idt_descriptor;
 idt_desc_tab_t idt[256];
@@ -297,20 +297,16 @@ void init_idt() {
 	idt_descriptor.limit = sizeof(idt) - 1;
 	idt_descriptor.base = (uint32_t)idt;
 
-	uint16_t selector = KCODE_SELECTOR;
-	uint8_t type_attr = 0b10001110;
-	uint8_t user_type_attr = 0b11101110;
-
 	for (int i = 0; i < 256; i++) {
 		if (i < 32) {
 			idt_set_gate(i, interrupt_handler_addresses[i], KCODE_SELECTOR,
-			             0x10001110, 0);
+			             0x8E, 0);
 		} else if (i == INT_SYSCALL) {
 			idt_set_gate(i, interrupt_handler_addresses[INT_SYSCALL], KCODE_SELECTOR,
-			             0x11101110, 0);
+			             0xEE, 0);
 		} else {
 			idt_set_gate(i, interrupt_handler_addresses[i], KCODE_SELECTOR,
-			             0x10001110, 0);
+			             0, 0);     // Not present
 		}
 	}
 

@@ -9,9 +9,12 @@
 #ifndef __GDT_H_
 #define __GDT_H_
 
-#include <stddef.h>
+#define __UINT32_TYPE__ long unsigned int
 #include <stdint.h>
-#include "ktypedef.h"
+
+#include <stddef.h>
+
+#include "boot/ktypedef.h"
 
 // A struct describing a Task State Segment.
 typedef struct {
