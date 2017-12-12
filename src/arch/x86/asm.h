@@ -32,14 +32,23 @@ static __inline__ void lidt(void *idt) {
 
 static __inline__ uint8_t _inb(uint16_t port) {
 	uint8_t ret_val;
-	__asm__ __volatile__("in %0,%1"
-	                     : "=a"(ret_val)
-	                     : "d"(port));
+	asm("in %0,%1"
+	    : "=a"(ret_val)
+	    : "d"(port));
 	return ret_val;
 }
 
 static __inline__ void _outb(uint16_t port, uint8_t val) {
-	__asm__ __volatile__("out %1,%0" ::"a"(val), "d"(port));
+	asm("out %1,%0" ::"a"(val), "d"(port));
+}
+
+static __inline__ void io_wait(void) {
+	/* Port 0x80 is used for 'checkpoints' during POST. */
+	/* The Linux kernel seems to think it is free for use :-/ */
+	asm("outb %%al, $0x80"
+	    :
+	    : "a"(0));
+	/* %%al instead of %0 makes no difference.  TODO: does the register need to be zeroed? */
 }
 
 static __inline__ uint32_t __early get_cr0(void) {

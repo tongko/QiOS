@@ -309,120 +309,121 @@ _isr_32:
 		cli
 		push	dword 0
 		push	dword 32
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_33
+global _isr_33 ; IRQ1
 _isr_33:
 		cli
 		push	dword 0
 		push	dword 33
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_34
+global _isr_34 ; IRQ2
 _isr_34:
 		cli
 		push	dword 0
 		push	dword 34
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_35
+global _isr_35 ; IRQ3
 _isr_35:
 		cli
 		push	dword 0
 		push	dword 35
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_36
+global _isr_36 ; IRQ4
 _isr_36:
 		cli
 		push	dword 0
 		push	dword 36
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_37
+global _isr_37 ; IRQ5
 _isr_37:
 		cli
 		push	dword 0
 		push	dword 37
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_38
+global _isr_38 ; IRQ6
 _isr_38:
 		cli
 		push	dword 0
 		push	dword 38
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_39
+global _isr_39 ; IRQ7
 _isr_39:
 		cli
 		push	dword 0
 		push	dword 39
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_40
+global _isr_40 ; IRQ8
 _isr_40:
 		cli
 		push	dword 0
 		push	dword 40
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_41
+global _isr_41 ; IRQ9
 _isr_41:
 		cli
 		push	dword 0
 		push	dword 41
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_42
+global _isr_42 ; IRQ10
 _isr_42:
 		cli
 		push	dword 0
 		push	dword 42
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_43
+global _isr_43 ; IRQ11
 _isr_43:
 		cli
 		push	dword 0
 		push	dword 43
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_44
+global _isr_44 ; IRQ12
 _isr_44:
 		cli
 		push	dword 0
 		push	dword 44
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_45
+global _isr_45 ; IRQ13
 _isr_45:
 		cli
 		push	dword 0
 		push	dword 45
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_46
+global _isr_46 ; IRQ14
 _isr_46:
 		cli
 		push	dword 0
 		push	dword 46
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_47
+global _isr_47 ; IRQ15
 _isr_47:
 		cli
 		push	dword 0
 		push	dword 47
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
-global _isr_48
+global _isr_48 ; IRQ15
 _isr_48:
 		cli
 		push	dword 0
 		push	dword 48
-		jmp		isr_common_handler
+		jmp		irq_common_handler
 
+; The rest are software interrupt.
 global _isr_49
 _isr_49:
 		cli

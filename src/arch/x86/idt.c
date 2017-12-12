@@ -12,14 +12,6 @@
 #include "gdt.h"
 #include "interrupts.h"
 
-#define PIC1 0x20 /* IO base address for master PIC */
-#define PIC2 0xA0 /* IO base address for slave PIC */
-#define PIC1_COMMAND PIC1
-#define PIC1_DATA (PIC1 + 1)
-#define PIC2_COMMAND PIC2
-#define PIC2_DATA (PIC2 + 1)
-#define PIC_EOI 0x20 /* End-of-interrupt command code */
-
 idt_desc_t idt_descriptor;
 idt_desc_tab_t idt[256];
 uint32_t interrupt_handler_addresses[] = {
@@ -323,14 +315,4 @@ void init_idt() {
 	}
 
 	lidt(&idt_descriptor);
-}
-
-void init_pic() {
-	_outb(PIC1_DATA, 0b11111101);  // Only enable keyboard (irc 1)
-	_outb(PIC2_DATA, 0b11111111);  // Don't enable any interrupts on slave pic (irc 8-15)
-	sti();
-}
-
-void pic_acknowledge() {
-	_outb(PIC1_COMMAND, PIC_EOI);
 }
