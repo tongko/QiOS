@@ -39,7 +39,7 @@ typedef struct {
 	};
 } idt_desc_tab_t;
 
-void init_idt();
+void idt_init();
 void pic_acknowledge();
 void init_pic();
 

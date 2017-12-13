@@ -7,10 +7,10 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include "idt.h"
-#include "asm.h"
-#include "func.h"
+#include "../asm.h"
+#include "../func.h"
+//#include "../interrupts.h"
 #include "gdt.h"
-#include "interrupts.h" 
 
 idt_desc_t idt_descriptor;
 idt_desc_tab_t idt[256];
@@ -293,7 +293,7 @@ void idt_set_gate(int32_t idx,
 	}
 }
 
-void init_idt() {
+void idt_init() {
 	idt_descriptor.limit = sizeof(idt) - 1;
 	idt_descriptor.base = (uint32_t)idt;
 
@@ -306,7 +306,7 @@ void init_idt() {
 			             0xEE, 0);
 		} else {
 			idt_set_gate(i, interrupt_handler_addresses[i], KCODE_SELECTOR,
-			             0, 0);     // Not present
+			             0, 0);  // Not present
 		}
 	}
 

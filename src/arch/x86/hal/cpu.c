@@ -6,21 +6,14 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
+#include <cpu.h>
+#include "gdt.h"
+#include "idt.h"
 
-#ifndef __BOOT_H_
-#define __BOOT_H_
+uint32_t cpu_init() {
+	init_gdt();
+	init_idt();
+}
 
-#include <multiboot/mb_info.h>
-#include <multiboot/multiboot2.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <sys/symbols.h>
-#include <sys/term.h>
-#include "../comm/serial_port.h"
-#include "../hal/gdt.h"
-#include "../idt.h"
-#include "../ktypedef.h"
-#include "paging.h"
-
-#endif  //	__BOOT_H_
+void cpu_fini() {
+}
