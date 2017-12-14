@@ -18,6 +18,19 @@
 
 SECTION .text
 
+GLOBAL _geninterrupt
+		align	8
+_geninterrupt:
+		enter	0, 0
+
+		mov		eax, [ebp+8]
+		mov		byte [.intr+1], al
+.intr:
+		int		0
+.leave:	leave
+		ret
+.end:
+
 GLOBAL _gdt_flush
 		align	8
 _gdt_flush:
@@ -1884,8 +1897,8 @@ fault_common_stub:               ; the common parts of the generic interrupt han
 		push	eax
 
 		; call the C function
-		extern	fault_handler ; the C interrupt handler
-		call	fault_handler
+		; extern	fault_handler ; the C interrupt handler
+		; call	fault_handler
 
 		; restore the registers
 		add		esp, 4 ; cr2
@@ -1905,8 +1918,8 @@ interrupt_handler_with_return_value:
 		push	eax
 
 		; call the C function
-		extern	
-		call	interrupt_handler
+		; extern	interrupt_handler
+		; call	interrupt_handler
 
 		; restore the registers
 		add		esp, 4 ; cr2
@@ -1933,8 +1946,8 @@ irq_common_handler:
 		push	eax
 
 		; call the C function
-		extern	irq_handler ; the C interrupt handler
-		call	irq_handler
+		; extern	irq_handler ; the C interrupt handler
+		; call	irq_handler
 
 		; restore the registers
 		add		esp, 4 ; cr2
@@ -1946,3 +1959,5 @@ irq_common_handler:
   		; return to the code that got interrupted
 		iret
 .end:
+
+isr_common_handler:

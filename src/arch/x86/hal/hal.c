@@ -28,11 +28,3 @@ uint32_t hal_fini(void) {
 	cpu_fini();
 	return 0;
 }
-
-//	generates interrupt
-void geninterrupt(int n) {
-	asm("mov al, byte %0\n"
-	    "mov byte [1F+1], al\n"
-	    "1:"
-	    "int 0" ::"r"(n));
-}

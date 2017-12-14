@@ -11,8 +11,10 @@
 #include "idt.h"
 
 uint32_t cpu_init() {
-	init_gdt();
-	init_idt();
+	gdt_init();
+	idt_init();
+
+	return 0;
 }
 
 void cpu_fini() {

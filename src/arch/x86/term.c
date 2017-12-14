@@ -54,7 +54,7 @@ static void set_cursor_xy(uint32_t x, uint32_t y) {
 	_info.point.y = y;
 }
 
-void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
+static void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
 	if (scanStart == 0 && scanEnd == 0) {
 		// Disable cursor
 		_outb(0x3D4, 0x0A);

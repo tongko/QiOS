@@ -45,7 +45,7 @@ static __inline__ void _outb(uint16_t port, uint8_t val) {
 static __inline__ void io_wait(void) {
 	/* Port 0x80 is used for 'checkpoints' during POST. */
 	/* The Linux kernel seems to think it is free for use :-/ */
-	asm("outb %%al, $0x80"
+	asm("out 0x80, %0"
 	    :
 	    : "a"(0));
 	/* %%al instead of %0 makes no difference.  TODO: does the register need to be zeroed? */

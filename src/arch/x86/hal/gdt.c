@@ -24,12 +24,12 @@ static gdt_desc_t __align(8) _gdt_entry[MAX_DESCRIPTORS];
 static gdtr_t __align(8) _gdt_ptr;
 static tss_entry_t __align(128) _tss_entry;
 
-static uint16_t NULL_SELECTOR = 0x0;
-static uint16_t KCODE_SELECTOR = sizeof(gdt_desc_t) * KCODE_INDEX;
-static uint16_t KDATA_SELECTOR = sizeof(gdt_desc_t) * KDATA_INDEX;
-static uint16_t UCODE_SELECTOR = sizeof(gdt_desc_t) * UCODE_INDEX;
-static uint16_t UDATA_SELECTOR = sizeof(gdt_desc_t) * UDATA_INDEX;
-static uint16_t TSS_SELECTOR = sizeof(gdt_desc_t) * TSS_INDEX;
+uint16_t NULL_SELECTOR = 0x0;
+uint16_t KCODE_SELECTOR = sizeof(gdt_desc_t) * KCODE_INDEX;
+uint16_t KDATA_SELECTOR = sizeof(gdt_desc_t) * KDATA_INDEX;
+uint16_t UCODE_SELECTOR = sizeof(gdt_desc_t) * UCODE_INDEX;
+uint16_t UDATA_SELECTOR = sizeof(gdt_desc_t) * UDATA_INDEX;
+uint16_t TSS_SELECTOR = sizeof(gdt_desc_t) * TSS_INDEX;
 
 void init_tss(void *kernel_stack_bottom, size_t stack_size) {
 	uint32_t tss_base = (uint32_t)&_tss_entry;

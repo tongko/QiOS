@@ -37,7 +37,4 @@ extern uint32_t hal_init(void);
 //	Shutting down HAL
 extern uint32_t hal_fini(void);
 
-//	generates interrupt
-extern void geninterrupt(int n);
-
 #endif  //	__HAL_H_

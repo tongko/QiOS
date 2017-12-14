@@ -54,21 +54,28 @@ void _kmain(uint32_t magic, uint32_t mbi_addr) {
 		printf("[OK]\n");
 	} else {
 		printf("Error loading kernel's symbols table...");
+		return;
 	}
 
-	serial()->print("Initializing GDT... ");
-	init_gdt();
-	serial()->print("[OK]\n");
+	hal_init();
 
-	serial()->print("Initializing IDT... ");
-	init_idt();
-	serial()->print("[OK]\n");
+	sti();
+	uint32_t z = 0;
+	printf("This should trigger exception %d", 5 / z);
 
-	char buffer[4096];
-	mbiapi()->print_mb2i(buffer);
+	// serial()->print("Initializing GDT... ");
+	// init_gdt();
+	// serial()->print("[OK]\n");
 
-	serial()->puts(buffer, (int32_t)strlen(buffer));
-	printf("\n%s", buffer);
+	// serial()->print("Initializing IDT... ");
+	// init_idt();
+	// serial()->print("[OK]\n");
+
+	// char buffer[4096];
+	// mbiapi()->print_mb2i(buffer);
+
+	// serial()->puts(buffer, (int32_t)strlen(buffer));
+	// printf("\n%s", buffer);
 
 	while (1) {
 	}

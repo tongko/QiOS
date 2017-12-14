@@ -21,8 +21,9 @@ void init_pic() {
 
 void disable_pic(uint8_t is_slave) {
 	uint16_t port = is_slave * 0x80 + 0x21;
-	asm("mov AL, 0xFF"
-	    "out %0, AL" ::"r"(port));
+	_outb(port, 0xFF);
+	// asm("mov ax, 0xFF"
+	//     "out %0, ax" ::"r"(port));
 }
 
 void irq_set_line(uint8_t irq_line) {
@@ -51,8 +52,8 @@ void irq_clear_mask(uint8_t irq_line) {
 		irq_line -= 8;
 	}
 
-	value = inb(port) & ~(1 << irq_line);
-	outb(port, value);
+	value = _inb(port) & ~(1 << irq_line);
+	_outb(port, value);
 }
 
 /*
@@ -64,8 +65,8 @@ arguments:
 void pic_remap(uint32_t offset1, uint32_t offset2) {
 	uint8_t a1, a2;
 
-	a1 = inb(MPIC_DTA);  // save masks
-	a2 = inb(SPIC_CMD);
+	a1 = _inb(MPIC_DTA);  // save masks
+	a2 = _inb(SPIC_CMD);
 
 	_outb(MPIC_CMD, ICW1_INIT + ICW1_ICW4);  // starts the initialization sequence (in cascade mode)
 	io_wait();

@@ -10,6 +10,7 @@
 #ifndef __BOOT_H_
 #define __BOOT_H_
 
+#include <hal.h>
 #include <multiboot/mb_info.h>
 #include <multiboot/multiboot2.h>
 #include <stdarg.h>
@@ -17,9 +18,9 @@
 #include <stdio.h>
 #include <sys/symbols.h>
 #include <sys/term.h>
+#include "../asm.h"
 #include "../comm/serial_port.h"
-#include "../hal/gdt.h"
-#include "../idt.h"
+#include "../func.h"
 #include "../ktypedef.h"
 #include "paging.h"
 
