@@ -18,19 +18,6 @@
 
 SECTION .text
 
-GLOBAL _geninterrupt
-		align	8
-_geninterrupt:
-		enter	0, 0
-
-		mov		eax, [ebp+8]
-		mov		byte [.intr+1], al
-.intr:
-		int		0
-.leave:	leave
-		ret
-.end:
-
 GLOBAL _gdt_flush
 		align	8
 _gdt_flush:

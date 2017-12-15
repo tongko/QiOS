@@ -332,3 +332,11 @@ void idt_init() {
 
 	lidt(&_idt_ptr);
 }
+
+void geninterrupt(uint8_t n) {
+	asm("mov al, byte %0\n"
+	"mov byte [1f + 1], al\n"
+	"1:\n"
+	"int 0" : : "N"((n) : "cc", "memory"
+	)
+}

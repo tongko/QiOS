@@ -97,3 +97,17 @@ void pic_acknowledge(uint8_t irq) {
 
 	_outb(MPIC_CMD, PIC_EOI);
 }
+
+// GLOBAL _geninterrupt
+// 		align	8
+// _geninterrupt:
+// 		enter	0, 0
+
+// 		mov		eax, [ebp+8]
+// 		mov		byte [.intr+1], al
+// .intr:
+// 		int		0
+// .leave:	leave
+// 		ret
+// .end:
+

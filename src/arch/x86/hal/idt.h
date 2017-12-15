@@ -58,4 +58,6 @@ extern idt_desc_t *idt_get_intr_desc(uint32_t index);
 //
 extern void idt_set_gate(uint32_t idx, uint8_t flags, uint16_t selector, I386_IRQ_HANDLER irq_handler);
 
+void geninterrupt(uint8_t n);
+
 #endif  // __IDT_H_
