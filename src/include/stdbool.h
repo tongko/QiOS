@@ -5,23 +5,25 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
+ * 																			   *
  * ****************************************************************************/
+#ifndef __STDBOOL_H_
+#define __STDBOOL_H_
 
-#ifndef __BOOT_H_
-#define __BOOT_H_
+#ifndef _Bool
+#define _Bool unsigned int
+#endif
 
-#include <hal.h>
-#include <multiboot/mb_info.h>
-#include <multiboot/multiboot2.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <sys/symbols.h>
-#include <sys/term.h>
-#include "../asm.h"
-#include "../comm/serial_port.h"
-#include "../func.h"
-#include "../ktypedef.h"
-#include "paging.h"
+#ifndef bool
+#define bool _Bool
+#endif
 
-#endif  //	__BOOT_H_
+#ifndef false
+#define false 0
+#endif
+
+#ifndef true
+#define true !false
+#endif
+
+#endif  //	__STDBOOL_H_

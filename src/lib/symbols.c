@@ -20,8 +20,8 @@ static bool load_symbol_table(elf32_section_header_t *symbol_table,
 	} else {
 		_symb_tab_desc.present = true;
 		_symb_tab_desc.count = symbol_table->sh_size / sizeof(elf32_symbol_t);
-		_symb_tab_desc.symbols = (elf32_symbol_t *)physical_to_virtual(symbol_table->sh_addr);
-		_symb_tab_desc.string_table_addr = (char *)physical_to_virtual(string_table->sh_addr);
+		_symb_tab_desc.symbols = (elf32_symbol_t *)(symbol_table->sh_addr);
+		_symb_tab_desc.string_table_addr = (char *)(string_table->sh_addr);
 		return true;
 	}
 }

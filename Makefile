@@ -23,10 +23,10 @@ bin/boot.iso : bin/kernel.elf src/grub.cfg
 
 run: bin/boot.iso
 	# view contents of register with `p $$eax`
-	$(QEMU) -cdrom $< -D log/qemu.log -d guest_errors -m 2048M -daemonize -serial file:log/boot.log
+	$(QEMU) -cdrom $< -D log/qemu.log -d guest_errors -machine q35 -enable-kvm -m 2048M -daemonize -serial file:log/boot.log
 
 debug: bin/boot.iso bin/kernel.elf
-	$(QEMU) -cdrom $< -D log/qemu.log -d guest_errors -m 2048M -daemonize -serial file:log/boot.log -s -S
+	$(QEMU) -cdrom $< -D log/qemu.log -d guest_errors -machine q35 -enable-kvm -m 2048M -daemonize -serial file:log/boot.log -s -S
 	gdb bin/kernel.elf -ex "target remote :1234" --tui
 
 clean:

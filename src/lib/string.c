@@ -77,6 +77,15 @@ void *memcpy(void *dest, const void *src, size_t n) {
 	return dest;
 }
 
+void *memset(void *dest, char c, size_t count) {
+	uint8_t *temp = (uint8_t *)dest;
+	for (; count != 0; count--) {
+		*temp++ = c;
+	}
+
+	return dest;
+}
+
 void reverse(char *str) {
 	size_t len = strlen(str);
 	char aux;

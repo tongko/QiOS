@@ -6,22 +6,15 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
+#ifndef __CPU_H_
+#define __CPU_H_
 
-#ifndef __BOOT_H_
-#define __BOOT_H_
-
-#include <hal.h>
-#include <multiboot/mb_info.h>
-#include <multiboot/multiboot2.h>
-#include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <sys/symbols.h>
-#include <sys/term.h>
-#include "../asm.h"
-#include "../comm/serial_port.h"
-#include "../func.h"
-#include "../ktypedef.h"
-#include "paging.h"
 
-#endif  //	__BOOT_H_
+//	Initialize the processor
+extern uint32_t cpu_init(void);
+
+//	Shutdown processor
+extern void cpu_fini(void);
+
+#endif  //	__CPU_H_

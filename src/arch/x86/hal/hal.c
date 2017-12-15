@@ -7,21 +7,24 @@
  *  base).                                                                     *
  * ****************************************************************************/
 
-#ifndef __BOOT_H_
-#define __BOOT_H_
+#ifndef __i386__
+#error "[hal.c for i386] requires i386 architecture. Define __i386__"
+#endif
+
+/*    IMPLEMENTATION HEADERS												  */
 
 #include <hal.h>
-#include <multiboot/mb_info.h>
-#include <multiboot/multiboot2.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <sys/symbols.h>
-#include <sys/term.h>
 #include "../asm.h"
-#include "../comm/serial_port.h"
-#include "../func.h"
-#include "../ktypedef.h"
-#include "paging.h"
+#include "cpu.h"
 
-#endif  //	__BOOT_H_
+//	Initializing HAL
+uint32_t hal_init(void) {
+	cpu_init();
+	return 0;
+}
+
+//	Shutting down HAL
+uint32_t hal_fini(void) {
+	cpu_fini();
+	return 0;
+}
