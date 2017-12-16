@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 
+extern void _get_cpu_string(char *buffer);
 extern void _gdt_flush(void *, uint32_t d);  // definition in func.asm
 extern void _tss_flush(void);                // definition in func.asm
 extern uint32_t _probe_cpuid(void);

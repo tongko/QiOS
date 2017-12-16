@@ -18,6 +18,23 @@
 
 SECTION .text
 
+GLOBAL _get_cpu_string
+		align	8
+_get_cpu_string:
+		enter	0, 0
+		push	dword [ebp+8]			; store address of buffer
+
+		mov		eax, 0
+		cpuid
+		pop		eax
+		mov		dword [eax], ebx
+		mov		dword [eax+4], edx
+		mov		dword [eax+8], ecx
+
+		leave
+		ret
+.end:
+
 GLOBAL _gdt_flush
 		align	8
 _gdt_flush:

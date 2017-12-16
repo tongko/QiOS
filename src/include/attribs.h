@@ -25,4 +25,8 @@
 #define __packed __attribute__((packed))
 #endif
 
+#ifndef __cdecl
+#define __attribute__(cdecl)
+#endif
+
 #endif  //	__ATTRIBS_H_

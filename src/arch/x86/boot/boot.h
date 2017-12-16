@@ -22,6 +22,7 @@
 #include "../comm/serial_port.h"
 #include "../func.h"
 #include "../ktypedef.h"
+#include "../exception.h"
 #include "paging.h"
 
 #endif  //	__BOOT_H_

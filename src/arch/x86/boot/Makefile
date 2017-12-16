@@ -13,7 +13,7 @@ CSRC := $(wildcard *.c)
 OBJ := $(patsubst %.asm,$(OBJDIR)/%.o,$(SRC))
 OBJ += $(patsubst %.c,$(OBJDIR)/%.o,$(CSRC))
 ASFLAGS = -felf32 -g
-CFLAGS=-std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -g -O0 -I $(INC)
+CFLAGS=-std=c11 -ffreestanding -Wall -Wextra -Werror -masm=intel -g -O0 --verbose -I $(INC)
 
 .PHONY: all clean
 

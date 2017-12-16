@@ -30,7 +30,7 @@ uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
 #define __gett(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | __tabn(y))
 #define __getp(x, y) (paddr_t)((x & ENTRY_MASK) | __pfn(y))
 
-void map_page(vaddr_t from, size_t count, paddr_t physical) {
+__early void map_page(vaddr_t from, size_t count, paddr_t physical) {
 	size_t c = count;
 	// Page schema for 32 bits PAE set, PSE unset:
 	//	2 | 9 | 9 | 12
@@ -54,7 +54,7 @@ void map_page(vaddr_t from, size_t count, paddr_t physical) {
 	}
 }
 
-static paddr_t __early virt_to_phys(vaddr_t vaddr) {
+static __early paddr_t virt_to_phys(vaddr_t vaddr) {
 	uint64_t pdptr_e = page_dir_ptr_tab[__ptrn(vaddr)];
 	if ((pdptr_e & 1) == 0) {  // directory not present
 		return 0;
@@ -71,7 +71,7 @@ static paddr_t __early virt_to_phys(vaddr_t vaddr) {
 	return ret;
 }
 
-void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
+__early void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
 	last_page_dir = page_dir;
 	last_page_tab = page_tab;
 
@@ -91,24 +91,10 @@ void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
 	offset = ROUNDUP(size, 4096);
 	map_page((vaddr_t)mb2_loaded, offset, (paddr_t)mb2_loaded);
 
-	// uint64_t *pg_dir = (uint64_t *)(uint32_t)(page_dir_ptr_tab[3] & ~1);  // get the page directory (you should 'and' the flags away)
-	// pg_dir[511] = (uint64_t)(uint32_t)page_dir;                           // map pd to itself
-	// pg_dir[510] = page_dir_ptr_tab[2];                                    // map pd3 to it
-	// pg_dir[509] = page_dir_ptr_tab[1];                                    // map pd2 to it
-	// pg_dir[508] = page_dir_ptr_tab[0];                                    // map pd1 to it
-	// pg_dir[507] = (uint64_t)(uint32_t)&page_dir_ptr_tab;                  // map the PDPT to the directory
-
 	//	map higher half to page, start from 0xC0100000
 	offset = ROUNDUP((kmem_info.physical_end - kmem_info.physical_start) + 0xB00000, 4096);  // + 0x100000;
-	//	Round down to nearest page size
-	//	offset -= (offset % 4096);
-	// uint32_t remainder = offset % 0x1000;
-	// offset = remainder ? offset + (4096 - remainder) : offset;
-
 	vaddr_t kvb = (vaddr_t)ROUNDUP(KERNEL_VIRTUAL_BASE, 4096);
 	paddr_t pss = (paddr_t)ROUNDUP(kmem_info.physical_start, 4096);
-	// remainder = offset % 0x1000;
-	// offset = remainder ? offset - remainder : offset;
 	map_page(kvb, offset, pss);
 	if (virt_to_phys(KERNEL_VIRTUAL_BASE) != kmem_info.physical_start) {
 		while (1) {
@@ -134,29 +120,33 @@ void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
 	set_cr0(cr0);
 }
 
-__attribute__((section(".bootdata"))) uint32_t efer;
-uint32_t debug(uint32_t eflags, uint32_t cpuid_enabled) {
-	if (!cpuid_enabled) {
-		return eflags;
-	}
+// __earlydata uint32_t efer;
+// uint32_t __early debug(uint32_t eflags, uint32_t cpuid_enabled) {
+// 	if (!cpuid_enabled) {
+// 		return eflags;
+// 	}
 
-	asm("mov eax, 0x00;\n"
-	    "cpuid;\n" ::);
-	asm("mov eax, 0x80000008;\n"
-	    "cpuid;\n" ::);
-	efer = 0;
-	asm("mov ecx, 0xC0000080;\n"
-	    "rdmsr;\n"
-	    : "=r"(efer)
-	    :);
-	uint32_t efer_lma = ~(1U << 10);
-	asm("and eax, %0;\n"
-	    "wrmsr"
-	    :
-	    : "r"(efer_lma)
-	    :);
-	// disable EFER.LMA
-	asm("nop;\n" ::);
+// 	_asm(
+// 	    "mov eax, 0x00;\n"
+// 	    "cpuid;\n" ::);
+// 	_asm(
+// 	    "mov eax, 0x80000008;\n"
+// 	    "cpuid;\n" ::);
+// 	efer = 0;
+// 	_asm(
+// 	    "mov ecx, 0xC0000080;\n"
+// 	    "rdmsr;\n"
+// 	    : "=r"(efer)
+// 	    :);
+// 	uint32_t efer_lma = ~(1U << 10);
+// 	_asm(
+// 	    "and eax, %0;\n"
+// 	    "wrmsr"
+// 	    :
+// 	    : "r"(efer_lma)
+// 	    :);
+// 	// disable EFER.LMA
+// 	_asm("nop;\n" ::);
 
-	return eflags;
-}
+// 	return eflags;
+// }
