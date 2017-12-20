@@ -30,7 +30,7 @@ uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
 #define __gett(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | __tabn(y))
 #define __getp(x, y) (paddr_t)((x & ENTRY_MASK) | __pfn(y))
 
-__early void map_page(vaddr_t from, size_t count, paddr_t physical) {
+void map_page(vaddr_t from, size_t count, paddr_t physical) {
 	size_t c = count;
 	// Page schema for 32 bits PAE set, PSE unset:
 	//	2 | 9 | 9 | 12
@@ -71,7 +71,7 @@ static __early paddr_t virt_to_phys(vaddr_t vaddr) {
 	return ret;
 }
 
-__early void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
+void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
 	last_page_dir = page_dir;
 	last_page_tab = page_tab;
 

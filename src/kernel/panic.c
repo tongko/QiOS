@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <sys/term.h>
 
+extern void system_halt(void);
+
 void kernel_panic(const char *format, ...) {
 	//	First, stop all hardware interrupt.
 	disable_intr();
@@ -30,15 +32,14 @@ We are sorry for the inconvenience caused.\n\n\
 Please report the following information and restart your computer.\n\
 System halted.\n\n";
 
+	term_color_t color = {1, 15};
+	term_api()->set_color(&color);
 	term_api()->clear();
 	cursor_point_t cxy = {0, 0};
 	term_api()->set_cursor_point(&cxy);
-	term_color_t color = {1, 15};
-	term_api()->set_color(&color);
 	term_api()->puts(disclaimer);
 	term_api()->puts("[STOP]: ");
 	term_api()->puts(buffer);
 
-	while (1) {
-	}
+	system_halt();
 }

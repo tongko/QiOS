@@ -9,6 +9,7 @@ all:bin/boot.iso
 compile:
 	+$(MAKE) -C src/lib
 	+$(MAKE) -C src/arch/x86
+	+$(MAKE) -C src/kernel
 
 bin/kernel.elf : compile
 	# Link to make an executable for the kernel.
@@ -32,6 +33,7 @@ debug: bin/boot.iso bin/kernel.elf
 clean:
 	+$(MAKE) -C src/lib clean
 	+$(MAKE) -C src/arch/x86 clean
+	+$(MAKE) -C src/kernel clean
 	rm -f *.dmp *.objdump *.log
 	rm -rf obj/*
 	rm -rf bin/*

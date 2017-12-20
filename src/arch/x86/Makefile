@@ -20,7 +20,6 @@ all: $(OBJ) subsystem
 subsystem:
 	+$(MAKE) -C $(X86)/comm
 	+$(MAKE) -C $(X86)/hal
-	+$(MAKE) -C $(X86)/multiboot
 	+$(MAKE) -C $(X86)/boot
 
 $(OBJDIR)/%.o : %.asm
@@ -35,6 +34,5 @@ debug:
 clean:
 	+$(MAKE) -C $(X86)/comm clean
 	+$(MAKE) -C $(X86)/hal clean
-	+$(MAKE) -C $(X86)/multiboot clean
 	+$(MAKE) -C $(X86)/boot clean
 	rm -f $(OBJ)

@@ -8,10 +8,8 @@
  * ****************************************************************************/
 #include <multiboot/mb_info.h>
 #include <stddef.h>
-
-#include <string.h>
-
 #include <stdio.h>
+#include <string.h>
 
 static void *_mb2_info;
 static mbiapi_t _api;

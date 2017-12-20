@@ -126,7 +126,11 @@ higher_half_entry:
 		extern	_kmain							; Enter C code kernel
 		call	_kmain
 		add		esp, 4
+.end:
 
+GLOBAL system_halt
+		align	8
+system_halt:
 		; kernel should never return, but just in case...
 		;	Halted
 		push	halt_message

@@ -10,7 +10,6 @@
 #ifndef __KTYPEDEF_H_
 #define __KTYPEDEF_H_
 
-#include <attribs.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -19,4 +18,4 @@ typedef uint32_t vaddr_t;
 //	type represent physical address
 typedef uint32_t paddr_t;
 
-#endif // __KTYPEDEF_H_
+#endif  // __KTYPEDEF_H_

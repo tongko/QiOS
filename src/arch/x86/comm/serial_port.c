@@ -7,10 +7,8 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include "serial_port.h"
-#include <stddef.h>
-
 #include <stdarg.h>
-
+#include <stddef.h>
 #include <stdio.h>
 #include "../asm.h"
 

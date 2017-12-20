@@ -10,6 +10,7 @@
 #ifndef __PAGING_H_
 #define __PAGING_H_
 
+#include <attribs.h>
 #include <stddef.h>
 #include "../ktypedef.h"
 
@@ -32,7 +33,7 @@ typedef struct kernel_mem_info {
 	uint32_t virtual_end;
 } kernel_mem_info_t;
 
-extern void map_page(vaddr_t from, size_t count, paddr_t physical);
-extern void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr);
+extern __early void map_page(vaddr_t from, size_t count, paddr_t physical);
+extern __early void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr);
 
 #endif  //	__PAGING_H_

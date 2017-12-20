@@ -26,7 +26,6 @@
 #endif
 
 #ifndef __cdecl
-#define __attribute__(cdecl)
+#define __cdecl __attribute__(cdecl)
 #endif
-
 #endif  //	__ATTRIBS_H_

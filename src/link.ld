@@ -16,12 +16,12 @@ SECTIONS
 	.boot : ALIGN (0x1000) /* align at 4 KiB, the size of a page */
 	{
 		*(.multiboot)
-		*(early)
+		*(.early)
 	}
 
 	.bootdata : ALIGN (0x1000)
 	{
-		*(earlydata)
+		*(.earlydata)
 	}
 
 	/* WARNING: All this need to be done after kernel loaded at physical address 1M */
