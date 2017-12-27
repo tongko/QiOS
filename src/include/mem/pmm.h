@@ -7,30 +7,28 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __ATTRIBS_H_
-#define __ATTRIBS_H_
+#ifndef __PMM_H_
+#define __PMM_H_
 
-#ifndef __sect
-	#define __sect(S) __attribute__((section(#S)))
-#endif
+#include <attribs.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#ifndef __early
-	#define __early __sect(.early)
-#endif
+//	Physical Memory Address
+typedef void *paddr_t;
 
-#ifndef __earlydata
-	#define __earlydata __sect(.earlydata)
-#endif
+#define PMM_BLOCKS_PER_BYTE 8
+#define PMM_BLOCK_SIZE 4096
+#define PMM_BLOCK_ALIGN PMM_BLOCK_SIZE
 
-#ifndef __align
-	#define __align(x) __attribute__((aligned(x)))
-#endif
+void __early pmm_init(size_t mem_size, paddr_t table);
+void __early pmm_init_region(paddr_t base, size_t size, bool set);
+void __early *pmm_alloc_block(void);
+void __early *pmm_alloc_blocks(size_t size);
+void __early pmm_free_block(void *p);
+void __early pmm_free_blocks(void *p, size_t size);
+uint32_t __early pmm_get_block_count(void);
+uint32_t __early pmm_get_used_block(void);
 
-#ifndef __packed
-	#define __packed __attribute__((packed))
-#endif
-
-// #ifndef __cdecl
-// 	#define __cdecl __attribute__(cdecl)
-// #endif
-#endif  //	__ATTRIBS_H_
+#endif  //	__PMM_H_

@@ -7,23 +7,21 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __STDBOOL_H_
-#define __STDBOOL_H_
+#ifndef __MEMORY_H_
+#define __MEMORY_H_
 
-#ifndef _Bool
-#define _Bool unsigned int
-#endif
+#include <attribs.h>
 
-#ifndef bool
-#define bool _Bool
-#endif
+/*	Defines and Type Definitions */
+typedef struct {
+	paddr_t physical_start;
+	paddr_t physical_end;
+	vaddr_t virtual_start;
+	vaddr_t virtual_end;
+} kernel_meminfo_t;
 
-#ifndef false
-#define false 0
-#endif
+__early void mm_init(kernel_meminfo_t kern_mem_info);
+__early uint32_t mm_total_physical(void);
+__early uint32_t mm_used_physical(void);
 
-#ifndef true
-#define true !false
-#endif
-
-#endif  //	__STDBOOL_H_
+#endif  //	__MEMORY_H_

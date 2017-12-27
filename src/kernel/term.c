@@ -6,29 +6,32 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
+#include <asm.h>
+#include <attribs.h>
 #include <sys/term.h>
-#include "asm.h"
 
-static term_api_t _api;
-static const uint32_t TERM_WIDTH = 80;
+#define VIDEO_MEM (uint16_t *)0xB8000
+
+static __earlydata term_api_t _api;
+static __earlydata uint32_t _term_width;
 //static const uint32_t TERM_HEIGHT = 25;
-static __volatile__ uint16_t *_video_mem = (uint16_t *)0xB8000;
-static term_color_t _color;
-static cursor_info_t _info;
+static __earlydata volatile uint16_t *_video_mem;
+static __earlydata term_color_t _color;
+static __earlydata cursor_info_t _info;
 
-static __inline__ uint8_t vga_color(const term_color_t *color) {
+static __early __inline__ uint8_t vga_color(const term_color_t *color) {
 	return color->foreground | color->background << 4;
 }
 
-static __inline__ uint16_t vga_entry(char c, const term_color_t *color) {
+static __early __inline__ uint16_t vga_entry(char c, const term_color_t *color) {
 	return (uint16_t)c | ((uint16_t)vga_color(color) << 8);
 }
 
-static const term_color_t *get_color(void) {
+static __early const term_color_t *get_color(void) {
 	return &_color;
 }
 
-static void set_color(const term_color_t *color) {
+static __early void set_color(const term_color_t *color) {
 	if (!color) {
 		return;
 	}
@@ -37,12 +40,12 @@ static void set_color(const term_color_t *color) {
 	_color.foreground = color->foreground;
 }
 
-static const cursor_info_t *get_cursor_info(void) {
+static __early const cursor_info_t *get_cursor_info(void) {
 	return &_info;
 }
 
-static void set_cursor_xy(uint32_t x, uint32_t y) {
-	uint32_t pos = y * TERM_WIDTH + x;
+static __early void set_cursor_xy(uint32_t x, uint32_t y) {
+	uint32_t pos = y * _term_width + x;
 
 	_outb(0x3D4, 0x0F);
 	_outb(0x3D5, (uint8_t)(pos & 0xFF));
@@ -54,7 +57,7 @@ static void set_cursor_xy(uint32_t x, uint32_t y) {
 	_info.point.y = y;
 }
 
-static void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
+static __early void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
 	if (scanStart == 0 && scanEnd == 0) {
 		// Disable cursor
 		_outb(0x3D4, 0x0A);
@@ -69,7 +72,7 @@ static void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
 	_outb(0x3D5, (_inb(0x3E0) & 0xE0) | scanEnd);
 }
 
-static void set_cursor_info(const cursor_info_t *info) {
+static __early void set_cursor_info(const cursor_info_t *info) {
 	if (!info) {
 		return;
 	}
@@ -95,7 +98,7 @@ static void set_cursor_info(const cursor_info_t *info) {
 	_info.shape = info->shape;
 }
 
-static void set_cursor_point(const cursor_point_t *point) {
+static __early void set_cursor_point(const cursor_point_t *point) {
 	if (!point) {
 		return;
 	}
@@ -103,9 +106,9 @@ static void set_cursor_point(const cursor_point_t *point) {
 	set_cursor_xy(point->x, point->y);
 }
 
-static void putc(char c) {
+static __early void putc(char c) {
 	cursor_point_t point = _info.point;
-	uint32_t offset = point.y * TERM_WIDTH + point.x;
+	uint32_t offset = point.y * _term_width + point.x;
 
 	switch (c) {
 		// new line
@@ -159,12 +162,12 @@ static void putc(char c) {
 	set_cursor_point(&point);
 }
 
-static void putc_at(char c, const cursor_point_t *point) {
+static __early void putc_at(char c, const cursor_point_t *point) {
 	set_cursor_point(point);
 	putc(c);
 }
 
-static void puts(const char *s) {
+static __early void puts(const char *s) {
 	if (!s) {
 		return;
 	}
@@ -174,7 +177,7 @@ static void puts(const char *s) {
 	}
 }
 
-static void clear() {
+static __early void clear() {
 	for (int32_t i = 0; i < 2000; i++) {
 		putc(' ');
 	}
@@ -184,6 +187,8 @@ static void clear() {
 }
 
 void term_default_config() {
+	_video_mem = VIDEO_MEM;
+	_term_width = 80;
 	term_color_t color = {0x02, 0x00};  // green, black
 	_api.set_color(&color);
 	cursor_point_t point = {0, 0};                // 0, 0
@@ -197,7 +202,7 @@ term_api_t *term_api() {
 	return &_api;
 }
 
-void init_term(term_api_t *api) {
+void term_init(term_api_t *api) {
 	if (api != NULL) {
 		_api.get_color = api->get_color;
 		_api.set_color = api->set_color;

@@ -153,7 +153,7 @@ struct multiboot_color {
 	multiboot_uint8_t blue;
 };
 
-struct multiboot_mmap_entry {
+typedef struct multiboot_mmap_entry {
 	multiboot_uint64_t addr;
 	multiboot_uint64_t len;
 #define MULTIBOOT_MEMORY_AVAILABLE 1
@@ -163,8 +163,7 @@ struct multiboot_mmap_entry {
 #define MULTIBOOT_MEMORY_BADRAM 5
 	multiboot_uint32_t type;
 	multiboot_uint32_t zero;
-};
-typedef struct multiboot_mmap_entry multiboot_memory_map_t;
+} mb_tag_memmap_entry_t;
 
 struct multiboot_tag {
 	multiboot_uint32_t type;
@@ -177,20 +176,20 @@ struct multiboot_tag_string {
 	char string[0];
 };
 
-struct multiboot_tag_module {
+typedef struct {
 	multiboot_uint32_t type;
 	multiboot_uint32_t size;
 	multiboot_uint32_t mod_start;
 	multiboot_uint32_t mod_end;
 	char cmdline[0];
-};
+} mb_tag_module_t;
 
-struct multiboot_tag_basic_meminfo {
+typedef struct multiboot_tag_basic_meminfo {
 	multiboot_uint32_t type;
 	multiboot_uint32_t size;
 	multiboot_uint32_t mem_lower;
 	multiboot_uint32_t mem_upper;
-};
+} mb_tag_meminfo_t;
 
 struct multiboot_tag_bootdev {
 	multiboot_uint32_t type;
@@ -200,14 +199,13 @@ struct multiboot_tag_bootdev {
 	multiboot_uint32_t part;
 };
 
-struct multiboot_tag_mmap {
+typedef struct multiboot_tag_mmap {
 	multiboot_uint32_t type;
 	multiboot_uint32_t size;
 	multiboot_uint32_t entry_size;
 	multiboot_uint32_t entry_version;
-	struct multiboot_mmap_entry entries[0];
-};
-typedef struct multiboot_tag_mmap multiboot_tag_mmap_t;
+	mb_tag_memmap_entry_t entries[0];
+} mb_tag_memmap_t;
 
 struct multiboot_vbe_info_block {
 	multiboot_uint8_t external_specification[512];

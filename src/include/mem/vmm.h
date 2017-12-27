@@ -5,16 +5,16 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
+ * 																			   *
  * ****************************************************************************/
-#ifndef __TYPES_H_
-#define __TYPES_H_
+#ifndef __VMM_H_
+#define __VMM_H_
 
-#include <stddef.h>
+#include <attribs.h>
+#include <mem/pmm.h>
+#include <stdint.h>
 
-//	type represent virtual address
-typedef uint32_t vaddr_t;
+//	Initialize Virtual Memory Manager
+void __early vmm_init();
 
-//	type represent physical address
-typedef uint32_t paddr_t;
-
-#endif  //	__TYPES_H_
+#endif  //	__VMM_H_

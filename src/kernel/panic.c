@@ -6,16 +6,16 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#include <hal.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <sys/panic.h>
+#include <asm.h>
+#include <karg.h>
+#include <kio.h>
 #include <sys/term.h>
 
 extern void system_halt(void);
-
 void kernel_panic(const char *format, ...) {
 	//	First, stop all hardware interrupt.
-	disable_intr();
+	cli();
 
 	va_list args;
 	static char buffer[4096];

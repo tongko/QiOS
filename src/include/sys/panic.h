@@ -6,26 +6,12 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
+#ifndef __PANIC_H_
+#define __PANIC_H_
 
-#ifndef __STDARG_H_
-#define __STDARG_H_
+#include <attribs.h>
+#include <karg.h>
 
-// These functions are from the official GNU stdarg.h file
-typedef char *va_list;
+__early void kernel_panic(const char *format, ...);
 
-// Amount of space required in an argument list for an arg of type TYPE.
-// TYPE may alternatively be an expression whose type is used.
-
-#define __va_rounded_size(TYPE) \
-	(((sizeof(TYPE) + sizeof(int) - 1) / sizeof(int)) * sizeof(int))
-
-#define va_start(AP, LASTARG) \
-	(AP = ((char *)&(LASTARG) + __va_rounded_size(LASTARG)))
-
-extern void va_end(va_list);
-#define va_end(AP)  //  Does Nothing
-
-#define va_arg(AP, TYPE) (AP += __va_rounded_size(TYPE), \
-	                      *((TYPE *)(AP - __va_rounded_size(TYPE))))
-
-#endif
+#endif  //	__PANIC_H_

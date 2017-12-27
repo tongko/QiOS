@@ -6,17 +6,16 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#ifndef __STDIO_H_
-#define __STDIO_H_
+#ifndef __KIO_H_
+#define __KIO_H_
 
+#include <attribs.h>
+#include <karg.h>
+#include <kdef.h>
 #include <stdint.h>
 
-#include <stdarg.h>
+__early uint32_t sprintf(char *str, const char *format, ...);
+__early uint32_t vsprintf(char *str, const char *format, va_list arg);
+__early uint32_t printf(const char *format, ...);
 
-#include <stddef.h>
-
-uint32_t sprintf(char *str, const char *format, ...);
-uint32_t vsprintf(char *str, const char *format, va_list arg);
-uint32_t printf(const char *format, ...);
-
-#endif  //	__STDIO_H_
+#endif  //	__KIO_H_

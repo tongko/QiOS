@@ -5,16 +5,25 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
+ * 																			   *
  * ****************************************************************************/
-#ifndef __TYPES_H_
-#define __TYPES_H_
+#ifndef __KSTR_H_
+#define __KSTR_H_
 
-#include <stddef.h>
+#include <attribs.h>
+#include <kdef.h>
+#include <stdint.h>
 
-//	type represent virtual address
-typedef uint32_t vaddr_t;
+#ifndef ISDIGIT
+#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
+#endif
 
-//	type represent physical address
-typedef uint32_t paddr_t;
+__early size_t strlen(const char *str);
+__early char *strcat(char *dest, const char *src);
+__early int strcmp(const char *str1, const char *str2);
+__early void *memcpy(void *dest, const void *src, size_t n);
+__early void *memset(void *dest, char c, size_t count);
+__early void reverse(char *str);
+__early char *strchr(const char *s, int c_in);
 
-#endif  //	__TYPES_H_
+#endif  //	__KSTR_H_

@@ -13,7 +13,7 @@
 #include <attribs.h>
 #include <stdint.h>
 
-#define _asm(x...) __asm__ __volatile__(x)
+#define _asm(x...) asm volatile(x)
 
 static __inline__ void sti(void) {
 	_asm(

@@ -7,26 +7,23 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __STDLIB_H_
-#define __STDLIB_H_
+#ifndef __PAGING_H_
+#define __PAGING_H_
 
+#include <mem/pmm.h>
 #include <stdint.h>
 
-#include <stddef.h>
+typedef void *vaddr_t;
 
-#ifndef MAX
-#define MAX(x, y) (x > y ? x : y)
-#endif  //	MAX
+//	laod a new paging structure
+paddr_t pg_load(paddr_t new_paging);
+//	Enable/Disable paging
+void pg_enable(bool enable);
+//	Flush Translation Lookaside Buffer (TLB) entry
+void pg_flush_tlb_entry(vaddr_t vaddr);
+//	Map virtual address to a physical address
+void pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t length);
+//	Initialize Paging
+void pg_init(void);
 
-#ifndef MIN
-#define MIN(x, y) (x < y ? x : y)
-#endif  //	MIN
-
-#ifndef ISDIGIT
-#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
-#endif  //	ISDIGIT
-
-int32_t abs(int32_t x);
-size_t itoa(uint32_t value, char *str, int base, const char *digit_str);
-uint32_t atoi(const char *str);
-#endif  // __STDLIB_H_
+#endif  //	__PAGING_H_

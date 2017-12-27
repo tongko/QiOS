@@ -29,7 +29,7 @@
 #include "boot.h"
 
 #define serial serial_port_api
-#define mbiapi mbi_info_api
+#define mbiapi mb_info_api
 #define symbol symbol_table_api
 
 char *logo =
@@ -40,8 +40,8 @@ char *logo =
 \\___\\_\\/_/\\____/___/\n\n";
 
 void _kmain(uint32_t magic, uint32_t mbi_addr) {
-	init_mb_info(NULL);
-	mbiapi()->load_mb2i(mbi_addr);
+	//mb_info_init(NULL);
+	//mbiapi()->load_mb2i(mbi_addr);
 	init_term(NULL);          // use default term implementation
 	term_default_config();    // default configuration
 	init_serial_port(NULL);   // use default serial_port implementation
@@ -87,13 +87,13 @@ void _kmain(uint32_t magic, uint32_t mbi_addr) {
 	intr_set_vect(18, machine_check_abort);
 	intr_set_vect(19, simd_fpu_fault);
 
-	sti();
+	//sti();
 
-	term_api()->clear();
 	cursor_point_t cxy = {0, 0};
 	term_api()->set_cursor_point(&cxy);
 	term_color_t color = {2, 0};
 	term_api()->set_color(&color);
+	term_api()->clear();
 
 	printf("%s", logo);
 	printf("The PIC, PIT, and exception handlers are installed!\n\n");
@@ -101,12 +101,12 @@ void _kmain(uint32_t magic, uint32_t mbi_addr) {
 	printf("not have a keyboard driver yet to install one.\n\n");
 	printf("CPU: %s\n\n", get_cpu_vender());
 
-	while (1) {
-		cxy.x = 0;
-		cxy.y = 14;
-		term_api()->set_cursor_point(&cxy);
-		printf("Current tick count: %i", get_tick_count());
-	}
+	// while (1) {
+	// 	cxy.x = 0;
+	// 	cxy.y = 14;
+	// 	term_api()->set_cursor_point(&cxy);
+	// 	printf("Current tick count: %i", get_tick_count());
+	// }
 
 	// serial()->print("Initializing GDT... ");
 	// init_gdt();
@@ -116,11 +116,11 @@ void _kmain(uint32_t magic, uint32_t mbi_addr) {
 	// init_idt();
 	// serial()->print("[OK]\n");
 
-	// char buffer[4096];
-	// mbiapi()->print_mb2i(buffer);
+	char buffer[4096];
+	mbiapi()->print_mb2i(buffer);
 
-	// serial()->puts(buffer, (int32_t)strlen(buffer));
-	// printf("\n%s", buffer);
+	serial()->puts(buffer, (int32_t)strlen(buffer));
+	printf("\n%s", buffer);
 
 	while (1) {
 	}

@@ -17,17 +17,6 @@
 [bits 32]
 
 %include "multiboot2.inc"
-; %ifdef	__ELF__
-; %define	AOUT_KLUDGE	0
-; %else
-; %define AOUT_KLUDGE MULTIBOOT_AOUT_KLUDGE
-; %endif
-
-SECTION .data
-		align	8
-halt_message:
-		db		"\nHalt.", 0
-_edata:
 
 SECTION .multiboot
 		align	8
@@ -140,6 +129,12 @@ system_halt:
 		cli
 		hlt
 		jmp		.hang
+
+SECTION .data
+		align	8
+halt_message:
+		db		"\nHalt.", 0
+_edata:
 
 SECTION .bss
 GLOBAL kstack_bottom

@@ -7,23 +7,23 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __STRING_H_
-#define __STRING_H_
+#ifndef __KBOOL_H_
+#define __KBOOL_H_
 
-#include <stdint.h>
-//#include <sys/types.h>
-#include <stddef.h>
-
-#ifndef ISDIGIT
-#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
+#ifndef _Bool
+#define _Bool unsigned int
 #endif
 
-size_t strlen(const char *str);
-char *strcat(char *dest, const char *src);
-int strcmp(const char *str1, const char *str2);
-void *memcpy(void *dest, const void *src, size_t n);
-void *memset(void *dest, char c, size_t count);
-void reverse(char *str);
-char *strchr(const char *s, int c_in);
+#ifndef bool
+#define bool _Bool
+#endif
 
-#endif  //	__STRING_H_
+#ifndef false
+#define false 0
+#endif
+
+#ifndef true
+#define true !false
+#endif
+
+#endif  //	__KBOOL_H_

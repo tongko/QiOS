@@ -7,18 +7,44 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#include "paging.h"
-#include "../asm.h"
+/*-----------------------------------------------------------------------------*
+ *                                                                             *
+ *    Paging Implementation                                                    *
+ *    ---------------------                                                    *
+ *    This module implements the interfaces define in <mem/paging.h>. This     *
+ *    implementation assume host system supports PAE, thus will initialize     *
+ *    the paging to create a page directory pointer which hold 3 page          *
+ *    directory. Each of these directory consists of 4096 page table. Each     *
+ *    page table in turn consists of 4096 entries. Each entries point to a     *
+ *    physical address which is the begining of a 4096 KiB block.              *
+ *                                                                             *
+ * ---------------------------------------------------------------------------*/
+#include <asm.h>
+#include <kstr.h>
+#include <mem/paging.h>
+#include <sys/panic.h>
 
-uint32_t __earlydata _magic;
-uint32_t __earlydata _addr;
-uint64_t __earlydata *last_page_dir;
-uint64_t __earlydata *last_page_tab;
-uint64_t __earlydata page_dir_ptr_tab[4];
-uint64_t __align(0x1000) __earlydata page_dir[ENTRY_SIZE * 4];  // must be aligned to page boundry
-uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
+#define PAGE_DIR_PTR_SIZE 4
+#define PAGE_DIR_SIZE 512
+#define PAGE_TAB_SIZE 4096
+#define ENTRY_MASK 0xFFFFFFFFFF000UL  // 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 0000 0000 0000
+#define PDPTR_MASK 0xC0000000         // 1100 0000 0000 0000 0000 0000 0000 0000
+#define PD_MASK 0x3FE00000            // 0011 1111 1110 0000 0000 0000 0000 0000
+#define PT_MASK 0x001FF000            // 0000 0000 0001 1111 1111 0000 0000 0000
+#define PO_MASK 0x00000FFF            // 0000 0000 0000 0000 0000 1111 1111 1111
+#define PAGE_SIZE 0x00001000          // 4 KIB
+#define ENTRY_SIZE 0x00000200         // 512 entries
+#define PT_SIZE_IN_BYTE (ENTRY_SIZE * sizeof(uint64_t))
+#define PD_SIZE_IN_BYTE (ENTRY_SIZE * PT_SIZE_IN_BYTE)
+#define KERNEL_VIRTUAL_BASE 0xC0100000
+#define KERNEL_PHYSICAL_BASE 0x00100000
 
+//	PDPTE flags
+#define PDPTE_FLAG_PRESENT 0x01
+
+//	Round up to nearest y
 #define ROUNDUP(x, y) (x % y ? x + (y - (x % y)) : x)
+//	Round down to nearest y
 #define ROUNDDW(x, y) x - (x % y)
 
 #define __to_entry(x) ((uint64_t)((uint32_t)x & ENTRY_MASK))
@@ -29,6 +55,160 @@ uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
 #define __getd(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | __dirn(y))
 #define __gett(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | __tabn(y))
 #define __getp(x, y) (paddr_t)((x & ENTRY_MASK) | __pfn(y))
+
+typedef struct {
+	uint64_t entries[PAGE_DIR_PTR_SIZE];
+} pdpte_t;
+
+typedef struct {
+	pg_dir_e_t entries[PAGE_DIR_PTR_SIZE];
+} pg_dir_t;
+
+typedef uint64_t pg_dir_e_t;
+
+typedef struct {
+	pg_tab_e_t entries[PAGE_TAB_SIZE];
+} pg_tab_t;
+
+typedef uint64_t pg_tab_e_t;
+
+//	Current Page Directory
+pg_dir_t *_curr_dir __earlydata;
+//	Current Page Table
+pg_tab_t *_curr_tab __earlydata;
+//	PDPTE consists of 4 entries that each point to a page directory
+pdpte_t pg_dir_ptr __earlydata;
+
+/*--------------------------------------------------------------
+*	Function pg_switch
+*	Param:
+*	paddr_t new_paging - The physical address of a new PDPTE
+*	Return:
+*	The physical address of existing PDPTE
+---------------------------------------------------------------*/
+paddr_t __early pg_load(paddr_t new_paging) {
+	uint32_t old_addr;
+	_asm(
+	    "mov %0, cr3\n"
+	    "mov eax, %1\n"
+	    "mov cr3, eax\n"
+	    : "=r"(old_addr)
+	    : "r"(new_paging));
+
+	return old_addr;
+}
+
+/*--------------------------------------------------------------
+*	Function pg_enable
+*	Param:
+*	bool enable - true to enable paging, else, disable paging.
+--------------------------------------------------------------*/
+void __early pg_enable(bool enable) {
+	_asm(
+	    "mov eax, cr4\n"
+	    "or eax, 0x20\n"  //	set bit 5
+	    "mov cr4, eax\n"
+	    "mov eax, cr0\n"
+	    "cmp %0, 0\n"
+	    "je  disable\n"
+	    "jmp enable\n"
+	    "disable:\n"
+	    "and eax, 0x7FFFFFFF\n"  //	Clear bit 31
+	    "mov cr0, eax\n"
+	    "jmp done\n"
+	    "enable:\n"
+	    "or eax, 0x80000000\n"  //	Set Bit 31
+	    "mov cr0, eax\n"
+	    "done:" ::"r"(enable));
+}
+
+/*-----------------------------------------------------------
+*	function pg_flush_tlb_entry
+*	Param:
+*	vaddr_t vaddr - The virtual address to flush from TLB
+-----------------------------------------------------------*/
+void __early pg_flush_tlb_entry(vaddr_t vaddr) {
+	if (!vaddr) {
+		return;
+	}
+
+	_asm(
+	    "cli\n"
+	    "invlpg %0\n"
+	    "sti\n" ::"r"(vaddr));
+}
+
+/*------------------------------------------------------------
+*	function pg_map_addr
+*	Param:
+*	vaddr_t vaddr - The virtual address which to map to physical address
+*	paddr_t paddr - The physical address which to be map to
+*	uint32_t length - The length to map.
+*	all the parameters value must be page size aligned, i.e. starting
+*	at page boundry.
+-------------------------------------------------------------------*/
+void pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t length) {
+	uint32_t v = (uint32_t)vaddr;
+	if ((v % PAGE_SIZE) != 0) {
+		kernel_panic("pg_map_addr: Virtual address '%#x' not aligned to page boundry.", v);
+	}
+
+	uint32_t p = (uint32_t)paddr;
+	if ((p % PAGE_SIZE) != 0) {
+		kernel_panic("pg_map_addr: Physical address '%#x' not aligned to page boundry.", p);
+	}
+
+	if ((length % PAGE_SIZE) != 0) {
+		kernel_panic("pg_map_addr: Length '%d' not aligned to page boundry.", length);
+	}
+
+	for (; length > 0; v += 0x1000, p += 0x1000, length -= 0x1000) {
+		int p = __ptrn(v);
+		uint64_t pdptr_i = pg_dir_ptr.entries[p];
+		// check PDPTEi, if P flag is not 1, or pdpte is zero
+		if (!(pdptr_i & PDPTE_FLAG_PRESENT && pdptr_i & ENTRY_MASK)) {
+			//	PDPTR not define, let's make 1 for it.
+			_curr_dir = pmm_alloc_block();
+			pg_dir_ptr.entries[p] = __to_entry(_curr_dir) | PDPTE_FLAG_PRESENT;
+		}
+		//	retrieve page dir entry base on dir first element and [from]
+	}
+}
+
+/*-------------------------------------------------------------
+*	function pg_init
+*	Before we can enable paging, we must ensure proper paging
+*	has been constructed and place in CR3. Failing to do so
+*	will send the kernel to hell immediately.
+*
+*	1) Setup identity page for first 4 MiB which includes all
+*		BIOS area and the kernel space.
+*	2) Setup Higher Half for kernel
+*	3) Setup for modules
+*	4) Call pg_load by passing the PDPTE we've just setup
+*	5) Call pg_enable passing true.
+-------------------------------------------------------------*/
+void __early pg_init() {
+	//	Initialize pdpte to zero
+	memset(&pg_dir_ptr, 0, sizeof(pdpte_t));
+	//	allocate first dir, this is for first 4 MiB ID mapped
+	pg_dir_t *dir = (pg_dir_t *)pmm_alloc_block();
+	pg_dir_ptr.entries[0] = __to_entry(dir) | PDPTE_FLAG_PRESENT;
+	_curr_dir = dir;
+
+	//	allocate first page table, this is for first 4 MiB ID mapped
+	pg_tab_t *tab = (pg_tab_t *)pmm_alloc_blocks(8);  //	Need 8 blocks per page.
+	dir->entries[0] = __to_entry(tab) | 3;
+
+	//	First 4 MiB are identity mapped
+	vaddr_t v = 0;
+	for (int i = 0; i < 1024; i++, v += 4096) {
+		tab->entries[0] = __to_entry(v) | 3;
+	}
+}
+
+// uint64_t __align(0x1000) __earlydata page_dir[ENTRY_SIZE * 4];  // must be aligned to page boundry
+// uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
 
 void map_page(vaddr_t from, size_t count, paddr_t physical) {
 	size_t c = count;
