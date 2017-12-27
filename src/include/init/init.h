@@ -5,16 +5,19 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
+ * 																			   *
  * ****************************************************************************/
-#ifndef __TYPES_H_
-#define __TYPES_H_
+#ifndef __INIT_H_
+#define __INIT_H_
 
-#include <stddef.h>
+#include <attribs.h>
+#include <mem/memory.h>
+#include <multiboot/mb_info.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-//	type represent virtual address
-typedef uint32_t vaddr_t;
+/*	Interfaces	*/
 
-//	type represent physical address
-typedef uint32_t paddr_t;
+__early void early_init(kernel_meminfo_t k_meminfo, mbi_t mbi);
 
-#endif  //	__TYPES_H_
+#endif  //	__INIT_H_

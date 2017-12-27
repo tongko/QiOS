@@ -17,4 +17,7 @@ extern uint32_t cpu_init(void);
 //	Shutdown processor
 extern void cpu_fini(void);
 
+//	Get CPU Vender
+extern const char *cpu_get_vendor(void);
+
 #endif  //	__CPU_H_

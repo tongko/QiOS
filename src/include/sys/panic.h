@@ -6,13 +6,12 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#include "isr.h"
+#ifndef __PANIC_H_
+#define __PANIC_H_
 
-void fault_handler(cpu_state_t cpu_state, stack_state_t stack, uint32_t intr_no, uint32_t error_no) {
-}
+#include <attribs.h>
+#include <karg.h>
 
-void interrupt_handler(cpu_state_t cpu_state, stack_state_t stack, uint32_t intr_no, uint32_t error_no) {
-}
+__early void kernel_panic(const char *format, ...);
 
-void irq_handler(cpu_state_t cpu_state, stack_state_t stack, uint32_t intr_no, uint32_t error_no) {
-}
+#endif  //	__PANIC_H_

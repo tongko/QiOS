@@ -9,8 +9,9 @@
 #ifndef __TERM_H_
 #define __TERM_H_
 
+#include <attribs.h>
+#include <kstr.h>
 #include <stdint.h>
-#include <string.h>
 
 typedef struct {
 	uint32_t foreground;
@@ -46,8 +47,8 @@ typedef struct {
 	void (*clear)(void);
 } term_api_t;
 
-extern term_api_t *term_api(void);
-extern void term_default_config(void);
-extern void init_term(term_api_t *api);
+__early term_api_t *term_api(void);
+__early void term_default_config(void);
+__early void term_init(term_api_t *api);
 
 #endif  //	__TERM_H_

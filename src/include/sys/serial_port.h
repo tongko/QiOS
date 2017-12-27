@@ -9,6 +9,7 @@
 #ifndef __SERIAL_PORT_H_
 #define __SERIAL_PORT_H_
 
+#include <attribs.h>
 #include <stdint.h>
 
 #define SERIAL_COM1 0x3F8 /* COM1 base port */
@@ -38,8 +39,8 @@ typedef struct {
 	void (*print)(const char *format, ...);
 } serial_port_api_t;
 
-serial_port_api_t *serial_port_api(void);
-void serial_default_config(void);
-void init_serial_port(serial_port_api_t *api);
+__early serial_port_api_t *serial_port_api(void);
+__early void serial_port_default_config(void);
+__early void serial_port_init(serial_port_api_t *api);
 
 #endif  //	__SERIAL_PORT_H_

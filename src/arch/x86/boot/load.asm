@@ -17,17 +17,6 @@
 [bits 32]
 
 %include "multiboot2.inc"
-; %ifdef	__ELF__
-; %define	AOUT_KLUDGE	0
-; %else
-; %define AOUT_KLUDGE MULTIBOOT_AOUT_KLUDGE
-; %endif
-
-SECTION .data
-		align	8
-halt_message:
-		db		"\nHalt.", 0
-_edata:
 
 SECTION .multiboot
 		align	8
@@ -126,7 +115,11 @@ higher_half_entry:
 		extern	_kmain							; Enter C code kernel
 		call	_kmain
 		add		esp, 4
+.end:
 
+GLOBAL system_halt
+		align	8
+system_halt:
 		; kernel should never return, but just in case...
 		;	Halted
 		push	halt_message
@@ -136,6 +129,12 @@ higher_half_entry:
 		cli
 		hlt
 		jmp		.hang
+
+SECTION .data
+		align	8
+halt_message:
+		db		"\nHalt.", 0
+_edata:
 
 SECTION .bss
 GLOBAL kstack_bottom

@@ -6,8 +6,8 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#ifndef __STDDEF_H_
-#define __STDDEF_H_
+#ifndef __KDEF_H_
+#define __KDEF_H_
 
 /* This is the signed integral type and is the result of subtracting two
  * pointers. */

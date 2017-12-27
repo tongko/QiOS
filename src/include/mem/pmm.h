@@ -7,23 +7,28 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __STRING_H_
-#define __STRING_H_
+#ifndef __PMM_H_
+#define __PMM_H_
 
-#include <stdint.h>
-//#include <sys/types.h>
+#include <attribs.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
-#ifndef ISDIGIT
-#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
-#endif
+//	Physical Memory Address
+typedef void *paddr_t;
 
-size_t strlen(const char *str);
-char *strcat(char *dest, const char *src);
-int strcmp(const char *str1, const char *str2);
-void *memcpy(void *dest, const void *src, size_t n);
-void *memset(void *dest, char c, size_t count);
-void reverse(char *str);
-char *strchr(const char *s, int c_in);
+#define PMM_BLOCKS_PER_BYTE 8
+#define PMM_BLOCK_SIZE 4096
+#define PMM_BLOCK_ALIGN PMM_BLOCK_SIZE
 
-#endif  //	__STRING_H_
+void __early pmm_init(size_t mem_size, paddr_t table);
+void __early pmm_init_region(paddr_t base, size_t size, bool set);
+void __early *pmm_alloc_block(void);
+void __early *pmm_alloc_blocks(size_t size);
+void __early pmm_free_block(void *p);
+void __early pmm_free_blocks(void *p, size_t size);
+uint32_t __early pmm_get_block_count(void);
+uint32_t __early pmm_get_used_block(void);
+
+#endif  //	__PMM_H_

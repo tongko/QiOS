@@ -7,26 +7,23 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __STDLIB_H_
-#define __STDLIB_H_
+#ifndef __KBOOL_H_
+#define __KBOOL_H_
 
-#include <stdint.h>
+#ifndef _Bool
+#define _Bool unsigned int
+#endif
 
-#include <stddef.h>
+#ifndef bool
+#define bool _Bool
+#endif
 
-#ifndef MAX
-#define MAX(x, y) (x > y ? x : y)
-#endif  //	MAX
+#ifndef false
+#define false 0
+#endif
 
-#ifndef MIN
-#define MIN(x, y) (x < y ? x : y)
-#endif  //	MIN
+#ifndef true
+#define true !false
+#endif
 
-#ifndef ISDIGIT
-#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
-#endif  //	ISDIGIT
-
-int32_t abs(int32_t x);
-size_t itoa(uint32_t value, char *str, int base, const char *digit_str);
-uint32_t atoi(const char *str);
-#endif  // __STDLIB_H_
+#endif  //	__KBOOL_H_

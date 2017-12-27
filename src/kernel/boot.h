@@ -6,14 +6,22 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#ifndef __ISR_H_
-#define __ISR_H_
 
+#ifndef __BOOT_H_
+#define __BOOT_H_
+
+#include <hal.h>
+#include <multiboot/mb_info.h>
+#include <multiboot/multiboot2.h>
+#include <stdarg.h>
 #include <stdint.h>
-#include "cpu.h"
+#include <stdio.h>
+#include <sys/symbols.h>
+#include <sys/term.h>
+#include "../arch/x86/asm.h"
+#include "../arch/x86/boot/paging.h"
+#include "../arch/x86/comm/serial_port.h"
+#include "../arch/x86/exception.h"
+#include "../arch/x86/func.h"
 
-void fault_handler(cpu_state_t cpu_state, stack_state_t stack, uint32_t intr_no, uint32_t error_no);
-void interrupt_handler(cpu_state_t cpu_state, stack_state_t stack, uint32_t intr_no, uint32_t error_no);
-void irq_handler(cpu_state_t cpu_state, stack_state_t stack, uint32_t intr_no, uint32_t error_no);
-
-#endif  //	__ISR_H_
+#endif  //	__BOOT_H_

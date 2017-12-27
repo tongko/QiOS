@@ -11,18 +11,26 @@
 #define __ATTRIBS_H_
 
 #ifndef __sect
-#define __sect(S) __attribute__((section(#S)))
+	#define __sect(S) __attribute__((section(#S)))
 #endif
 
-#define __early __sect(.early)
-#define __earlydata __sect(.earlydata)
+#ifndef __early
+	#define __early __sect(.early)
+#endif
+
+#ifndef __earlydata
+	#define __earlydata __sect(.earlydata)
+#endif
 
 #ifndef __align
-#define __align(x) __attribute__((aligned(x)))
+	#define __align(x) __attribute__((aligned(x)))
 #endif
 
 #ifndef __packed
-#define __packed __attribute__((packed))
+	#define __packed __attribute__((packed))
 #endif
 
+// #ifndef __cdecl
+// 	#define __cdecl __attribute__(cdecl)
+// #endif
 #endif  //	__ATTRIBS_H_

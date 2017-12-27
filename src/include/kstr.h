@@ -7,23 +7,23 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __STDBOOL_H_
-#define __STDBOOL_H_
+#ifndef __KSTR_H_
+#define __KSTR_H_
 
-#ifndef _Bool
-#define _Bool unsigned int
+#include <attribs.h>
+#include <kdef.h>
+#include <stdint.h>
+
+#ifndef ISDIGIT
+#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
 #endif
 
-#ifndef bool
-#define bool _Bool
-#endif
+__early size_t strlen(const char *str);
+__early char *strcat(char *dest, const char *src);
+__early int strcmp(const char *str1, const char *str2);
+__early void *memcpy(void *dest, const void *src, size_t n);
+__early void *memset(void *dest, char c, size_t count);
+__early void reverse(char *str);
+__early char *strchr(const char *s, int c_in);
 
-#ifndef false
-#define false 0
-#endif
-
-#ifndef true
-#define true !false
-#endif
-
-#endif  //	__STDBOOL_H_
+#endif  //	__KSTR_H_

@@ -1,6 +1,6 @@
 QEMU=qemu-system-i386
 GCC=i686-elf-gcc
-LDFLAGS=-ffreestanding -O2 -nostdlib -lgcc --verbose
+LDFLAGS=-ffreestanding -O0 -nostdlib -lgcc --verbose
 OBJ = $(wildcard obj/*.o)
 
 .PHONY: all clean compile bin/kernel.elf bin/boot.iso run debug
@@ -9,6 +9,7 @@ all:bin/boot.iso
 compile:
 	+$(MAKE) -C src/lib
 	+$(MAKE) -C src/arch/x86
+	+$(MAKE) -C src/kernel
 
 bin/kernel.elf : compile
 	# Link to make an executable for the kernel.
@@ -19,6 +20,8 @@ bin/boot.iso : bin/kernel.elf src/grub.cfg
 	@mkdir -p bin/iso/boot/grub              # create the folder structure
 	@cp bin/kernel.elf bin/iso/boot/             # copy the kernel
 	@cp src/grub.cfg bin/iso/boot/grub           # copy the grub configuration file
+	@mkdir -p bin/iso/modules
+	@cp bin/mymodule.so bin/iso/modules/
 	@grub-mkrescue -o $@ bin/iso
 
 run: bin/boot.iso
@@ -32,6 +35,9 @@ debug: bin/boot.iso bin/kernel.elf
 clean:
 	+$(MAKE) -C src/lib clean
 	+$(MAKE) -C src/arch/x86 clean
+	+$(MAKE) -C src/kernel clean
 	rm -f *.dmp *.objdump *.log
 	rm -rf obj/*
-	rm -rf bin/*
+	rm -rf bin/iso
+	rm -f bin/kernel.elf
+	rm -f bin/boot.iso

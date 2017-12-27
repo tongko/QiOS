@@ -8,17 +8,19 @@
  * ****************************************************************************/
 #include <multiboot/mb_info.h>
 #include <stddef.h>
-
+#include <stdio.h>
 #include <string.h>
 
-#include <stdio.h>
+static __earlydata void *_mb2_info;
+static __earlydata mbiapi_t _api;
 
-static void *_mb2_info;
-static mbiapi_t _api;
+static struct multiboot_tag *get_multiboot_tag __early(uint32_t type) {
+	if (!_mb2_info) {
+		return NULL;
+	}
 
-static struct multiboot_tag *get_multiboot_tag(uint32_t type) {
 	struct multiboot_tag *tag;
-	for (tag = (struct multiboot_tag *)(_mb2_info + 8);
+	for (tag = (struct multiboot_tag *)((uint32_t)_mb2_info + 8);
 	     tag->type != MULTIBOOT_TAG_TYPE_END;
 	     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
 		if (tag->type == type) {
@@ -29,7 +31,7 @@ static struct multiboot_tag *get_multiboot_tag(uint32_t type) {
 	return NULL;
 }
 
-static void load_mb2i(uint32_t mbi_addr) {
+static void load_mb2i __early(uint32_t mbi_addr) {
 	if (mbi_addr) {
 		if (mbi_addr & 7) {
 			printf("Unaligned MBI: 0x%x.8\n", mbi_addr);
@@ -41,12 +43,40 @@ static void load_mb2i(uint32_t mbi_addr) {
 	}
 }
 
-static multiboot_tag_mmap_t *get_mmap(void) {
-	return (multiboot_tag_mmap_t *)get_multiboot_tag(MULTIBOOT_TAG_TYPE_MMAP);
+static mb_tag_memmap_t *get_mmap __early(void) {
+	return (mb_tag_memmap_t *)get_multiboot_tag(MULTIBOOT_TAG_TYPE_MMAP);
 }
 
-static void print_mb2i(char *buffer) {
+static mb_tag_meminfo_t *get_meminfo __early(void) {
+	return (mb_tag_meminfo_t *)get_multiboot_tag(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
+}
+
+static mb_tag_module_t *enum_module_info __early(void) {
+	static mb_tag_module_t *ptr;
+	struct multiboot_tag *tag;
+	if (!ptr) {
+		for (tag = (struct multiboot_tag *)((uint32_t)_mb2_info + 8);
+		     tag->type != MULTIBOOT_TAG_TYPE_END;
+		     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
+			if (tag->type == MULTIBOOT_TAG_TYPE_MODULE) {
+				ptr = (mb_tag_module_t *)tag;
+			}
+		}
+	} else {
+		tag = (struct multiboot_tag *)ptr;
+		tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7));
+		ptr = tag->type == MULTIBOOT_TAG_TYPE_END ? ptr = NULL : (mb_tag_module_t *)tag;
+	}
+
+	return ptr;
+}
+
+static void print_mb2i __early(char *buffer) {
 	if (!buffer) {
+		return;
+	}
+
+	if (!_mb2_info) {
 		return;
 	}
 
@@ -55,13 +85,14 @@ static void print_mb2i(char *buffer) {
 	size_t total_printed = sprintf(p, "Multiboot Info loaded at: %#.8x\n", (uint32_t)_mb2_info);
 	while (*p++) {
 	}
-	total_printed = sprintf(--p, "Announced mbi size %d Bytes.\n", size);
+	p--;
+	total_printed = sprintf(p, "Announced mbi size %d Bytes.\n", size);
 	while (*p++) {
 	}
 	p--;
 
 	struct multiboot_tag *tag;
-	for (tag = (struct multiboot_tag *)(_mb2_info + 8);
+	for (tag = (struct multiboot_tag *)((uint32_t)_mb2_info + 8);
 	     tag->type != MULTIBOOT_TAG_TYPE_END;
 	     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
 		total_printed += sprintf(p, "Tag %#.2x, Size %#.16x\n", tag->type, tag->size);
@@ -94,8 +125,8 @@ static void print_mb2i(char *buffer) {
 				break;
 			case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO:
 				total_printed += sprintf(p, "-> mem_lower = %uKiB, mem_upper = %uKiB\n",
-				                         ((struct multiboot_tag_basic_meminfo *)tag)->mem_lower,
-				                         ((struct multiboot_tag_basic_meminfo *)tag)->mem_upper);
+				                         ((mb_tag_meminfo_t *)tag)->mem_lower,
+				                         ((mb_tag_meminfo_t *)tag)->mem_upper);
 				while (*p++) {
 				}
 				p--;
@@ -110,16 +141,16 @@ static void print_mb2i(char *buffer) {
 				p--;
 				break;
 			case MULTIBOOT_TAG_TYPE_MMAP: {
-				multiboot_memory_map_t *mmap;
+				mb_tag_memmap_entry_t *mmap;
 
 				total_printed += sprintf(p, "-> Memory Map\n");
 				while (*p++) {
 				}
 				p--;
 				// int32_t count = 0;
-				for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
+				for (mmap = ((mb_tag_memmap_t *)tag)->entries;
 				     (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
-				     mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size)) {
+				     mmap = (mb_tag_memmap_t *)((unsigned long)mmap + ((mb_tag_memmap_t *)tag)->entry_size)) {
 					total_printed += sprintf(p,
 					                         //	For 32 bits only 32 bit address exists.
 					                         //"\tbase_addr = 0x%x%x, length = 0x%x%x, type = 0x%x\n",
@@ -178,21 +209,21 @@ static void print_mb2i(char *buffer) {
 						for (i = 0; i < tagfb->common.framebuffer_width && i < tagfb->common.framebuffer_height; i++) {
 							switch (tagfb->common.framebuffer_bpp) {
 								case 8: {
-									multiboot_uint8_t *pixel = fb + tagfb->common.framebuffer_pitch * i + i;
+									multiboot_uint8_t *pixel = (multiboot_uint8_t *)fb + tagfb->common.framebuffer_pitch * i + i;
 									*pixel = color;
 								} break;
 								case 15:
 								case 16: {
-									multiboot_uint16_t *pixel = fb + tagfb->common.framebuffer_pitch * i + 2 * i;
+									multiboot_uint16_t *pixel = (multiboot_uint16_t *)fb + tagfb->common.framebuffer_pitch * i + 2 * i;
 									*pixel = color;
 								} break;
 								case 24: {
-									multiboot_uint32_t *pixel = fb + tagfb->common.framebuffer_pitch * i + 3 * i;
+									multiboot_uint32_t *pixel = (multiboot_uint32_t *)fb + tagfb->common.framebuffer_pitch * i + 3 * i;
 									*pixel = (color & 0xffffff) | (*pixel & 0xff000000);
 								} break;
 
 								case 32: {
-									multiboot_uint32_t *pixel = fb + tagfb->common.framebuffer_pitch * i + 4 * i;
+									multiboot_uint32_t *pixel = (multiboot_uint32_t *)fb + tagfb->common.framebuffer_pitch * i + 4 * i;
 									*pixel = color;
 								} break;
 							}
@@ -210,7 +241,11 @@ static void print_mb2i(char *buffer) {
 	p--;
 }
 
-static elf32_section_header_t *get_elf_sec_hdr(const char *sec_name) {
+static elf32_section_header_t *get_elf_sec_hdr __early(const char *sec_name) {
+	if (!_mb2_info) {
+		return NULL;
+	}
+
 	struct multiboot_tag_elf_sections *elf =
 	    (struct multiboot_tag_elf_sections *)get_multiboot_tag(MULTIBOOT_TAG_TYPE_ELF_SECTIONS);
 	if (!elf) {
@@ -232,16 +267,22 @@ static elf32_section_header_t *get_elf_sec_hdr(const char *sec_name) {
 	return NULL;
 }
 
-mbiapi_t *mbi_info_api() {
+static bool is_loaded __early() {
+	return _mb2_info;
+}
+
+mbiapi_t *mb_info_api() {
 	return &_api;
 }
 
-void init_mb_info(mbiapi_t *api) {
+void mb_info_init(mbiapi_t *api) {
 	if (api == NULL) {
 		_api.get_mmap = get_mmap;
 		_api.load_mb2i = load_mb2i;
 		_api.print_mb2i = print_mb2i;
 		_api.get_elf_sec_hdr = get_elf_sec_hdr;
+		_api.get_meminfo = get_meminfo;
+		_api.enum_module_info = enum_module_info;
 		return;
 	}
 
@@ -249,4 +290,6 @@ void init_mb_info(mbiapi_t *api) {
 	_api.load_mb2i = api->load_mb2i;
 	_api.print_mb2i = api->print_mb2i;
 	_api.get_elf_sec_hdr = api->get_elf_sec_hdr;
+	_api.get_meminfo = api->get_meminfo;
+	_api.enum_module_info = api->enum_module_info;
 }
