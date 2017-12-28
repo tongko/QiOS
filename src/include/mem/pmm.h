@@ -11,8 +11,8 @@
 #define __PMM_H_
 
 #include <attribs.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include <kbool.h>
+#include <kdef.h>
 #include <stdint.h>
 
 //	Physical Memory Address

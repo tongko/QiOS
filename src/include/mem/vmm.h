@@ -12,7 +12,7 @@
 
 #include <attribs.h>
 #include <mem/pmm.h>
-#include <stdint.h>
+#include <stdint.h> 
 
 //	Initialize Virtual Memory Manager
 void __early vmm_init();
