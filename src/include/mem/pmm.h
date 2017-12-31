@@ -16,7 +16,7 @@
 #include <stdint.h>
 
 //	Physical Memory Address
-typedef void *paddr_t;
+typedef uintptr_t paddr_t;
 
 #define PMM_BLOCKS_PER_BYTE 8
 #define PMM_BLOCK_SIZE 4096
@@ -24,10 +24,10 @@ typedef void *paddr_t;
 
 void __early pmm_init(size_t mem_size, paddr_t table);
 void __early pmm_init_region(paddr_t base, size_t size, bool set);
-void __early *pmm_alloc_block(void);
-void __early *pmm_alloc_blocks(size_t size);
-void __early pmm_free_block(void *p);
-void __early pmm_free_blocks(void *p, size_t size);
+paddr_t __early pmm_alloc_block(void);
+paddr_t __early pmm_alloc_blocks(size_t size);
+void __early pmm_free_block(paddr_t p);
+void __early pmm_free_blocks(paddr_t p, size_t size);
 uint32_t __early pmm_get_block_count(void);
 uint32_t __early pmm_get_used_block(void);
 

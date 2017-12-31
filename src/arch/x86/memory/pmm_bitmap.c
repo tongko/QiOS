@@ -104,7 +104,7 @@ void pmm_init(size_t mem_size, paddr_t bitmap) {
 }
 
 void pmm_init_region(paddr_t base, size_t size, bool set) {
-	uint32_t align = base / PMM_BLOCK_SIZE;
+	uint32_t align = (uintptr_t)base / PMM_BLOCK_SIZE;
 	uint32_t blocks = size / PMM_BLOCK_SIZE;
 
 	while (blocks-- > 0) {
@@ -163,7 +163,7 @@ void pmm_free_block(void *p) {
 		return;
 	}
 
-	paddr_t addr = (paddr_t)p;
+	uintptr_t addr = (uintptr_t)p;
 	uint32_t frame = addr / PMM_BLOCK_SIZE;
 
 	mem_unset(frame);
@@ -172,7 +172,7 @@ void pmm_free_block(void *p) {
 }
 
 void pmm_free_blocks(void *p, size_t size) {
-	paddr_t addr = (paddr_t)p;
+	uintptr_t addr = (uintptr_t)p;
 	uint32_t frame = addr / PMM_BLOCK_SIZE;
 
 	for (size_t i = 0; i < size; i++) {

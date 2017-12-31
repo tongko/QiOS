@@ -10,11 +10,11 @@
 #ifndef __VMM_H_
 #define __VMM_H_
 
-#include <attribs.h>
-#include <mem/pmm.h>
-#include <stdint.h> 
+#include <stdint.h>
+
+//	Kernel mode allocate new memory
 
 //	Initialize Virtual Memory Manager
-void __early vmm_init();
+void vmm_init();
 
 #endif  //	__VMM_H_

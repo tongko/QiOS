@@ -7,25 +7,10 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __PAGING_H_
-#define __PAGING_H_
-
+#include <attribs.h>
+#include <mem/paging.h>
 #include <mem/pmm.h>
-#include <stdint.h>
+#include <mem/vmm.h>
 
-typedef uintptr_t vaddr_t;
-
-//	laod a new paging structure
-paddr_t pg_load(paddr_t new_paging);
-//	Enable/Disable paging
-void pg_enable(bool enable);
-//	Flush Translation Lookaside Buffer (TLB)
-void pg_flush_tlb(void);
-//	Flush Translation Lookaside Buffer (TLB) entry
-void pg_flush_tlb_entry(vaddr_t vaddr);
-//	Map virtual address to a physical address
-void pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_count);
-//	Initialize Paging
-void pg_init(void);
-
-#endif  //	__PAGING_H_
+void __early vmm_init() {
+}

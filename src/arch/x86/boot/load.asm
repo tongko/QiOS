@@ -140,7 +140,7 @@ SECTION .bss
 GLOBAL kstack_bottom
 		align	4
 kstack_bottom:
-		KSTACK_SIZE	equ	0x100000				; 1 MiB Stack
+		KSTACK_SIZE	equ	0x1000				; 4 KiB Stack
 		resb	KSTACK_SIZE
 kstack_top:
 _end:

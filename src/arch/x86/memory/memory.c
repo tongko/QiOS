@@ -9,10 +9,10 @@
  * ****************************************************************************/
 #include <kstr.h>
 #include <mem/memory.h>
+#include <mem/pmm.h>
 #include <multiboot/mb_info.h>
 #include <sys/panic.h>
 #include "../ktypedef.h"
-#include "pmm.h"
 
 #ifndef ROUNDUP
 #define ROUNDUP(x, y) (x % y ? x + (y - (x % y)) : x)
