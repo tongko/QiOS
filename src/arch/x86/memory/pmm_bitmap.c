@@ -11,33 +11,33 @@
 #include <mem/pmm.h>
 #include <stdbool.h>
 
-static uint32_t __earlydata _pmm_mem_size;
-static uint32_t __earlydata _pmm_used_blocks;
-static uint32_t __earlydata _pmm_max_blocks;
-static uint32_t __earlydata *_pmm_mem_map;
+static uint32_t _pmm_mem_size;
+static uint32_t _pmm_used_blocks;
+static uint32_t _pmm_max_blocks;
+static uint32_t *_pmm_mem_map;
 
-static __inline__ void __early mem_set(uint32_t bit) {
+static __inline__ void mem_set(uint32_t bit) {
 	_pmm_mem_map[bit / 32] |= (1 << (bit % 32));
 }
 
-static __inline__ void __early mem_unset(uint32_t bit) {
+static __inline__ void mem_unset(uint32_t bit) {
 	_pmm_mem_map[bit / 32] &= ~(1 << (bit % 32));
 }
 
-static __inline__ bool __early mem_test(uint32_t bit) {
+static __inline__ bool mem_test(uint32_t bit) {
 	return _pmm_mem_map[bit / 32] & (1 << (bit % 32));
 }
 
-static __inline__ uint32_t __early get_free_block_count() {
+static __inline__ uint32_t get_free_block_count() {
 	return _pmm_max_blocks - _pmm_used_blocks;
 }
 
-static uint32_t __early get_free_block() {
-	for (uint32_t i = 0; i < get_block_count() / 32; i++) {
+static uint32_t get_free_block() {
+	for (uint32_t i = 0; i < pmm_get_block_count() / 32; i++) {
 		if (_pmm_mem_map[i] != 0xFFFFFFFF) {
 			for (uint32_t j = 0; j < 32; j++) {
 				int bit = 1 << j;
-				if (!(_pmm_mem_map[i] & (1 << j))) {
+				if (!(_pmm_mem_map[i] & (bit))) {
 					return i * 4 * 8 + j;
 				}
 			}
@@ -47,7 +47,7 @@ static uint32_t __early get_free_block() {
 	return -1;
 }
 
-static uint32_t __early get_free_blocks(size_t size) {
+static int get_free_blocks(size_t size) {
 	if (size == 0) {
 		return -1;
 	}
@@ -55,9 +55,8 @@ static uint32_t __early get_free_blocks(size_t size) {
 	if (size == 1) {
 		return get_free_block();
 	}
-	size_t remain = size;
-	uint32_t base;
-	for (uint32_t i = 0; i < get_block_count() / 32; i++) {
+
+	for (uint32_t i = 0; i < pmm_get_block_count() / 32; i++) {
 		if (_pmm_mem_map[i] != 0xFFFFFFFF) {
 			for (uint32_t j = 0; j < 32; j++) {
 				int bit = 1 << j;
@@ -120,12 +119,12 @@ void pmm_init_region(paddr_t base, size_t size, bool set) {
 	mem_set(0);  // first block is always set.
 }
 
-void *pmm_alloc_block(void) {
+paddr_t pmm_alloc_block(void) {
 	if (get_free_block_count() <= 0) {
 		return 0;  // Out of Memory
 	}
 
-	uint32_t frame = get_free_block();
+	int frame = get_free_block();
 	if (frame == -1) {
 		return 0;  //	Out of Memory
 	}
@@ -135,15 +134,15 @@ void *pmm_alloc_block(void) {
 	paddr_t addr = frame * PMM_BLOCK_SIZE;
 	_pmm_used_blocks++;
 
-	return (void *)addr;
+	return addr;
 }
 
-void *pmm_alloc_blocks(size_t size) {
+paddr_t pmm_alloc_blocks(size_t size) {
 	if (get_free_block_count() < size) {
 		return 0;  //	Out of Memory
 	}
 
-	uint32_t frame = get_free_blocks(size);
+	int frame = get_free_blocks(size);
 	if (frame == -1) {
 		return 0;  //	Out of Memory
 	}
@@ -155,10 +154,10 @@ void *pmm_alloc_blocks(size_t size) {
 	paddr_t addr = frame * PMM_BLOCK_SIZE;
 	_pmm_used_blocks += size;
 
-	return (void *)addr;
+	return addr;
 }
 
-void pmm_free_block(void *p) {
+void pmm_free_block(paddr_t p) {
 	if (!p) {
 		return;
 	}
@@ -171,7 +170,7 @@ void pmm_free_block(void *p) {
 	_pmm_used_blocks--;
 }
 
-void pmm_free_blocks(void *p, size_t size) {
+void pmm_free_blocks(paddr_t p, size_t size) {
 	uintptr_t addr = (uintptr_t)p;
 	uint32_t frame = addr / PMM_BLOCK_SIZE;
 

@@ -7,9 +7,9 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#include <string.h>
+#include <kstr.h>
 
-#include <stdlib.h>
+#include <klib.h>
 
 __inline__ int32_t abs(int32_t x) {
 	int32_t y = x >> 31;

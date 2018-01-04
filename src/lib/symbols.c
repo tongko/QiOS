@@ -49,8 +49,8 @@ static char *address_to_symbol_name(uint32_t addr) {
 }
 
 bool symb_default_config(void) {
-	return _api.load_symbol_table(mbi_info_api()->get_elf_sec_hdr(".symtab"),
-	                              mbi_info_api()->get_elf_sec_hdr(".strtab"));
+	return _api.load_symbol_table(mbi_api()->get_elf_sec_hdr(".symtab"),
+	                              mbi_api()->get_elf_sec_hdr(".strtab"));
 }
 
 void init_symb_tab(symbol_api_t *api) {

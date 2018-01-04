@@ -39,8 +39,8 @@ typedef struct {
 	void (*print)(const char *format, ...);
 } serial_port_api_t;
 
-__early serial_port_api_t *serial_port_api(void);
-__early void serial_port_default_config(void);
-__early void serial_port_init(serial_port_api_t *api);
+serial_port_api_t *serial_port_api(void);
+void serial_port_default_config(void);
+void serial_port_init(serial_port_api_t *api);
 
 #endif  //	__SERIAL_PORT_H_

@@ -47,8 +47,8 @@ typedef struct {
 	void (*clear)(void);
 } term_api_t;
 
-__early term_api_t *term_api(void);
-__early void term_default_config(void);
-__early void term_init(term_api_t *api);
+term_api_t *term_api(void);
+void term_default_config(void);
+void term_init(term_api_t *api);
 
 #endif  //	__TERM_H_

@@ -11,6 +11,8 @@
 #define __MEMORY_H_
 
 #include <attribs.h>
+#include <mem/paging.h>
+#include <mem/pmm.h>
 
 /*	Defines and Type Definitions */
 typedef struct {
@@ -20,8 +22,8 @@ typedef struct {
 	vaddr_t virtual_end;
 } kernel_meminfo_t;
 
-__early void mm_init(kernel_meminfo_t kern_mem_info);
-__early uint32_t mm_total_physical(void);
-__early uint32_t mm_used_physical(void);
+void mm_init(kernel_meminfo_t kern_mem_info);
+uint32_t mm_total_physical(void);
+uint32_t mm_used_physical(void);
 
 #endif  //	__MEMORY_H_

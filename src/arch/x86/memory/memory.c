@@ -23,10 +23,10 @@ typedef struct {
 	paddr_t end;
 } module_t;
 
-static __early kernel_meminfo_t _kernel_mem_info;
-static __early module_t _modules[64];
+static kernel_meminfo_t _kernel_mem_info;
+static module_t _modules[64];
 
-static bool __early addr_in_module(multiboot_uint64_t addr) {
+static bool addr_in_module(multiboot_uint64_t addr) {
 	bool ret = false;
 	for (int i = 0; i < 64; i++) {
 		if (_modules[i].start == 0) {
@@ -38,6 +38,8 @@ static bool __early addr_in_module(multiboot_uint64_t addr) {
 			break;
 		}
 	}
+
+	return ret;
 }
 
 /******************************************************************************
@@ -47,8 +49,8 @@ static bool __early addr_in_module(multiboot_uint64_t addr) {
  *	kernel_end - ? : physical mem table
  *	? - mem_size : free to use memory
  *****************************************************************************/
-static void __early init_physical_mem(mb_tag_meminfo_t *mem_info,
-                                      mb_tag_memmap_t *mem_map) {
+static void init_physical_mem(mb_tag_meminfo_t *mem_info,
+                              mb_tag_memmap_t *mem_map) {
 	pmm_init(mem_info->mem_upper, (paddr_t)ROUNDUP(_kernel_mem_info.physical_end, 4096));
 	uint32_t kern_space = ROUNDUP(_kernel_mem_info.physical_end, 4096);
 
@@ -93,7 +95,8 @@ void mm_init(kernel_meminfo_t k_mem_info) {
 		_modules[i].end = 0;
 	}
 
-	init_physical_mem(mem_info, mem_map);  //(paddr_t)ROUNDUP(physical_kernel_end, 4096));
+	init_physical_mem(mem_info, mem_map);
+	vmm_init();
 }
 
 uint32_t mm_total_physical() {

@@ -19,6 +19,15 @@
  *    physical address which is the begining of a 4096 KiB block.              *
  *                                                                             *
  * ---------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*
+*																			   *
+*	For Debugging sake, this code is not being optimize at all.				   *
+*	1. Can directly obtain entry address instead of                            *
+*		a. Get array                                                           *
+*		b. Get entry base on offset           							       *
+*																			   *
+*-----------------------------------------------------------------------------*/
+
 #include <asm.h>
 #include <kstr.h>
 #include <mem/paging.h>
@@ -58,13 +67,18 @@
 #define ROUNDDW(x, y) x - (x % y)
 
 #define _TO_ENTRY(x) ((uint64_t)((uint32_t)x & ENTRY_MASK))
-#define _TAB_ENTRY_NO(x) (uint32_t)(((x & PT_MASK) >> 9) & ~3)
-#define _DIR_ENTRY_NO(x) (uint32_t)(((x & PD_MASK) >> 18) & ~3)
+//#define _TAB_ENTRY_NO(x) (uint32_t)(((x & PT_MASK) >> 9) & ~3)
+#define _TAB_ENTRY_OFFSET(x) (uint32_t)((x & PT_MASK) >> 12)
+//#define _DIR_ENTRY_NO(x) (uint32_t)(((x & PD_MASK) >> 18) & ~3)
+#define _DIR_ENTRY_OFFSET(x) (uint32_t)((x & PD_MASK) >> 21)
 #define _DIR_PTR_NO(x) (uint32_t)((x & PDPTR_MASK) >> 30)
 #define _PGE_ENTRY_NO(x) (uint32_t)(x & 0xFFF)
 
-#define _GET_DIR_ENTRY(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | _DIR_ENTRY_NO(y))
-#define _GET_TAB_ENTRY(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | _TAB_ENTRY_NO(y))
+#define _GET_DIR(x) (pg_dir_t *)(uint32_t)(x & ENTRY_MASK)
+#define _GET_TAB(x) (pg_tab_t *)(uint32_t)(x & ENTRY_MASK)
+
+//#define _GET_DIR_ENTRY(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | _DIR_ENTRY_NO(y))
+//#define _GET_TAB_ENTRY(x, y) (uint64_t *)(uint32_t)((x & ENTRY_MASK) | _TAB_ENTRY_NO(y))
 #define _GET_PGE_ENTRY(x, y) (paddr_t)((x & ENTRY_MASK) | _PGE_ENTRY_NO(y))
 
 typedef struct {
@@ -84,29 +98,37 @@ typedef struct {
 } pg_tab_t;
 
 //	Current Page Directory
-pg_dir_t *_curr_dir __earlydata;
+pg_dir_t *_curr_dir;
 //	Current Page Table
-pg_tab_t *_curr_tab __earlydata;
+pg_tab_t *_curr_tab;
 //	PDPTE consists of 4 entries that each point to a page directory
-pdpte_t _pg_dir_ptr __earlydata;
+pdpte_t _pg_dir_ptr;
 
-static __inline__ __early void set_entry_present(uint64_t *entry, bool set) {
-	return set ? *entry | PG_PRESENT : *entry & ~PG_PRESENT;
+static __inline__ void set_entry_present(uint64_t *entry, bool set) {
+	if (set) {
+		*entry |= PG_PRESENT;
+	} else {
+		*entry &= ~PG_PRESENT;
+	}
 }
 
-static __inline__ __early void set_entry_usermode(uint64_t *entry, bool has_access) {
-	return has_access ? *entry | PG_USERACCESS : *entry & ~PG_USERACCESS;
+static __inline__ void set_entry_usermode(uint64_t *entry, bool has_access) {
+	if (has_access) {
+		*entry |= PG_USERACCESS;
+	} else {
+		*entry &= ~PG_USERACCESS;
+	}
 }
 
-static __inline__ __early bool entry_is_dirty(pg_tab_e_t *entry) {
+static __inline__ bool entry_is_dirty(pg_tab_e_t *entry) {
 	return *entry & PG_TAB_DIRTY;
 }
 
-static __inline__ __early bool entry_is_accessed(pg_tab_e_t *entry) {
+static __inline__ bool entry_is_accessed(pg_tab_e_t *entry) {
 	return *entry & PG_ACCESSED;
 }
 
-static __inline__ __early void reset_entry(pg_tab_e_t *entry) {
+static __inline__ void reset_entry(pg_tab_e_t *entry) {
 	*entry &= ~PG_TAB_DIRTY;
 	*entry &= ~PG_ACCESSED;
 	_asm(
@@ -114,8 +136,8 @@ static __inline__ __early void reset_entry(pg_tab_e_t *entry) {
 	    "mov cr3, eax\n" ::);
 }
 
-static __early void *init_page(int size) {
-	void *page = NULL;
+static void *init_page(int size) {
+	uintptr_t page = 0;
 	int blocks = size / PMM_BLOCK_SIZE;
 
 	if (size % PMM_BLOCK_SIZE) {
@@ -128,38 +150,38 @@ static __early void *init_page(int size) {
 		page = pmm_alloc_blocks(blocks);
 	}
 
-	if (page == NULL) {
+	if (!page) {
 		kernel_panic("Out of memory.\nAllocating size: %#.8x Bytes\n", size);
 	}
 
-	memset(page, 0, blocks * PMM_BLOCK_SIZE);
-	return page;
+	memset((void *)page, 0, blocks * PMM_BLOCK_SIZE);
+	return (void *)page;
 }
 
-static __early paddr_t virt_to_phys(vaddr_t vaddr) {
+paddr_t virt_to_phys(vaddr_t vaddr) {
 	uint64_t pdptr_e = _pg_dir_ptr.entries[_DIR_PTR_NO(vaddr)];
 	if (!(pdptr_e & PG_PRESENT)) {  // directory not present
-		return NULL;
+		return 0;
 	}
 
-	pg_dir_t *dir = _GET_DIR_ENTRY(pdptr_e, vaddr);
+	pg_dir_t *dir = _GET_DIR(pdptr_e);
 	if (!dir) {
-		return NULL;
+		return 0;
 	}
 
-	pg_dir_e_t *dir_e = &(dir->entries[_DIR_ENTRY_NO(vaddr)]);
+	pg_dir_e_t *dir_e = &(dir->entries[_DIR_ENTRY_OFFSET(vaddr)]);
 	if (!dir_e || !(*dir_e & PG_PRESENT)) {
-		return NULL;
+		return 0;
 	}
 
-	pg_tab_t *tab = _GET_TAB_ENTRY(*dir_e, vaddr);
+	pg_tab_t *tab = _GET_TAB(*dir_e);
 	if (!tab) {
-		return NULL;
+		return 0;
 	}
 
-	pg_tab_e_t *tab_e = &(tab->entries[_TAB_ENTRY_NO(vaddr)]);
+	pg_tab_e_t *tab_e = &(tab->entries[_TAB_ENTRY_OFFSET(vaddr)]);
 	if (!tab_e || !(*tab_e & PG_PRESENT)) {
-		return NULL;
+		return 0;
 	}
 
 	paddr_t ret = _GET_PGE_ENTRY(*tab_e, vaddr);
@@ -173,7 +195,7 @@ static __early paddr_t virt_to_phys(vaddr_t vaddr) {
 *	Return:
 *	The physical address of existing PDPTE
 ---------------------------------------------------------------*/
-paddr_t __early pg_load(paddr_t new_paging) {
+paddr_t pg_load(paddr_t new_paging) {
 	uint32_t old_addr;
 	_asm(
 	    "mov %0, cr3\n"
@@ -190,29 +212,30 @@ paddr_t __early pg_load(paddr_t new_paging) {
 *	Param:
 *	bool enable - true to enable paging, else, disable paging.
 --------------------------------------------------------------*/
-void __early pg_enable(bool enable) {
+void pg_enable(bool enable) {
 	_asm(
-	    "mov eax, cr4\n"
-	    "or eax, 0x20\n"  //	set bit 5
-	    "mov cr4, eax\n"
-	    "mov eax, cr0\n"
-	    "cmp %0, 0\n"
-	    "je  disable\n"
-	    "jmp enable\n"
+	    //"mov eax, cr4\n"
+	    "mov	eax, 0x20\n"  //	set bit 5
+	    "mov	cr4, eax\n"
+	    "mov	eax, cr0\n"
+	    "cmp	%0, 0\n"
+	    "je		disable\n"
+	    "jmp	enable\n"
 	    "disable:\n"
-	    "and eax, 0x7FFFFFFF\n"  //	Clear bit 31
-	    "mov cr0, eax\n"
-	    "jmp done\n"
+	    "and	eax, 0x7FFFFFFF\n"  //	Clear bit 31
+	    "mov	cr0, eax\n"
+	    "jmp	done\n"
 	    "enable:\n"
-	    "or eax, 0x80000000\n"  //	Set Bit 31
-	    "mov cr0, eax\n"
-	    "done:" ::"r"(enable));
+	    "or		eax, 0x80000000\n"  //	Set Bit 31
+	    "mov	cr0, eax\n"
+	    "done:" ::"r"(enable)
+	    : "memory");
 }
 
 /*----------------------------------------------------------
 *	Function pg_flush_tlb
 -----------------------------------------------------------*/
-void __early pg_flush_tlb() {
+void pg_flush_tlb() {
 	_asm(
 	    "mov eax, cr3\n"
 	    "mov cr3, eax\n" ::);
@@ -223,15 +246,18 @@ void __early pg_flush_tlb() {
 *	Param:
 *	vaddr_t vaddr - The virtual address to flush from TLB
 -----------------------------------------------------------*/
-void __early pg_flush_tlb_entry(vaddr_t vaddr) {
+void pg_flush_tlb_entry(vaddr_t vaddr) {
 	if (!vaddr) {
 		return;
 	}
 
 	_asm(
 	    "cli\n"
-	    "invlpg %0\n"
-	    "sti\n" ::"r"(vaddr));
+	    "invlpg [%0]\n"
+	    "sti\n"
+	    :
+	    : "r"(vaddr)
+	    : "memory");
 }
 
 /*------------------------------------------------------------
@@ -243,7 +269,7 @@ void __early pg_flush_tlb_entry(vaddr_t vaddr) {
 *	all the parameters value must be page size aligned, i.e. starting
 *	at page boundry.
 -------------------------------------------------------------------*/
-static void __early pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_count) {
+void pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_count) {
 	uint32_t v = (uint32_t)vaddr;
 	if ((v % PAGE_SIZE) != 0) {
 		kernel_panic("pg_map_addr: Virtual address '%#x' not aligned to page boundry.", v);
@@ -272,11 +298,11 @@ static void __early pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_coun
 			set_entry_present(pdptr_e, true);
 			_curr_dir = dir;
 		} else {
-			dir = _GET_DIR_ENTRY(*pdptr_e, v);
+			dir = _GET_DIR(*pdptr_e);
 		}
 
 		//	retrieve page dir entry base on dir first element and [v]
-		p = _DIR_ENTRY_NO(v);
+		p = _DIR_ENTRY_OFFSET(v);
 		pg_dir_e_t *dir_e = &(dir->entries[p]);
 		pg_tab_t *tab = NULL;
 
@@ -289,11 +315,11 @@ static void __early pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_coun
 			set_entry_usermode(dir_e, true);
 			_curr_tab = tab;
 		} else {
-			tab = _GET_TAB_ENTRY(*dir_e, v);
+			tab = _GET_TAB(*dir_e);
 		}
 
 		//	retrieve page table entry base on tab first element and [v]
-		p = _TAB_ENTRY_NO(v);
+		p = _TAB_ENTRY_OFFSET(v);
 		pg_tab_e_t *tab_e = &(tab->entries[p]);
 
 		if (!(*tab_e & PG_PRESENT && *tab_e & ENTRY_MASK)) {
@@ -318,65 +344,73 @@ static void __early pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_coun
 *	4) Call pg_load by passing the PDPTE we've just setup
 *	5) Call pg_enable passing true.
 -------------------------------------------------------------*/
-void __early pg_init() {
+void pg_init() {
 	//	Initialize pdpte to zero
 	memset(&_pg_dir_ptr, 0, sizeof(pdpte_t));
-	//	allocate first dir, this is for first 4 MiB ID mapped
-	pg_dir_t *dir = init_page_directory();
 
-	_pg_dir_ptr.entries[0] = _TO_ENTRY(dir);
-	set_entry_present(_pg_dir_ptr.entries[0], true);
-	_curr_dir = dir;
-
-	//	allocate first page table, this is for first 4 MiB ID mapped
-	pg_tab_t *tab = (pg_tab_t *)pmm_alloc_blocks(8);  //	Need 8 blocks per page table.
-	memset(tab, 0, PAGE_SIZE * 8);
-
-	dir->entries[0] = _TO_ENTRY(tab);
-	set_entry_present(dir->entries[0], true);
-	set_entry_usermode(dir->entries[0], true);
-	_curr_tab = tab;
-
-	//	First 4 MiB are identity mapped
-	vaddr_t v = 0;
-	for (int i = 0; i < 1024; i++, v += 4096) {
-		tab->entries[i] = _TO_ENTRY(v);
-		set_entry_present(tab->entries[i], true);
-		set_entry_usermode(tab->entries[i], true);
-	}
-
-	//	allocate another dir, this is for higher half
-	dir = (pg_dir_t *)pmm_alloc_block();
+	//	allocate dir, this is for higher half
+	pg_dir_t *dir = (pg_dir_t *)pmm_alloc_block();
 	memset(dir, 0, PAGE_SIZE);
 
 	_pg_dir_ptr.entries[3] = _TO_ENTRY(dir);
-	set_entry_present(_pg_dir_ptr.entries[3], true);
+	set_entry_present(&(_pg_dir_ptr.entries[3]), true);
 	_curr_dir = dir;
 
-	//	allocate another page table, this is for higher half
-	tab = (pg_tab_t *)pmm_alloc_blocks(8);
+	//	allocate table, this is for higher half
+	pg_tab_t *tab = (pg_tab_t *)pmm_alloc_blocks(8);
 	memset(tab, 0, PAGE_SIZE * 8);
 
 	dir->entries[0] = _TO_ENTRY(tab);
-	set_entry_present(dir->entries[0], true);
-	set_entry_usermode(dir->entries[0], true);
+	set_entry_present(&(dir->entries[0]), true);
+	set_entry_usermode(&(dir->entries[0]), true);
 	_curr_tab = tab;
 
 	//	0xC0100000 mapped to 0x100000
 	paddr_t p = 0x100000;
 	for (int i = 256; i < 1024; i++, p += 4096) {
 		tab->entries[i] = _TO_ENTRY(p);
-		set_entry_present(tab->entries[i], true);
-		set_entry_usermode(tab->entries[i], true);
+		set_entry_present(&(tab->entries[i]), true);
+		set_entry_usermode(&(tab->entries[i]), true);
 	}
 
 	//	load the new PDPTR to CR03
-	pg_load(&_pg_dir_ptr);
+	pg_load((paddr_t)&_pg_dir_ptr);
+}
+
+//	This page directory entry identity-maps the first 4MB of the 32-bit physical address space.
+//	All bits are clear except the following:
+//	bit 7: PS The kernel page is 4MB.
+//	bit 1: RW The kernel page is read/write.
+//	bit 0: P  The kernel page is present.
+//	This entry must be set -- otherwise the kernel will crash immediately after paging is
+//	enabled because it can't fetch the next instruction! It's ok to unmap this page later.
+void __early pg_early_init() {
+	//	hard code page directory at offset 0x6400000 (100 MiB)
+	uint32_t *dir = (uint32_t *)0x6400000;
+
+	//	Map first 4MiB
+	dir[0] = 0x83;  //	4MiB page, Present, Read Write
+	//	Map 0x100000 to 0xC0000000
+	dir[768] = 0x83;  // Present, Read Write
+
+	//	Enable Paging
+	_asm(
+	    "mov	ecx, %0\n"
+	    "mov	cr3, ecx\n"
+	    "mov	ecx, cr4\n"
+	    "or		ecx, 0x00000010\n"
+	    "mov	cr4, ecx\n"
+	    "mov	ecx, cr0\n"
+	    "or		ecx, 0x80000000\n"
+	    "mov	cr0, ecx\n"
+	    :
+	    : "r"(0x6400000)
+	    : "memory");
 }
 
 /*
-uint64_t __align(0x1000) __earlydata page_dir[ENTRY_SIZE * 4];  // must be aligned to page boundry
-uint64_t __align(0x1000) __earlydata page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
+uint64_t __align(0x1000) page_dir[ENTRY_SIZE * 4];  // must be aligned to page boundry
+uint64_t __align(0x1000) page_tab[ENTRY_SIZE * ENTRY_SIZE * 4];
 
 void map_page(vaddr_t from, size_t count, paddr_t physical) {
 	size_t c = count;
@@ -452,7 +486,7 @@ void early_init_paging(kernel_mem_info_t kmem_info, uint32_t mb2_addr) {
 }
 
 __earlydata uint32_t efer;
-uint32_t __early debug(uint32_t eflags, uint32_t cpuid_enabled) {
+uint32_t debug(uint32_t eflags, uint32_t cpuid_enabled) {
 	if (!cpuid_enabled) {
 		return eflags;
 	}

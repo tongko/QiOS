@@ -12,26 +12,26 @@
 
 #define VIDEO_MEM (uint16_t *)0xB8000
 
-static __earlydata term_api_t _api;
-static __earlydata uint32_t _term_width;
+static term_api_t _api;
+static uint32_t _term_width;
 //static const uint32_t TERM_HEIGHT = 25;
-static __earlydata volatile uint16_t *_video_mem;
-static __earlydata term_color_t _color;
-static __earlydata cursor_info_t _info;
+static volatile uint16_t *_video_mem;
+static term_color_t _color;
+static cursor_info_t _info;
 
-static __early __inline__ uint8_t vga_color(const term_color_t *color) {
+static __inline__ uint8_t vga_color(const term_color_t *color) {
 	return color->foreground | color->background << 4;
 }
 
-static __early __inline__ uint16_t vga_entry(char c, const term_color_t *color) {
+static __inline__ uint16_t vga_entry(char c, const term_color_t *color) {
 	return (uint16_t)c | ((uint16_t)vga_color(color) << 8);
 }
 
-static __early const term_color_t *get_color(void) {
+static const term_color_t *get_color(void) {
 	return &_color;
 }
 
-static __early void set_color(const term_color_t *color) {
+static void set_color(const term_color_t *color) {
 	if (!color) {
 		return;
 	}
@@ -40,11 +40,11 @@ static __early void set_color(const term_color_t *color) {
 	_color.foreground = color->foreground;
 }
 
-static __early const cursor_info_t *get_cursor_info(void) {
+static const cursor_info_t *get_cursor_info(void) {
 	return &_info;
 }
 
-static __early void set_cursor_xy(uint32_t x, uint32_t y) {
+static void set_cursor_xy(uint32_t x, uint32_t y) {
 	uint32_t pos = y * _term_width + x;
 
 	_outb(0x3D4, 0x0F);
@@ -57,7 +57,7 @@ static __early void set_cursor_xy(uint32_t x, uint32_t y) {
 	_info.point.y = y;
 }
 
-static __early void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
+static void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
 	if (scanStart == 0 && scanEnd == 0) {
 		// Disable cursor
 		_outb(0x3D4, 0x0A);
@@ -72,7 +72,7 @@ static __early void cursor_shape(uint8_t scanStart, uint8_t scanEnd) {
 	_outb(0x3D5, (_inb(0x3E0) & 0xE0) | scanEnd);
 }
 
-static __early void set_cursor_info(const cursor_info_t *info) {
+static void set_cursor_info(const cursor_info_t *info) {
 	if (!info) {
 		return;
 	}
@@ -98,7 +98,7 @@ static __early void set_cursor_info(const cursor_info_t *info) {
 	_info.shape = info->shape;
 }
 
-static __early void set_cursor_point(const cursor_point_t *point) {
+static void set_cursor_point(const cursor_point_t *point) {
 	if (!point) {
 		return;
 	}
@@ -106,7 +106,7 @@ static __early void set_cursor_point(const cursor_point_t *point) {
 	set_cursor_xy(point->x, point->y);
 }
 
-static __early void putc(char c) {
+static void putc(char c) {
 	cursor_point_t point = _info.point;
 	uint32_t offset = point.y * _term_width + point.x;
 
@@ -162,12 +162,12 @@ static __early void putc(char c) {
 	set_cursor_point(&point);
 }
 
-static __early void putc_at(char c, const cursor_point_t *point) {
+static void putc_at(char c, const cursor_point_t *point) {
 	set_cursor_point(point);
 	putc(c);
 }
 
-static __early void puts(const char *s) {
+static void puts(const char *s) {
 	if (!s) {
 		return;
 	}
@@ -177,7 +177,7 @@ static __early void puts(const char *s) {
 	}
 }
 
-static __early void clear() {
+static void clear() {
 	for (int32_t i = 0; i < 2000; i++) {
 		putc(' ');
 	}

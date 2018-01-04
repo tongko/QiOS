@@ -18,6 +18,6 @@
 
 /*	Interfaces	*/
 
-__early void early_init(kernel_meminfo_t k_meminfo, mbi_t mbi);
+void early_init(kernel_meminfo_t k_meminfo, mbi_t mbi);
 
 #endif  //	__INIT_H_

@@ -12,7 +12,7 @@
 
 #include <attribs.h>
 #include <kbool.h>
-#include <kdef.h>
+#include <stddef.h>
 #include <stdint.h>
 
 //	Physical Memory Address
@@ -22,13 +22,13 @@ typedef uintptr_t paddr_t;
 #define PMM_BLOCK_SIZE 4096
 #define PMM_BLOCK_ALIGN PMM_BLOCK_SIZE
 
-void __early pmm_init(size_t mem_size, paddr_t table);
-void __early pmm_init_region(paddr_t base, size_t size, bool set);
-paddr_t __early pmm_alloc_block(void);
-paddr_t __early pmm_alloc_blocks(size_t size);
-void __early pmm_free_block(paddr_t p);
-void __early pmm_free_blocks(paddr_t p, size_t size);
-uint32_t __early pmm_get_block_count(void);
-uint32_t __early pmm_get_used_block(void);
+void pmm_init(size_t mem_size, paddr_t table);
+void pmm_init_region(paddr_t base, size_t size, bool set);
+paddr_t pmm_alloc_block(void);
+paddr_t pmm_alloc_blocks(size_t size);
+void pmm_free_block(paddr_t p);
+void pmm_free_blocks(paddr_t p, size_t size);
+uint32_t pmm_get_block_count(void);
+uint32_t pmm_get_used_block(void);
 
 #endif  //	__PMM_H_

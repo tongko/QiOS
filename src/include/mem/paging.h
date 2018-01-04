@@ -27,5 +27,9 @@ void pg_flush_tlb_entry(vaddr_t vaddr);
 void pg_map_addr(vaddr_t vaddr, paddr_t paddr, uint32_t page_count);
 //	Initialize Paging
 void pg_init(void);
+//	Temporary paging initialization for early boot stage.
+void pg_early_init(void);
+//	Translate linear address to physical address.
+paddr_t virt_to_phys(vaddr_t vaddr);
 
 #endif  //	__PAGING_H_

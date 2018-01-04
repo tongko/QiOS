@@ -7,14 +7,10 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include <stddef.h>
-
-#include <string.h>
-
-#include <stdlib.h>
-
+#include <kio.h>
+#include <klib.h>
+#include <kstr.h>
 #include <sys/term.h>
-
-#include <stdio.h>
 
 #define DIGIT_STR(f) (char *)(f == 'X' ? "0123456789ABCDEF" : "0123456789abcdef")
 
@@ -319,7 +315,7 @@ uint32_t vsprintf(char *str, const char *format, va_list arg) {
 					i += x;
 				} break;
 				case 'c': {
-					char c = va_arg(arg, char);
+					char c = (char)va_arg(arg, int);
 					PRINT_CHAR(c);
 				} break;
 				case 's': {

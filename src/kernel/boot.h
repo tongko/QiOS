@@ -10,17 +10,17 @@
 #ifndef __BOOT_H_
 #define __BOOT_H_
 
+#include <asm.h>
 #include <hal.h>
+#include <kio.h>
+#include <mem/memory.h>
 #include <multiboot/mb_info.h>
 #include <multiboot/multiboot2.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
+#include <sys/serial_port.h>
 #include <sys/symbols.h>
 #include <sys/term.h>
-#include "../arch/x86/asm.h"
-#include "../arch/x86/boot/paging.h"
-#include "../arch/x86/comm/serial_port.h"
 #include "../arch/x86/exception.h"
 #include "../arch/x86/func.h"
 

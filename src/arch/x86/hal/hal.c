@@ -13,9 +13,9 @@
 
 /*    IMPLEMENTATION HEADERS												  */
 
+#include <asm.h>
 #include <cpu.h>
 #include <hal.h>
-#include "../asm.h"
 #include "idt.h"
 #include "pic.h"
 #include "pit.h"

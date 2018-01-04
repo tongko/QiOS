@@ -13,7 +13,7 @@
 #include <attribs.h>
 #include <stdint.h>
 
-#define _asm(x...) asm volatile(x)
+#define _asm(x...) __asm__ __volatile__(x)
 
 static __inline__ void sti(void) {
 	_asm(
@@ -54,7 +54,7 @@ static __inline__ void io_wait(void) {
 	/* %%al instead of %0 makes no difference.  TODO: does the register need to be zeroed? */
 }
 
-static __inline__ uint32_t __early get_cr0(void) {
+static __inline__ uint32_t get_cr0(void) {
 	uint32_t ret;
 	_asm("mov %0, cr0"
 	     : "=r"(ret));
@@ -62,11 +62,11 @@ static __inline__ uint32_t __early get_cr0(void) {
 	return ret;
 }
 
-static __inline__ void __early set_cr0(uint32_t val) {
+static __inline__ void set_cr0(uint32_t val) {
 	_asm("mov cr0, %0" ::"r"(val));
 }
 
-static __inline__ uint32_t __early get_cr3(void) {
+static __inline__ uint32_t get_cr3(void) {
 	uint32_t ret;
 	_asm("mov %0, cr3"
 	     : "=r"(ret));
@@ -74,11 +74,11 @@ static __inline__ uint32_t __early get_cr3(void) {
 	return ret;
 }
 
-static __inline__ void __early set_cr3(uint32_t val) {
+static __inline__ void set_cr3(uint32_t val) {
 	_asm("mov cr3, %0" ::"r"(val));
 }
 
-static __inline__ uint32_t __early get_cr4(void) {
+static __inline__ uint32_t get_cr4(void) {
 	uint32_t ret;
 	_asm("mov %0, cr4"
 	     : "=r"(ret));
@@ -86,7 +86,7 @@ static __inline__ uint32_t __early get_cr4(void) {
 	return ret;
 }
 
-static __inline__ void __early set_cr4(uint32_t val) {
+static __inline__ void set_cr4(uint32_t val) {
 	_asm("mov cr4, %0" ::"r"(val));
 }
 

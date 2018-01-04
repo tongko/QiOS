@@ -11,19 +11,19 @@
 #define __KSTR_H_
 
 #include <attribs.h>
-#include <kdef.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifndef ISDIGIT
 #define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
 #endif
 
-__early size_t strlen(const char *str);
-__early char *strcat(char *dest, const char *src);
-__early int strcmp(const char *str1, const char *str2);
-__early void *memcpy(void *dest, const void *src, size_t n);
-__early void *memset(void *dest, char c, size_t count);
-__early void reverse(char *str);
-__early char *strchr(const char *s, int c_in);
+size_t strlen(const char *str);
+char *strcat(char *dest, const char *src);
+int strcmp(const char *str1, const char *str2);
+void *memcpy(void *dest, const void *src, size_t n);
+void *memset(void *dest, char c, size_t count);
+void reverse(char *str);
+char *strchr(const char *s, int c_in);
 
 #endif  //	__KSTR_H_

@@ -6,10 +6,10 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
-#include <sys/panic.h>
 #include <asm.h>
-#include <karg.h>
 #include <kio.h>
+#include <stdarg.h>
+#include <sys/panic.h>
 #include <sys/term.h>
 
 extern void system_halt(void);

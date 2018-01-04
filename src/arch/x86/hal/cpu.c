@@ -6,8 +6,8 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
+#include <asm.h>
 #include <cpu.h>
-#include "../asm.h"
 #include "gdt.h"
 #include "idt.h"
 

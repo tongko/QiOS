@@ -6,15 +6,15 @@
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
  * ****************************************************************************/
+#include <kio.h>
+#include <kstr.h>
 #include <multiboot/mb_info.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 
-static __earlydata void *_mb2_info;
-static __earlydata mbiapi_t _api;
+static void *_mb2_info;
+static mbiapi_t _api;
 
-static struct multiboot_tag *get_multiboot_tag __early(uint32_t type) {
+static struct multiboot_tag *get_multiboot_tag(uint32_t type) {
 	if (!_mb2_info) {
 		return NULL;
 	}
@@ -31,7 +31,7 @@ static struct multiboot_tag *get_multiboot_tag __early(uint32_t type) {
 	return NULL;
 }
 
-static void load_mb2i __early(uint32_t mbi_addr) {
+static void load_mb2i(uint32_t mbi_addr) {
 	if (mbi_addr) {
 		if (mbi_addr & 7) {
 			printf("Unaligned MBI: 0x%x.8\n", mbi_addr);
@@ -43,35 +43,37 @@ static void load_mb2i __early(uint32_t mbi_addr) {
 	}
 }
 
-static mb_tag_memmap_t *get_mmap __early(void) {
+static mb_tag_memmap_t *get_mmap(void) {
 	return (mb_tag_memmap_t *)get_multiboot_tag(MULTIBOOT_TAG_TYPE_MMAP);
 }
 
-static mb_tag_meminfo_t *get_meminfo __early(void) {
+static mb_tag_meminfo_t *get_meminfo(void) {
 	return (mb_tag_meminfo_t *)get_multiboot_tag(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
 }
 
-static mb_tag_module_t *enum_module_info __early(void) {
+static mb_tag_module_t *enum_module_info(void) {
 	static mb_tag_module_t *ptr;
 	struct multiboot_tag *tag;
 	if (!ptr) {
-		for (tag = (struct multiboot_tag *)((uint32_t)_mb2_info + 8);
-		     tag->type != MULTIBOOT_TAG_TYPE_END;
-		     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7))) {
+		tag = (struct multiboot_tag *)((uint32_t)_mb2_info + 8);
+		while (tag && tag->type != MULTIBOOT_TAG_TYPE_END) {
 			if (tag->type == MULTIBOOT_TAG_TYPE_MODULE) {
 				ptr = (mb_tag_module_t *)tag;
+				break;
 			}
+
+			tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7));
 		}
 	} else {
 		tag = (struct multiboot_tag *)ptr;
 		tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7));
-		ptr = tag->type == MULTIBOOT_TAG_TYPE_END ? ptr = NULL : (mb_tag_module_t *)tag;
+		ptr = tag->type != MULTIBOOT_TAG_TYPE_MODULE ? NULL : (mb_tag_module_t *)tag;
 	}
 
 	return ptr;
 }
 
-static void print_mb2i __early(char *buffer) {
+static void print_mb2i(char *buffer) {
 	if (!buffer) {
 		return;
 	}
@@ -116,9 +118,9 @@ static void print_mb2i __early(char *buffer) {
 				break;
 			case MULTIBOOT_TAG_TYPE_MODULE:
 				total_printed += sprintf(p, "-> Module at %#.16x-%#.16x. Command line %s\n",
-				                         ((struct multiboot_tag_module *)tag)->mod_start,
-				                         ((struct multiboot_tag_module *)tag)->mod_end,
-				                         ((struct multiboot_tag_module *)tag)->cmdline);
+				                         ((mb_tag_module_t *)tag)->mod_start,
+				                         ((mb_tag_module_t *)tag)->mod_end,
+				                         ((mb_tag_module_t *)tag)->cmdline);
 				while (*p++) {
 				}
 				p--;
@@ -150,7 +152,7 @@ static void print_mb2i __early(char *buffer) {
 				// int32_t count = 0;
 				for (mmap = ((mb_tag_memmap_t *)tag)->entries;
 				     (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
-				     mmap = (mb_tag_memmap_t *)((unsigned long)mmap + ((mb_tag_memmap_t *)tag)->entry_size)) {
+				     mmap = (mb_tag_memmap_entry_t *)((unsigned long)mmap + ((mb_tag_memmap_t *)tag)->entry_size)) {
 					total_printed += sprintf(p,
 					                         //	For 32 bits only 32 bit address exists.
 					                         //"\tbase_addr = 0x%x%x, length = 0x%x%x, type = 0x%x\n",
@@ -241,7 +243,7 @@ static void print_mb2i __early(char *buffer) {
 	p--;
 }
 
-static elf32_section_header_t *get_elf_sec_hdr __early(const char *sec_name) {
+static elf32_section_header_t *get_elf_sec_hdr(const char *sec_name) {
 	if (!_mb2_info) {
 		return NULL;
 	}
@@ -267,15 +269,15 @@ static elf32_section_header_t *get_elf_sec_hdr __early(const char *sec_name) {
 	return NULL;
 }
 
-static bool is_loaded __early() {
-	return _mb2_info;
+static bool is_loaded() {
+	return (uint32_t)_mb2_info;
 }
 
-mbiapi_t *mb_info_api() {
+mbiapi_t *mbi_api() {
 	return &_api;
 }
 
-void mb_info_init(mbiapi_t *api) {
+void mbi_init(mbiapi_t *api) {
 	if (api == NULL) {
 		_api.get_mmap = get_mmap;
 		_api.load_mb2i = load_mb2i;
@@ -283,6 +285,7 @@ void mb_info_init(mbiapi_t *api) {
 		_api.get_elf_sec_hdr = get_elf_sec_hdr;
 		_api.get_meminfo = get_meminfo;
 		_api.enum_module_info = enum_module_info;
+		_api.is_loaded = is_loaded;
 		return;
 	}
 
@@ -292,4 +295,5 @@ void mb_info_init(mbiapi_t *api) {
 	_api.get_elf_sec_hdr = api->get_elf_sec_hdr;
 	_api.get_meminfo = api->get_meminfo;
 	_api.enum_module_info = api->enum_module_info;
+	_api.is_loaded = api->is_loaded;
 }

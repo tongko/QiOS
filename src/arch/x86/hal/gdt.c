@@ -7,8 +7,8 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include "gdt.h"
-#include <string.h>
-#include "../asm.h"
+#include <asm.h>
+#include <kstr.h>
 #include "../func.h"
 
 //	Defines a GDT entry. Use packed, because it prevents the compiler from doing things that it thinks

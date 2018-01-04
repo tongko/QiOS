@@ -10,12 +10,16 @@
 #define __KIO_H_
 
 #include <attribs.h>
-#include <karg.h>
-#include <kdef.h>
+#include <stddef.h>
+#include <stdarg.h>
 #include <stdint.h>
 
-__early uint32_t sprintf(char *str, const char *format, ...);
-__early uint32_t vsprintf(char *str, const char *format, va_list arg);
-__early uint32_t printf(const char *format, ...);
+#ifndef MAXLEN
+#define MAXLEN 4096
+#endif
+
+uint32_t sprintf(char *str, const char *format, ...);
+uint32_t vsprintf(char *str, const char *format, va_list arg);
+uint32_t printf(const char *format, ...);
 
 #endif  //	__KIO_H_

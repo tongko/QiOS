@@ -10,13 +10,9 @@
 #define __GDT_H_
 
 /*		Interface Required Haders		*/
-#include <stdint.h>
-
-#include <stddef.h>
-
 #include <attribs.h>
-
-#include "../ktypedef.h"
+#include <stddef.h>
+#include <stdint.h>
 
 /*		Definitions, Enumerations, Type Definition	*/
 

@@ -9,6 +9,8 @@
 #ifndef __KDEF_H_
 #define __KDEF_H_
 
+#include <stdint.h>
+
 /* This is the signed integral type and is the result of subtracting two
  * pointers. */
 #ifndef _PTRDIFF_T_DECLARED
@@ -49,7 +51,7 @@ in bytes of a structure member from the beginning of the structure.
 The member is given by member-designator, and the name of the structure
 is given in type.
 */
-#define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)
+//#define offsetof(TYPE, MEMBER) __builtin_offsetof(TYPE, MEMBER)
 
 #ifndef MAXLEN
 #define MAXLEN 4096

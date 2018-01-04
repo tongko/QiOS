@@ -11,6 +11,10 @@
 #include <mem/paging.h>
 #include <mem/pmm.h>
 #include <mem/vmm.h>
+#include <stdbool.h>
 
-void __early vmm_init() {
+void vmm_init() {
+	pg_init();
+	pg_enable(true);
+	pg_flush_tlb();
 }

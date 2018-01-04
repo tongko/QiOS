@@ -29,7 +29,7 @@
 #include "boot.h"
 
 #define serial serial_port_api
-#define mbiapi mb_info_api
+#define mbiapi mbi_api
 #define symbol symbol_table_api
 
 char *logo =
@@ -39,13 +39,18 @@ char *logo =
 / /_/ / / / /_/ /\\ \\    Very Simple Operating System\n\
 \\___\\_\\/_/\\____/___/\n\n";
 
-void _kmain(uint32_t magic, uint32_t mbi_addr) {
+void _kmain(kernel_meminfo_t k_mem_info, uint32_t magic, uint32_t mbi_addr) {
+	mbi_init(NULL);
+	mbiapi()->load_mb2i(mbi_addr);
+	//	Initialize memory manager.
+	mm_init(k_mem_info);
+
 	//mb_info_init(NULL);
 	//mbiapi()->load_mb2i(mbi_addr);
-	init_term(NULL);          // use default term implementation
-	term_default_config();    // default configuration
-	init_serial_port(NULL);   // use default serial_port implementation
-	serial_default_config();  // default configuration
+	term_init(NULL);               // use default term implementation
+	term_default_config();         // default configuration
+	serial_port_init(NULL);        // use default serial_port implementation
+	serial_port_default_config();  // default configuration
 
 	if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
 		serial()->print("Invalid magic number: %#.8x\n", magic);

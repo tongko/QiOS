@@ -10,8 +10,8 @@
 #define __PANIC_H_
 
 #include <attribs.h>
-#include <karg.h>
+#include <stdarg.h>
 
-__early void kernel_panic(const char *format, ...);
+void kernel_panic(const char *format, ...);
 
 #endif  //	__PANIC_H_

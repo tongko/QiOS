@@ -83,17 +83,8 @@ _start:
 		mov		[mbr_addr], ebx
 
 		; Deal with paging in C code.
-		extern	kernel_virtual_end
-		push	kernel_virtual_end
-		extern	kernel_virtual_start
-		push	kernel_virtual_start
-		extern	kernel_physical_end
-		push	kernel_physical_end
-		extern	kernel_physical_start
-		push	kernel_physical_start
-		extern	early_init_paging
-		call	early_init_paging
-		add		esp, 16
+		extern	pg_early_init
+		call	pg_early_init
 
 		; map higher hafl to page table
 		lea		ecx, [higher_half_entry]
@@ -103,15 +94,21 @@ _start:
 SECTION .text
 		align	8
 higher_half_entry:
-		cli
-
 		mov		esp, kstack_top					; Intialize kernel stack
 
-		; push	0								; Reset EFLAGS
-		; popfd
+		push	0								; Reset EFLAGS
+		popfd
 
 		push	dword [mbr_addr]				; Multiboot2 info
 		push	dword [mbr_magic]				; Magic number
+		extern	kernel_virtual_end
+		push	kernel_virtual_end
+		extern	kernel_virtual_start
+		push	kernel_virtual_start
+		extern	kernel_physical_end
+		push	kernel_physical_end
+		extern	kernel_physical_start
+		push	kernel_physical_start
 		extern	_kmain							; Enter C code kernel
 		call	_kmain
 		add		esp, 4

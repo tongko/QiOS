@@ -21,6 +21,7 @@ subsystem:
 	+$(MAKE) -C $(X86)/comm
 	+$(MAKE) -C $(X86)/hal
 	+$(MAKE) -C $(X86)/boot
+	+$(MAKE) -C $(X86)/memory
 
 $(OBJDIR)/%.o : %.asm
 	$(NASM) $(ASFLAGS) -o $@ $<
@@ -35,4 +36,5 @@ clean:
 	+$(MAKE) -C $(X86)/comm clean
 	+$(MAKE) -C $(X86)/hal clean
 	+$(MAKE) -C $(X86)/boot clean
+	+$(MAKE) -C $(X86)/memory clean
 	rm -f $(OBJ)

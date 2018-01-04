@@ -11,7 +11,7 @@
 #define __KLIB_H_
 
 #include <attribs.h>
-#include <kdef.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifndef MAX
@@ -26,8 +26,9 @@
 #define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
 #endif  //	ISDIGIT
 
-__early int32_t abs(int32_t x);
-__early size_t itoa(uint32_t value, char *str, int base, const char *digit_str);
-__early uint32_t atoi(const char *str);
+int32_t abs(int32_t x);
+size_t itoa(uint32_t value, char *str, int base, const char *digit_str);
+uint32_t atoi(const char *str);
+void abort(void);
 
 #endif  // __KLIB_H_

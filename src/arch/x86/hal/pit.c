@@ -7,9 +7,9 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include "pit.h"
+#include <asm.h>
 #include <attribs.h>
 #include <hal.h>
-#include "../asm.h"
 
 /*	Controller Registers	*/
 #define PIT_REG_COUNTER0 0x40

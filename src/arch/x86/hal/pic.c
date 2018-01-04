@@ -7,8 +7,8 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include "pic.h"
+#include <asm.h>
 #include <hal.h>
-#include "../asm.h"
 
 #define MPIC 0x20 /* IO base address for master PIC */
 #define SPIC 0xA0 /* IO base address for slave PIC */

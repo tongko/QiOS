@@ -24,7 +24,7 @@ typedef char *va_list;
 #define va_start(AP, LASTARG) \
 	(AP = ((char *)&(LASTARG) + __va_rounded_size(LASTARG)))
 
-extern void __early va_end(va_list);
+extern void va_end(va_list);
 #define va_end(AP)  //  Does Nothing
 
 #define va_arg(AP, TYPE) (AP += __va_rounded_size(TYPE), \

@@ -7,9 +7,9 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include "idt.h"
-#include <stdio.h>
-#include <string.h>
-#include "../asm.h"
+#include <asm.h>
+#include <kio.h>
+#include <kstr.h>
 #include "../func.h"
 #include "gdt.h"
 #include "hal.h"

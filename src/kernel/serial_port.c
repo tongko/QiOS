@@ -7,12 +7,12 @@
  *  base).                                                                     *
  * ****************************************************************************/
 #include <asm.h>
-#include <karg.h>
-#include <kdef.h>
+#include <stddef.h>
 #include <kio.h>
+#include <stdarg.h>
 #include <sys/serial_port.h>
 
-static __earlydata serial_port_api_t _api;
+static serial_port_api_t _api;
 
 /** serial_configure_baud_rate:
 *   Sets the speed of the data being sent. The default speed of a serial
@@ -22,7 +22,7 @@ static __earlydata serial_port_api_t _api;
 *   @param com      The COM port to configure
 *   @param divisor  The divisor
 */
-static __early void init_baud_rate(uint16_t com, uint16_t divisor) {
+static void init_baud_rate(uint16_t com, uint16_t divisor) {
 	_outb(SERIAL_LINE_COMMAND_PORT(com),
 	      SERIAL_LINE_ENABLE_DLAB);
 	_outb(SERIAL_DATA_PORT(com),
@@ -31,7 +31,7 @@ static __early void init_baud_rate(uint16_t com, uint16_t divisor) {
 	      divisor & 0x00FF);
 }
 
-static __early void set_register(uint16_t port, uint16_t value) {
+static void set_register(uint16_t port, uint16_t value) {
 	_outb(port, value);
 }
 
@@ -43,12 +43,12 @@ static __early void set_register(uint16_t port, uint16_t value) {
 *   @return 0 if the transmit FIFO queue is not empty
 *           1 if the transmit FIFO queue is empty
 */
-static __early int serial_is_transmit_fifo_empty(uint16_t com) {
+static int serial_is_transmit_fifo_empty(uint16_t com) {
 	/* 0x20 = 0010 0000 */
 	return _inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20;
 }
 
-static __early void putc(char c) {
+static void putc(char c) {
 	// Block until buffer is not full
 	while (!serial_is_transmit_fifo_empty(SERIAL_COM1)) {
 	}
@@ -56,13 +56,13 @@ static __early void putc(char c) {
 	_outb(SERIAL_DATA_PORT(SERIAL_COM1), c);
 }
 
-static __early void puts(const char *str, int32_t n) {
+static void puts(const char *str, int32_t n) {
 	for (int32_t i = 0; i < n; i++) {
 		_api.putc(str[i]);
 	}
 }
 
-static __early void print(const char *format, ...) {
+static void print(const char *format, ...) {
 	char buffer[MAXLEN] = {0};
 	va_list arg;
 	int32_t i = 0;
