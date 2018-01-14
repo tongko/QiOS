@@ -78,9 +78,9 @@ mbr_addr:
 		align	8
 _start:
 		cli
-		; Keep multiboot magic and address
-		mov		[mbr_magic], eax
-		mov		[mbr_addr], ebx
+		; ; Keep multiboot magic and address
+		; mov		[mbr_magic], eax
+		; mov		[mbr_addr], ebx
 
 		; Deal with paging in C code.
 		extern	pg_early_init
@@ -99,8 +99,8 @@ higher_half_entry:
 		push	0								; Reset EFLAGS
 		popfd
 
-		push	dword [mbr_addr]				; Multiboot2 info
-		push	dword [mbr_magic]				; Magic number
+		push	ebx				; Multiboot2 info
+		push	eax				; Magic number
 		extern	kernel_virtual_end
 		push	kernel_virtual_end
 		extern	kernel_virtual_start

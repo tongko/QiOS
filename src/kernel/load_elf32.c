@@ -45,4 +45,17 @@ void load_elf32_verify_header(elf32_ehdr_t *hdr) {
 	if (hdr->e_version != EV_CURRENT) {
 		kernel_panic("load-elf32: binary is not standard ELF.");
 	}
+
+	if (hdr->e_shnum == 0) {
+		kernel_panic("load-elf32: binary has empty section table.");
+	}
+}
+
+void load_elf32(uint32_t start, uint32_t offset) {
+	elf32_ehdr_t *ehdr = (elf32_ehdr_t *)start;
+
+	load_elf32_verify_header(ehdr);
+
+	elf32_phdr_t *phdr_base = (elf32_phdr_t *)(start + ehdr->e_phoff);
+#define phdr(i) ((elf32_phdr_t *)(phdr_base + (i) + ehdr->e_phentsize))
 }

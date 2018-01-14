@@ -7,14 +7,19 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __VMM_H_
-#define __VMM_H_
+#ifndef __MEM_VMM_H_
+#define __MEM_VMM_H_
 
 #include <stdint.h>
 
-//	Kernel mode allocate new memory
+//	Align to next y bytes
+#define _ALIGN_UP(x, y) (x % y ? x + (y - (x % y)) : x)
+//	Align to previous y bytes
+#define _ALIGN_DW(x, y) x - (x % y)
 
+//	Allocate new blocks for virtual address
+uint32_t vmm_alloc_blocks(vaddr_t virt, uint32_t block_count);
 //	Initialize Virtual Memory Manager
 void vmm_init();
 
-#endif  //	__VMM_H_
+#endif  //	__MEM_VMM_H_

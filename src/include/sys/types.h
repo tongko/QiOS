@@ -12,9 +12,9 @@
 #include <stddef.h>
 
 //	type represent virtual address
-typedef uint32_t vaddr_t;
+typedef uintptr_t vaddr_t;
 
 //	type represent physical address
-typedef uint32_t paddr_t;
+typedef uintptr_t paddr_t;
 
 #endif  //	__TYPES_H_

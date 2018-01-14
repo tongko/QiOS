@@ -42,7 +42,6 @@
 #define PD_MASK 0x3FE00000            // 0011 1111 1110 0000 0000 0000 0000 0000
 #define PT_MASK 0x001FF000            // 0000 0000 0001 1111 1111 0000 0000 0000
 #define PO_MASK 0x00000FFF            // 0000 0000 0000 0000 0000 1111 1111 1111
-#define PAGE_SIZE 0x00001000          // 4 KIB
 #define ENTRY_SIZE 0x00000200         // 512 entries
 #define PT_SIZE_IN_BYTE (PAGE_DIR_SIZE * sizeof(uint64_t))
 #define PD_SIZE_IN_BYTE (PAGE_TAB_SIZE * sizeof(uint64_t))

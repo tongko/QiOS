@@ -13,6 +13,8 @@
 #include <mem/pmm.h>
 #include <stdint.h>
 
+#define PAGE_SIZE 0x00001000  // 4 KIB
+
 typedef uintptr_t vaddr_t;
 
 //	laod a new paging structure

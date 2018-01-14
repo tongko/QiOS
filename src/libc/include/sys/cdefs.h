@@ -32,4 +32,17 @@
 #define __END_DECLS
 #endif
 
+#define __attribute_malloc__ __attribute__((__malloc__))
+
+/* If fortification mode, we warn about unused results of certain
+   function calls which can lead to problems.  */
+#define __attribute_warn_unused_result__ \
+	__attribute__((__warn_unused_result__))
+#if __USE_FORTIFY_LEVEL > 0
+#define __wur __attribute_warn_unused_result__
+#endif  //	__USE_FORTIFY_LEVEL > 0
+#ifndef __wur
+#define __wur /* Ignore */
+#endif        //	__wur
+
 #endif  //	__SYS_CDEFS_H_

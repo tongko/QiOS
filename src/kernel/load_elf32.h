@@ -13,8 +13,14 @@
 #include <elf32.h>
 #include <multiboot/multiboot2.h>
 
+typedef struct elf_mod {
+	void *entry_point;
+
+} elf_mod_t;
+
 /* Verify ELF32 header */
 void load_elf32_verify_header(elf32_ehdr_t *hdr);
 /* Load ELF 32 bits binaries from multiboot2 info */
+void load_elf32(uint32_t start, uint32_t offset);
 
 #endif  //	__LOAD_ELF32_H_

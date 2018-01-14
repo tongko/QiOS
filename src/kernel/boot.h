@@ -12,6 +12,7 @@
 
 #include <asm.h>
 #include <hal.h>
+#include <kernel/init.h>
 #include <kio.h>
 #include <mem/memory.h>
 #include <multiboot/mb_info.h>

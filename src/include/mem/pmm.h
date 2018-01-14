@@ -14,9 +14,7 @@
 #include <kbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-//	Physical Memory Address
-typedef uintptr_t paddr_t;
+#include <sys/types.h>
 
 #define PMM_BLOCKS_PER_BYTE 8
 #define PMM_BLOCK_SIZE 4096

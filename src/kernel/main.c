@@ -39,11 +39,13 @@ char *logo =
 / /_/ / / / /_/ /\\ \\    Very Simple Operating System\n\
 \\___\\_\\/_/\\____/___/\n\n";
 
-void _kmain(kernel_meminfo_t k_mem_info, uint32_t magic, uint32_t mbi_addr) {
+void _kmain(setup_info_t setup_info) {
+	term_init(NULL);
 	mbi_init(NULL);
-	mbiapi()->load_mb2i(mbi_addr);
+	mbiapi()->load_mb2i(setup_info.mbi_addr);
+
 	//	Initialize memory manager.
-	mm_init(k_mem_info);
+	mm_init(&setup_info);
 
 	//mb_info_init(NULL);
 	//mbiapi()->load_mb2i(mbi_addr);

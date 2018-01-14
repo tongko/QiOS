@@ -7,9 +7,11 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
+#include <elf32.h>
 #include <kstr.h>
 #include <mem/memory.h>
 #include <mem/pmm.h>
+#include <mem/vmm.h>
 #include <multiboot/mb_info.h>
 #include <sys/panic.h>
 #include "../ktypedef.h"
@@ -23,7 +25,6 @@ typedef struct {
 	paddr_t end;
 } module_t;
 
-static kernel_meminfo_t _kernel_mem_info;
 static module_t _modules[64];
 
 static bool addr_in_module(multiboot_uint64_t addr) {
@@ -49,30 +50,7 @@ static bool addr_in_module(multiboot_uint64_t addr) {
  *	kernel_end - ? : physical mem table
  *	? - mem_size : free to use memory
  *****************************************************************************/
-static void init_physical_mem(mb_tag_meminfo_t *mem_info,
-                              mb_tag_memmap_t *mem_map) {
-	pmm_init(mem_info->mem_upper, (paddr_t)ROUNDUP(_kernel_mem_info.physical_end, 4096));
-	uint32_t kern_space = ROUNDUP(_kernel_mem_info.physical_end, 4096);
-
-	//	Set available memory blocks. This exclude those occupied by
-	//	kernel and system data.
-	mb_tag_memmap_entry_t *entry;
-	for (entry = mem_map->entries;
-	     (multiboot_uint8_t *)entry < (multiboot_uint8_t *)mem_map + mem_map->size;
-	     entry = (mb_tag_memmap_entry_t *)((multiboot_uint32_t)entry + ((mb_tag_memmap_t *)mem_map)->entry_size)) {
-		//	Only unset block if base above 1MiB and not in kernel space and is type 1
-		if (entry->type == 1 && entry->addr >= kern_space && !addr_in_module(entry->addr)) {
-			//	Available memory
-			pmm_init_region((paddr_t)entry->addr, (size_t)entry->len, false);
-		}
-	}
-}
-
-void mm_init(kernel_meminfo_t k_mem_info) {
-	memcpy(&_kernel_mem_info, &k_mem_info, sizeof(kernel_meminfo_t));
-
-	mbiapi_t *api = mbi_api();
-
+static void init_physical_mem(mbiapi_t *api, setup_info_t *setup_info) {
 	mb_tag_meminfo_t *mem_info = api->get_meminfo();
 	if (!mem_info) {
 		kernel_panic("Invalid multiboot2 information, no basic memory tag.");
@@ -95,7 +73,38 @@ void mm_init(kernel_meminfo_t k_mem_info) {
 		_modules[i].end = 0;
 	}
 
-	init_physical_mem(mem_info, mem_map);
+	// Set the bitmap table to after kernel image, aligned to 4096
+	uint32_t kern_end = ROUNDUP(setup_info->kernel_phys_end, 4096);
+	pmm_init(mem_info->mem_upper, (paddr_t)kern_end);
+
+	//	Set available memory blocks. This exclude those occupied by
+	//	kernel and system data.
+	mb_tag_memmap_entry_t *entry;
+	for (entry = mem_map->entries;
+	     (multiboot_uint8_t *)entry < (multiboot_uint8_t *)mem_map + mem_map->size;
+	     entry = (mb_tag_memmap_entry_t *)((multiboot_uint32_t)entry + ((mb_tag_memmap_t *)mem_map)->entry_size)) {
+		//	Only unset block if base above 1MiB and not in kernel space + 4096 and is type 1
+		if (entry->type == 1 && entry->addr >= (kern_end + 4096) && !addr_in_module(entry->addr)) {
+			//	Available memory
+			pmm_init_region((paddr_t)entry->addr, (size_t)entry->len, false);
+		}
+	}
+}
+
+static void call_mod(mb_tag_module_t *mod) {
+	printf("\nModule name: %s", mod->cmdline);
+
+	elf32_ehdr_t *ehdr = (elf32_ehdr_t *)mod->mod_start;
+	char *phdr_base;
+	int err;
+	phdr_base = (char *)mod->mod_start + ehdr->e_phoff;
+#define phdr(i) ((elf32_phdr_t *)(phdr_base + (i) + ehdr->e_phentsize))
+}
+
+void mm_init(setup_info_t *setup_info) {
+	mbiapi_t *api = mbi_api();
+
+	init_physical_mem(api, setup_info);
 	vmm_init();
 }
 

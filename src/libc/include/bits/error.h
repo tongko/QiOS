@@ -5,19 +5,13 @@
  * 	This file is part of the QiOS kernel, and is made available under the      *
  *  terms of The Unlicense (That means just do whatever you want with the code *
  *  base).                                                                     *
- * 																			   *
  * ****************************************************************************/
-#ifndef __INIT_H_
-#define __INIT_H_
+/* This file defines the errno constants. */
+#ifndef __BITS_ERRNO_H_
+#define __BITS_ERRNO_H_
 
-#include <attribs.h>
-#include <mem/memory.h>
-#include <multiboot/mb_info.h>
-#include <stdint.h>
-#include <sys/types.h>
+#ifndef __ERRNO_H_
+#error "Never include <bits/errno.h> directly; use <errno.h> instead."
+#endif
 
-/*	Interfaces	*/
-
-void early_init(kernel_meminfo_t k_meminfo, mbi_t mbi);
-
-#endif  //	__INIT_H_
+#endif  //	__BITS_ERRNO_H_

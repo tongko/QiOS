@@ -7,16 +7,19 @@
  *  base).                                                                     *
  * 																			   *
  * ****************************************************************************/
-#ifndef __MEMORY_H_
-#define __MEMORY_H_
+#ifndef __KERNEL_INIT_H_
+#define __KERNEL_INIT_H_
 
-#include <attribs.h>
-#include <kernel/init.h>
-#include <mem/paging.h>
-#include <mem/pmm.h>
+#include <stdint.h>
+#include <sys/types.h>
 
-void mm_init(setup_info_t *setup_info);
-uint32_t mm_total_physical(void);
-uint32_t mm_used_physical(void);
+typedef struct setup_info {
+	paddr_t kernel_phys_start;
+	paddr_t kernel_phys_end;
+	vaddr_t kernel_virt_start;
+	vaddr_t kernel_virt_end;
+	paddr_t mbi_addr;
+	uint32_t mbi_magic;
+} setup_info_t;
 
-#endif  //	__MEMORY_H_
+#endif  //	__KERNEL_INIT_H_
