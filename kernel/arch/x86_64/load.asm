@@ -59,6 +59,8 @@ mbr_addr:
 		dd		1
 		align 8
 _start:
+		;	Clear direction flag to make sure we're moving forward
+		cld
 		;	Disable all interrupts so we won't get into trouble
 		cli
 
@@ -72,37 +74,10 @@ _start:
 
 .detect_long_mode:
 		;-----------------------------------------------------------------------
- 		; Check if CPUID is supported by attempting to flip the ID bit (bit 21) 
- 		; in the FLAGS register. If we can flip it, CPUID is available.
-		;----------------------------------------------------------------------- 
- 		; Copy FLAGS in to EAX via stack
-		pushfd
-		pop		eax 
-		; Copy to ECX as well for comparing later on
-		mov		ecx, eax 
-		; Flip the ID bit
-		xor		eax, 1 << 21
-		; Copy EAX to FLAGS via the stack
-		push	eax
-		popfd
-		; Copy FLAGS back to EAX (with the flipped bit if CPUID is supported)
-		pushfd
-		pop		eax
-		; Restore FLAGS from the old version stored in ECX (i.e. flipping the ID bit
-		; back if it was ever flipped).
-		push	ecx
-		popfd
-		; Compare EAX and ECX. If they are equal then that means the bit wasn't
-		; flipped, and CPUID isn't supported.
-		xor		eax, ecx
-		jz		no_cpuid
-
-		;-----------------------------------------------------------------------
-		; Now that CPUID is available we have to check whether long mode can be
-		; used or not. Long mode can only be detected using the extended 
-		; functions of CPUID (> 0x80000000), so we have to check if the 
-		; function that determines whether long mode is available or not is 
-		; actually available:
+		; Check whether long mode can be used or not. Long mode can only be 
+		; detected using the extended functions of CPUID (> 0x80000000), so we 
+		; have to check if the function that determines whether long mode is 
+		; available or not is actually available:
 		;-----------------------------------------------------------------------
 		; Set the A-register to 0x80000000.
 		mov		eax, 0x80000000
@@ -203,7 +178,6 @@ no_cpuid:
 		jmp		hang
 
 no_long_mode:
-		cli
 		push	no_long_msg
 		call	put_string
 		add		esp, 4
@@ -219,95 +193,71 @@ put_string:
 		push	ebp
 		mov		ebp, esp
 
-		mov		edx, [ebp + 4]	;	string
-		mov		ebx, 0xB8000	;	video mem
-
+		mov		esi, [ebp + 4]		;	string
+		mov		edi, 0xB8000		;	video mem
 .L1:
-		mov		al, [edx]		;	the char
-		cmp		al, 0			;	compare with zero
-		je		.L2				;	End loop if zero
-		shl		ax, 8
-		mov		al, [edx + 1]	;	color bgfg
-		or		eax, 0x00FF
-		mov		WORD [ebx], ax
-		add		edx, 2
-		add		ebx, 2
+		movsb						;	move byte from esi to edi
+		mov		BYTE [edi], 0x07	;	Gray on Black
+		inc		edi
+		cmp		BYTE [esi], 0		;	compare with zero
+		jne		.L1					;	next byte if not zero		
 .L2:
-		mov		esp, ebp
-		pop		ebp
-		ret
+		; flush keyboard buffer
+		in		al, 0x64
+		test	al, 0x01
+		jz		.L3
+		in		al, 0x60
+		jmp		.L2
+.L3:
+		; wait for key pressed
+		in		al, 0x64
+		test	al, 0x01
+		jz		.L3
+
+		; reboot by triggering triple fault
+		int		0xFF
+.end
 
 SECTION .data
 		align 8
 halt_message:
-		db		'\n', 0x07, 'H', 0x07, 'a', 0x07, 'l', 0x07, 't', 0x07, '.', 0x07, 0, 0
-no_cpuid_msg:
-		db		'\n', 0x07, 'S', 0x07, 'y', 0x07, 's', 0x07, 't', 0x07, 'e',
-		db		0x07, 'm', 0x07, ' ', 0x07, 'f', 0x07, 'a', 0x07, 'i', 0x07,
-		db		'l', 0x07, 'e', 0x07, 'd', 0x07, ' ', 0x07, 't', 0x07, 'o', 0x07
-		db		' ', 0x07, 'd', 0x07, 'e', 0x07, 't', 0x07, 'e', 0x07, 'c', 0x07
-		db		't', 0x07, ' ', 0x07, 'C', 0x07, 'P', 0x07, 'U', 0x07, 'I', 0x07
-		db		'D', 0x07, ' ', 0x07, 'f', 0x07, 'e', 0x07, 'a', 0x07, 't', 0x07
-		db		'u', 0x07, 'r', 0x07, 'e', 0x07, 's', 0x07, ',', 0x07, ' ', 0x07
-		db		's', 0x07, 'y', 0x07, 's', 0x07, 't', 0x07, 'e', 0x07, 'm', 0x07
-		db		' ', 0x07, 'c', 0x07, 'a', 0x07, 'n', 0x07, 'n', 0x07, 'o', 0x07
-		db		't', 0x07, ' ', 0x07, 'c', 0x07, 'o', 0x07, 'n', 0x07, 't', 0x07
-		db		'i', 0x07, 'n', 0x07, 'u', 0x07, 'e', 0x07, ' ', 0x07, 'l', 0x07
-		db		'o', 0x07, 'a', 0x07, 'd', 0x07, 'i', 0x07, 'n', 0x07, 'g', 0x07
-		db		' ', 0x07, 'w', 0x07, 'i', 0x07, 't', 0x07, 'h', 0x07, 'o', 0x07
-		db		'u', 0x07, 't', 0x07, ' ', 0x07, 'C', 0x07, 'O', 0x07, 'U', 0x07
-		db		'I', 0x07, 'D', 0x07, ' ', 0x07, 'f', 0x07, 'e', 0x07, 'a', 0x07
-		db		't', 0x07, 'u', 0x07, 'r', 0x07, 'e', 0x07, 's', 0x07, '.', 0x07
-		db		'\0', 0x00
+		db		"\nHalt.", 0
 no_long_msg:
-		db		'\n', 0x07, 'I', 0x07, 'n', 0x07, 'v', 0x07, 'a', 0x07, 'l'
-		db		0x07, 'i', 0x07, 'd', 0x07, ' ', 0x07, 'p', 0x07, 'r', 0x07, 'o'
-		db		0x07, 'c', 0x07, 'e', 0x07, 's', 0x07, 's', 0x07, 'o', 0x07, 'r'
-		db		0x07, ' ', 0x07, 'a', 0x07, 'r', 0x07, 'c', 0x07, 'h', 0x07, 'i'
-		db		0x07, 't', 0x07, 'e', 0x07, 'c', 0x07, 't', 0x07, 'u', 0x07, 'r'
-		db		0x07, 'e', 0x07, '.', 0x07, ' ', 0x07, 'T', 0x07, 'h', 0x07, 'i'
-		db		0x07, 's', 0x07, ' ', 0x07, 'v', 0x07, 'e', 0x07, 'r', 0x07, 's'
-		db		0x07, 'i', 0x07, 'o', 0x07, 'n', 0x07, ' ', 0x07, 'o', 0x07, 'f'
-		db		0x07, ' ', 0x07, 'O', 0x07, 'S', 0x07, ' ', 0x07, 'n', 0x07, 'e'
-		db		0x07, 'e', 0x07, 'd', 0x07, 's', 0x07, ' ', 0x07, 'a', 0x07, ' '
-		db		0x07, '6', 0x07, '4', 0x07, ' ', 0x07, 'b', 0x07, 'i', 0x07, 't'
-		db		0x07, 's', 0x07, ' ', 0x07, 'p', 0x07, 'r', 0x07, 'o', 0x07, 'c'
-		db		0x07, 'e', 0x07, 's', 0x07, 's', 0x07, 'o', 0x07, 'r', 0x07, '.'
-		db		0x07, '\0', 0
+		db		"\nERROR: Invalid processor architecture. CPU doesn't support long mode.", 0
 
-[CPU X64]
-[BITS 64]
 ; Global Descriptor Table (64-bit).
 GDT64:
-.Null:	; The null descriptor.
-		equ		$ - GDT64
+; The null descriptor.
+.Null:	equ		$ - GDT64
 		dw		0xFFFF					; Limit (low).
 		dw		0						; Base (low).
 		db		0						; Base (middle)
 		db		0						; Access.
 		db		1						; Granularity.
 		db		0						; Base (high).
-.Code:	; The code descriptor.
-		equ		$ - GDT64
+; The code descriptor.
+.Code:	equ		$ - GDT64
 		dw		0						; Limit (low).
 		dw		0						; Base (low).
 		db		0						; Base (middle)
 		db		10011010b				; Access (exec/read).
 		db		10101111b				; Granularity, 64 bits flag, limit19:16.
 		db		0						; Base (high).
-.Data:	; The data descriptor.
-		equ		$ - GDT64
+; The data descriptor.
+.Data:	equ		$ - GDT64
 		dw		0						; Limit (low).
 		dw		0						; Base (low).
 		db		0						; Base (middle)
 		db		10010010b				; Access (read/write).
 		db		00000000b				; Granularity.
 		db		0						; Base (high).
-.pointer:	; The GDT-pointer.
-		dw		$ - GDT64 - 1			; Limit.
+; The GDT-pointer.
+.Pointer: dw		$ - GDT64 - 1			; Limit.
 		dq		GDT64					; Base.
 _edata:
 
+[CPU X64]
+[BITS 64]
 SECTION .text
 		align 8
 higher_half_entry:	; <== this will be map to 0xC0000000 (VAS)
