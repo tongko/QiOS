@@ -36,5 +36,7 @@ bin/
 obj/
 
 *.log
+# vs code files
 .vscode/
+*.code-workspace
 grub*/
