@@ -1,0 +1,42 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"C_Cpp.default.browse.limitSymbolsToIncludedHeaders": false,
+		"C_Cpp.default.browse.path": [
+			"${workspaceFolder}/libc/include",
+			"${workspaceFolder}/hal/include",
+			"${workspaceFolder}/kernel/include",
+			"/home/tongko/opt/cross/lib/gcc/x86_64-elf/9.2.0/include",
+			"/home/tongko/opt/cross/lib/gcc/x86_64-elf/9.2.0/include-fixed"
+		],
+		"C_Cpp.default.cppStandard": "c++20",
+		"C_Cpp.default.cStandard": "c11",
+		"C_Cpp.default.defines": [
+			"__GNUC__=9",
+			"__linux__=0",
+			"__STDC_HOSTED__=0",
+			"__x86_64__=1",
+			"__is_kernel__=1"
+		],
+		"C_Cpp.default.enableConfigurationSquiggles": true,
+		"C_Cpp.default.includePath": [
+			"${workspaceFolder}/libc/include",
+			"${workspaceFolder}/hal/include",
+			"${workspaceFolder}/kernel/include",
+			"/home/tongko/opt/cross/lib/gcc/x86_64-elf/9.2.0/include",
+			"/home/tongko/opt/cross/lib/gcc/x86_64-elf/9.2.0/include-fixed"
+		],
+		"C_Cpp.default.intelliSenseMode": "gcc-x64",
+		"fileTemplates.author": "Terry Liew",
+		"fileTemplates.company": "Sin Hing",
+		"files.associations": {
+			"*.tcc": "cpp"
+		},
+		"editor.formatOnSave": true,
+		"editor.formatOnPaste": true
+	}
+}
