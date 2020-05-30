@@ -1,0 +1,85 @@
+/*== QiOS =====================================================================+
+|                                                                              |
+|    Author: Liew Tze Wei                                                      |
+|                                                                              |
+|    This file is part of the QiOS kernel, and is made available under the     |
+|    terms of The Unlicense (That means just do whatever you want with the     |
+|    code base).                                                               |
+|                                                                              |
++=============================================================================*/
+#pragma once
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//   cdefs.h                                                                  //
+//   -  libc cdefs.h                                                          //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+#if !(__x86_64__)
+	#error \
+		"[QiOS (64 bits) - cdefs.h] requires x86_64 architecture. Please use the right compiler options."
+#endif
+////////////////////////////////////////////////////////////////////////////////
+//    INTERFACE REQUIRED HEADERS                                              //
+////////////////////////////////////////////////////////////////////////////////
+
+#include <stdint.h>
+
+namespace System {
+
+////////////////////////////////////////////////////////////////////////////////
+//    STRUCTURE PROTOTYPE                                                     //
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//    INTERFACE DEFINITIONS/ENUMERATIONS/SIMPLE TYPEDEFS                      //
+////////////////////////////////////////////////////////////////////////////////
+
+#define DECLARE_LOCK(name) volatile int name##Locked
+
+#define LOCK(name)                                             \
+	while (!__sync_bool_compare_and_swap(&name##Locked, 0, 1)) \
+		;                                                      \
+	__sync_synchronize();
+
+#define UNLOCK(name)      \
+	__sync_synchronize(); \
+	name##Locked = 0;
+
+#ifndef byte
+typedef unsigned char byte;
+#endif
+
+#ifndef uint
+typedef unsigned int uint;
+#endif
+
+typedef struct {
+	char *fpos; /* Current position of file pointer (absolute address) */
+	void *base; /* Pointer to the base of the file */
+	unsigned short handle; /* File handle */
+	short		   flags;  /* Flags (see FileFlags) */
+	short		   unget;  /* 1-byte buffer for ungetc (b15=1 if non-empty) */
+	unsigned long  alloc; /* Number of currently allocated bytes for the file */
+	unsigned short buffincrement; /* Number of bytes allocated at once */
+} FILE;
+
+typedef uint64_t fpos_t;
+
+typedef uintptr_t VirtAddr;
+typedef uintptr_t PhysAddr;
+
+////////////////////////////////////////////////////////////////////////////////
+//    INTERFACE STRUCTURES                                                    //
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//    INTERFACE FUNCTION PROTOTYPES                                           //
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//    End cdefs.h                                                             //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+}	 // namespace System
