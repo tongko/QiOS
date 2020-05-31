@@ -23,6 +23,7 @@ SECTIONS
 	.text : AT(ADDR(.text) - OFFSET)
 	{
 		_code = .;
+		*load.o(.text64)
 		*(.text)
 		*(.text*)
 		*(.init)

@@ -52,7 +52,7 @@ all: qios.kernel
 
 qios.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 	@printf "\t\e[32;1mLinking\e[0m $(KERNEL)\n"
-	@$(CC) -T $(ARCHDIR)/linker.ld -o $@ -z max-page-size=0x1000 $(CFLAGS) $(CPPFLAGS) $(ARCHDIR)/load.o
+	@$(CC) -T $(ARCHDIR)/linker.ld -o $@ -z max-page-size=0x1000 $(CFLAGS) $(CPPFLAGS) $(LINK_LIST)
 	#$(LINK_LIST)
 	@$(OBJCOPY) --only-keep-debug $@ $@.sym
 	@$(OBJCOPY) --strip-debug $@

@@ -5,7 +5,7 @@ set architecture i386:x86-64
 set disassembly-flavor intel
 set pagination off
 target remote localhost:1234
-hbreak *0x100018
-hbreak *0x100055
+hbreak *0x100135
+hbreak long_mode
 continue
 tui enable

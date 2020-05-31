@@ -150,6 +150,9 @@ bootstrap:
 		mov		eax, P4_TABLE
 		mov		cr3, eax
 
+		mov		eax, [mb2addr]
+		push	eax
+
 		; Set the C-register to 0xC0000080, which is the EFER MSR.
 		mov		ecx, 0xC0000080
 		; Read from the model-specific register.
@@ -172,7 +175,6 @@ bootstrap:
 		; mov		dword [esp + 2], GDT64 - KERNEL_TEXT_BASE
 		; mov		dword [esp + 6], 0x00000000
 
-		;mov		eax, GDT64
 		lgdt	[GDT64.Pointer]
 		jmp		GDT64.code:.no_return
 
@@ -185,7 +187,7 @@ bootstrap:
 		mov		gs, ax
 		mov		ss, ax
 		
-;		jmp		long_mode
+		jmp		long_mode
 
 		; Not suppose to reach here.
 		cli
@@ -330,47 +332,55 @@ bootstrap:
 
 	.endbootstrap:
 
-; BITS	64
-; long_mode:
-; 	;	At this point, Paging kicks in, so we need to add KERNEL_TEXT_BASE to our
-; 	;	addresses
-; 	;	Load TSS descriptor into GDT
-; 		mov		rdi, GDT64
-; 		add		rdi, GDT64.tss
-; 		mov		rax, TSS64
-; 		mov		word [rdi + 2], ax
-; 		shr		rax, 16
-; 		mov		byte [rdi + 4], al
-; 		shr		rax, 8
-; 		mov		byte [rdi + 7], al
-; 		shr		rax, 8
-; 		mov		dword [rdi + 8], eax
+SECTION		.text64
+BITS	64
+long_mode:
+	;	At this point, Paging kicks in, so we need to add KERNEL_TEXT_BASE to our
+	;	addresses
+	;	Load TSS descriptor into GDT
+		mov		rdi, GDT64
+		add		rdi, GDT64.tss
+		mov		rax, TSS64
+		mov		word [rdi + 2], ax
+		shr		rax, 16
+		mov		byte [rdi + 4], al
+		shr		rax, 8
+		mov		byte [rdi + 7], al
+		shr		rax, 8
+		mov		dword [rdi + 8], eax
 
-; 		;	Load GDT
-; 		mov		rax, KERNEL_TEXT_BASE	; Reset stack pointer
-; 		add		rsp, rax
-; 		mov		qword [rsp + 2], GDT64
-; 		lgdt	[rsp]
+		;	Load GDT
+		mov		rax, KERNEL_TEXT_BASE	; Reset stack pointer
+		add		rsp, rax
+		pop		rbx						; Restore MB2Addr
+		add		rbx, rax				; Adjust MB2Addr
 
-; 		; mov		rax, higher_half
-; 		; jmp		rax
+		;mov		qword [rsp + 2], GDT64
+		push	GDT64
+		lgdt	[rsp]
+		pop		rax
+		push	rbx						; store MB2Addr
 
-; ;higher_half:
-; 	;	unmap the lowre half page tables
-; 		mov		rax, P4_TABLE
-; 		mov		rbx, KERNEL_TEXT_BASE
-; 		add		rax, rbx
-; 		mov		qword [rax], 0		; Invalidate first page entry
+		; mov		rax, higher_half
+		; jmp		rax
 
-; 		;	Flush whole TLB
-; 		mov		rax, cr3
-; 		mov		cr3, rax
+;higher_half:
+	;	unmap the lowre half page tables
+		mov		rax, P4_TABLE
+		mov		rbx, KERNEL_TEXT_BASE
+		add		rax, rbx
+		mov		qword [rax], 0		; Invalidate first page entry
 
-; 		; extern	long_mode_entry
-; 		; mov		rax, long_mode_entry
-; 		; jmp		rax
+		;	Flush whole TLB
+		mov		rax, cr3
+		mov		cr3, rax
 
-; 	.endlong_mode:
+		pop		rbx
+		extern	long_mode_entry
+		mov		rax, long_mode_entry
+		jmp		rax
+
+	.endlong_mode:
 
 
 

@@ -1,5 +1,6 @@
 %include "include.inc"
 
+BITS	64
 SECTION	.text
 GLOBAL long_mode_entry
 long_mode_entry:
