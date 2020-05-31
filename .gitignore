@@ -6,6 +6,9 @@
 *.d
 *.dmp
 *.hdmp
+*.elf
+*.iso
+qios.kernel
 
 # Precompiled Headers
 *.gch

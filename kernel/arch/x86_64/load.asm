@@ -28,7 +28,11 @@
 
 BITS	32
 
-SECTION		.multiboot2	PROGBITS ALLOC NOEXEC NOWRITE ALIGN=8
+;==============================================================================
+; .text SECTION
+;==============================================================================
+SECTION		.text
+
 ALIGN	8
 header_start:
 				dd		MULTIBOOT2_HEADER_MAGIC
@@ -47,122 +51,28 @@ header_start:
 header_end:
 
 
-SECTION		.bootrodata	PROGBITS ALLOC NOEXEC NOWRITE ALIGN=4
-ALIGN	4
-E_MB:			db		"ERROR: Not loaded by multiboot2 boot loader, halt.", 0
-E_CPUID:		db		"ERROR: Processor doesn't suppot CPUID instruction, halt.", 0
-E_LONG:			db		"ERROR: Require 64-bits processor, halt.", 0
-E_LARGE:		db		"ERROR: Kernel image is too large, halt.", 0
-
-
-SECTION		.bootbss	NOBITS ALLOC NOEXEC WRITE ALIGN=0x1000
-ALIGN 0x1000
-GLOBAL	P4_TABLE
-P4_TABLE:		resb	PAGE_SIZE
-P3_TABLE:		resb	PAGE_SIZE
-P2_TABLE:		resb	PAGE_SIZE
-
-; kernel stack
-STACK_TOP:
-				resb	PAGE_SIZE * 4 	; 16 KiB stack
-STACK_BOTTOM:
-
-; Stacks for the interrupt stack table
-				resb	PAGE_SIZE
-IST_STACK_1:
-				resb	PAGE_SIZE
-IST_STACK_2:
-
-
-
-SECTION		.bootdata	PROGBITS ALLOC NOEXEC WRITE ALIGN=4
-ALIGN	4
-xpos:			dd		0
-ypos:			dd		0
-
-ALIGN	16
-GLOBAL	TSS64
-GLOBAL	INT_STACK_TOP
-TSS64:
-				dd		0
-		times 3 dq		0	; RSPn
-				dq		0	; Reserved
-	.INT_STACK_TOP:
-				dq		IST_STACK_1	; IST1, NMI
-				dq		IST_STACK_2	; IST2, Double fault
-				dq		0 ; IST3
-				dq		0 ; IST4
-				dq		0 ; IST5
-				dq		0 ; IST6
-				dq		0 ; IST7
-				dq		0 ; Reserved
-				dw		0 ; Reserved
-				dw		0 ; I/O Map Base Address
-TSS_SIZE	equ	$ - TSS64 - 1
-
-GLOBAL	GDT64
-GDT64:
-		; null descriptor, if we dont declare this, some VM may make
-		; noice
-	.null	equ $ - GDT64
-		dq		0		; null descriptor
-		; kernel code descrptor
-	.code	equ $ - GDT64
-		; Set 64-bit flag.
-		; read and execute.
-		; DPL is 0.
-		dd		0			; Limit (low) + Base (low)
-		dd		0x00209A00	; Access (exec/read) + Granularity
-		; kernel data descriptor
-	.data	equ $ - GDT64
-		; Set 64-bit flag.
-		; read and write.
-		; DPL is 0.
-		dd		0			; Limit (low) + Base (low)
-		dd		0x00009200	; Access (read/write)
-		; user land code descriptor
-	.user_code32	equ $ - GDT64
-		; DPL is 3. 
-		dd		0			; Limit (low) + Base (low)
-		dd		0
-	.user_data			equ $ - GDT64
-		; DPL is 3.
-		dd		0			; Limit (low) + Base (low)
-		dd		0x0000F200	; Access (read/write)
-	.user_code64	equ $ - GDT64
-		dd		0			; Limit (low) + Base (low)
-		dd		0x0020FA00	; Access (exec/read) Granularity
-		; TSS descriptor
-	.tss	equ $ - GDT64
-		dw		0		; Base (bytes 0-2)
-		db		0		; Base (byte 3)
-		db		0x89	; Type, present
-		db		0		; Misc
-		db		0		; Base (byte 4)
-		dd		0		; Base (bytes 5-8)
-		dd		0		; Zero / reserved
-
-GLOBAL	GDT_SIZE
-GDT_SIZE	equ	$ - GDT64 - 1
-
-
-
-SECTION		.boottext	PROGBITS ALLOC EXEC NOWRITE ALIGN=16
-GLOBAL	_qstart
-_qstart:
+GLOBAL	bootstrap
+bootstrap:
 		;	Disable interrupts
 		cli
 
 		;	Clear the direction flag
 		cld
 
-		;	Set stack pointer
-		mov		eax, STACK_BOTTOM
-		mov		esp, eax
-
 		;	Reset EFLAGS by poping the 0 to EFLAGS.
 		push	0
 		popfd
+
+		;=======================================
+		mov		esi, E_CHECK
+				mov		eax, VGABUF
+		mov		es, eax
+		call	.sprint
+		;=======================================
+
+		;	Set stack pointer
+		mov		eax, STACK_BOTTOM
+		mov		esp, eax
 
 		;	Initialize cursor
 		call	.init_csr
@@ -228,8 +138,8 @@ _qstart:
 		map_page	P3_TABLE, P3_INDEX(KERNEL_TEXT_BASE), P2_TABLE, (PG_PRESENT | PG_WRITABLE)
 
 		; Make sure we allocated enough memory in the page tables for the kernel
-		extern	PHYSICAL_END
-		mov		eax, PHYSICAL_END
+		extern	_end
+		mov		eax, _end
 		cmp		eax, KERNEL_PHYS_MAP_END
 		jg		.kernel_too_big
 
@@ -415,45 +325,159 @@ _qstart:
 		mov		es, eax
 		call	.sprint
 
-		hlt
+	.endbootstrap:
 
-BITS	64
-SECTION		.text
-long_mode:
-	;	At this point, Paging kicks in, so we need to add KERNEL_TEXT_BASE to our
-	;	addresses
-	;	Load TSS descriptor into GDT
-		mov		rdi, GDT64
-		add		rdi, GDT64.tss
-		mov		rax, TSS64
-		mov		word [rdi + 2], ax
-		shr		rax, 16
-		mov		byte [rdi + 4], al
-		shr		rax, 8
-		mov		byte [rdi + 7], al
-		shr		rax, 8
-		mov		dword [rdi + 8], eax
+; BITS	64
+; long_mode:
+; 	;	At this point, Paging kicks in, so we need to add KERNEL_TEXT_BASE to our
+; 	;	addresses
+; 	;	Load TSS descriptor into GDT
+; 		mov		rdi, GDT64
+; 		add		rdi, GDT64.tss
+; 		mov		rax, TSS64
+; 		mov		word [rdi + 2], ax
+; 		shr		rax, 16
+; 		mov		byte [rdi + 4], al
+; 		shr		rax, 8
+; 		mov		byte [rdi + 7], al
+; 		shr		rax, 8
+; 		mov		dword [rdi + 8], eax
 
-		;	Load GDT
-		mov		rax, KERNEL_TEXT_BASE	; Reset stack pointer
-		add		rsp, rax
-		mov		qword [rsp + 2], GDT64
-		lgdt	[rsp]
+; 		;	Load GDT
+; 		mov		rax, KERNEL_TEXT_BASE	; Reset stack pointer
+; 		add		rsp, rax
+; 		mov		qword [rsp + 2], GDT64
+; 		lgdt	[rsp]
 
-		; mov		rax, higher_half
-		; jmp		rax
+; 		; mov		rax, higher_half
+; 		; jmp		rax
 
-;higher_half:
-	;	unmap the lowre half page tables
-		mov		rax, P4_TABLE
-		mov		rbx, KERNEL_TEXT_BASE
-		add		rax, rbx
-		mov		qword [rax], 0		; Invalidate first page entry
+; ;higher_half:
+; 	;	unmap the lowre half page tables
+; 		mov		rax, P4_TABLE
+; 		mov		rbx, KERNEL_TEXT_BASE
+; 		add		rax, rbx
+; 		mov		qword [rax], 0		; Invalidate first page entry
 
-		;	Flush whole TLB
-		mov		rax, cr3
-		mov		cr3, rax
+; 		;	Flush whole TLB
+; 		mov		rax, cr3
+; 		mov		cr3, rax
 
-		; extern	long_mode_entry
-		; mov		rax, long_mode_entry
-		; jmp		rax
+; 		; extern	long_mode_entry
+; 		; mov		rax, long_mode_entry
+; 		; jmp		rax
+
+; 	.endlong_mode:
+
+
+
+;==============================================================================
+; .rodata SECTION
+;==============================================================================
+SECTION		.rodata
+
+E_MB:			db		"ERROR: Not loaded by multiboot2 boot loader, halt.", 0
+E_CPUID:		db		"ERROR: Processor doesn't suppot CPUID instruction, halt.", 0
+E_LONG:			db		"ERROR: Require 64-bits processor, halt.", 0
+E_LARGE:		db		"ERROR: Kernel image is too large, halt.", 0
+E_CHECK:		db		"Check Point reach, all OK.", 0
+
+
+;==============================================================================
+; .data SECTION
+;==============================================================================
+SECTION		.data
+
+ALIGN	4
+xpos:			dd		0
+ypos:			dd		0
+
+ALIGN	16
+GLOBAL	TSS64
+GLOBAL	.INT_STACK_TOP
+TSS64:
+				dd		0
+		times 3 dq		0	; RSPn
+				dq		0	; Reserved
+	.INT_STACK_TOP:
+				dq		IST_STACK_1	; IST1, NMI
+				dq		IST_STACK_2	; IST2, Double fault
+				dq		0 ; IST3
+				dq		0 ; IST4
+				dq		0 ; IST5
+				dq		0 ; IST6
+				dq		0 ; IST7
+				dq		0 ; Reserved
+				dw		0 ; Reserved
+				dw		0 ; I/O Map Base Address
+TSS_SIZE	equ	$ - TSS64 - 1
+
+GLOBAL	GDT64
+GDT64:
+		; null descriptor, if we dont declare this, some VM may make
+		; noice
+	.null	equ $ - GDT64
+		dq		0		; null descriptor
+		; kernel code descrptor
+	.code	equ $ - GDT64
+		; Set 64-bit flag.
+		; read and execute.
+		; DPL is 0.
+		dd		0			; Limit (low) + Base (low)
+		dd		0x00209A00	; Access (exec/read) + Granularity
+		; kernel data descriptor
+	.data	equ $ - GDT64
+		; Set 64-bit flag.
+		; read and write.
+		; DPL is 0.
+		dd		0			; Limit (low) + Base (low)
+		dd		0x00009200	; Access (read/write)
+		; user land code descriptor
+	.user_code32	equ $ - GDT64
+		; DPL is 3. 
+		dd		0			; Limit (low) + Base (low)
+		dd		0
+	.user_data			equ $ - GDT64
+		; DPL is 3.
+		dd		0			; Limit (low) + Base (low)
+		dd		0x0000F200	; Access (read/write)
+	.user_code64	equ $ - GDT64
+		dd		0			; Limit (low) + Base (low)
+		dd		0x0020FA00	; Access (exec/read) Granularity
+		; TSS descriptor
+	.tss	equ $ - GDT64
+		dw		0		; Base (bytes 0-2)
+		db		0		; Base (byte 3)
+		db		0x89	; Type, present
+		db		0		; Misc
+		db		0		; Base (byte 4)
+		dd		0		; Base (bytes 5-8)
+		dd		0		; Zero / reserved
+
+GLOBAL	GDT_SIZE
+GDT_SIZE	equ	$ - GDT64 - 1
+
+
+;==============================================================================
+; .bss SECTION
+;==============================================================================
+SECTION		.bss
+
+GLOBAL	P4_TABLE
+ALIGN 0x1000
+P4_TABLE:		resb	PAGE_SIZE
+P3_TABLE:		resb	PAGE_SIZE
+P2_TABLE:		resb	PAGE_SIZE
+
+; kernel stack
+STACK_TOP:
+				resb	PAGE_SIZE * 4 	; 16 KiB stack
+STACK_BOTTOM:
+				resb	4
+
+; Stacks for the interrupt stack table
+				resb	PAGE_SIZE
+IST_STACK_1:
+				resb	PAGE_SIZE
+IST_STACK_2:
+				resb	4

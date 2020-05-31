@@ -1,68 +1,65 @@
 OUTPUT_FORMAT(elf64-x86-64)
-ENTRY(_qstart)
+ENTRY(bootstrap)
 
-PHYS = 0x00100000;
+KERNEL_LMA = 0x00100000;
 OFFSET = 0xFFFFFFFF80000000;
-VIRT = PHYS + OFFSET;
+KERNEL_VMA = KERNEL_LMA + OFFSET;
 
 SECTIONS
 {
-	. = PHYS;
+	. = KERNEL_LMA;
 
-	.bootrodata ALIGN(0x1000) :
+	.load : 
 	{
 		*load.o(.multiboot2)
-		*load.o(.bootrodata)
-	}
-
-	.bootbss ALIGN(0x08) :
-	{
-		*load.o(.bootbss)
-	}
-
-	.bootdata ALIGN(0x08) :
-	{
-		*load.o(.bootdata)
-	}
-
-	.boottext ALIGN(0x10) :
-	{
-		*load.o(.boottext)
+		*load.o(.text)
+		*load.o(.rodata)
+		*load.o(.data)
+		*load.o(.bss)
 	}
 
 	. += OFFSET;
-
-	.rodata ALIGN(0x08) : AT(ADDR(.rodata) - OFFSET)
+	
+	.text : AT(ADDR(.text) - OFFSET)
 	{
-		*(.rodata)
-		*(.rodata*)
-		*(.eh_frame)
-	}
-
-	.text ALIGN(0x10) : AT(ADDR(.text) - OFFSET)
-	{
+		_code = .;
 		*(.text)
 		*(.text*)
 		*(.init)
 		*(.fini)
 		*(.ctors)
 		*(.dtors)
+		*(.rodata)
+		*(.rodata*)
+		. = ALIGN(0x1000);
 	}
 
-	.data ALIGN(0x1000) : AT(ADDR(.data) - OFFSET)
+	.data : AT(ADDR(.data) - OFFSET)
 	{
+		_data = .;
 		*(.data)
+		. = ALIGN(0x1000);
 	}
 
-	.bss ALIGN(0x1000) : AT(ADDR(.bss) - OFFSET) /* align at 4 KB, the size of a page */
+	.eh_frame : AT(ADDR(.eh_frame) - OFFSET)
 	{
-		*(.bss*)
+		_ehframe = .;
+		*(.eh_frame)
+		. = ALIGN(0x1000);
 	}
+
+	.bss : AT(ADDR(.bss) - OFFSET)
+	{
+		_bss = .;
+		*(.bss*)
+		*(COMMON)
+		. = ALIGN(0x1000);
+	}
+
+	_end = . - OFFSET;
 
 	/DISCARD/ :
 	{
 		*(.comment)
 	}
-
-	PHYSICAL_END = . + 0x1000 - OFFSET;
 }
