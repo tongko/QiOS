@@ -19,7 +19,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -masm=intel 
-CPPFLAGS:=$(CPPFLAGS) -std=c++17 -nostdlib -Iinclude -I../hal/include -D__is_kernel__
+CPPFLAGS:=$(CPPFLAGS) -std=c++17 -nostdlib -fno-rtti -fno-exceptions -Iinclude -I../hal/include -D__is_kernel__
 
 ARCHDIR=arch/$(HOSTARCH)
 
@@ -31,6 +31,10 @@ CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 qkernel/QKernel.o \
+system/QTerm.o \
+system/CopyMemory.o \
+system/MemLength.o \
+system/SetMemory.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \
@@ -72,6 +76,8 @@ clean:
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
 	rm -f $(OBJS:.o=.dep) *.dep */*.dep */*/*.dep
+	rm -f $(OBJS:.o=.dmp) *.dmp */*.dmp */*/*.dmp
+	rm -f $(OBJS:.o=.elf) *.elf */*.elf */*/*.elf
 
 install: install-headers install-kernel
 

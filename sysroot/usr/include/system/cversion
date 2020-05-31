@@ -36,8 +36,8 @@
 #define QIOS_VER	"0.0.3"
 #define QIOS_NAME	"QiOS"
 #define SPACE		" "
-#define WELCOME_STR QIOS_NAME SPACE QIOS_VER
-#define COPYRIGHT	"Copyright (C) 2019, 2020 Liew Tze Wei"
+#define WELCOME_STR "        " QIOS_NAME SPACE QIOS_VER
+#define COPYRIGHT	"        Copyright (C) 2019, 2020 Liew Tze Wei"
 
 #define TXT_LOGO                                                               \
 	"                                                                        " \

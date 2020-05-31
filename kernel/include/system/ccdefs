@@ -50,8 +50,8 @@ namespace System {
 typedef unsigned char byte;
 #endif
 
-#ifndef uint
-typedef unsigned int uint;
+#if !(uint_t)
+typedef unsigned int uint_t;
 #endif
 
 typedef struct {
