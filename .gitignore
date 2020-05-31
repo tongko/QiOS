@@ -8,7 +8,7 @@
 *.hdmp
 *.elf
 *.iso
-qios.kernel
+qios.kernel*
 
 # Precompiled Headers
 *.gch

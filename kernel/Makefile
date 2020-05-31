@@ -78,6 +78,7 @@ clean:
 	rm -f $(OBJS:.o=.dep) *.dep */*.dep */*/*.dep
 	rm -f $(OBJS:.o=.dmp) *.dmp */*.dmp */*/*.dmp
 	rm -f $(OBJS:.o=.elf) *.elf */*.elf */*/*.elf
+	rm -f $(OBJS:.o=.sym) *.sym */*.sym */*/*.sym
 
 install: install-headers install-kernel
 
