@@ -65,39 +65,27 @@ bootstrap:
 		push	0
 		popfd
 
+		;	Store MB2 info
+		mov		[mb2magic], eax
+		mov		[mb2addr], ebx
+
 		;	Set stack pointer
-		mov		eax, STACK_BOTTOM
-		mov		esp, eax
-
-		;=======================================
-		push	eax
-		push	ebx
-
-		mov		esi, E_CHECK
-		call	.sprint
-
-		pop		ebx
-		pop		eax
-		;=======================================
+		mov		ecx, STACK_BOTTOM
+		mov		esp, ecx
 
 		;	Initialize cursor
 		call	.init_csr
 
 		;	Verify that we have the correct multiboot2 magic number
-		test	eax, MULTIBOOT2_HEADER_MAGIC
+		mov		eax, dword [mb2magic]
+		cmp		eax, MULTIBOOT2_BOOTLOADER_MAGIC
 		jne		.no_multiboot
 
 		;	Check if CPUID is supported
 		call	.probe_cpuid
 
-		;	Preserve multiboot information
-		push	ebx
-
 		;	Check if long mode is supported
 		call	.probe_long_mode
-
-		;	Pop multiboot information
-		pop		ebx
 
 		;	Probe for SSE
 		mov		eax, 0x1
@@ -184,8 +172,8 @@ bootstrap:
 		; mov		dword [esp + 2], GDT64 - KERNEL_TEXT_BASE
 		; mov		dword [esp + 6], 0x00000000
 
-		mov		eax, GDT64
-		lgdt	[eax]
+		;mov		eax, GDT64
+		lgdt	[GDT64.Pointer]
 		jmp		GDT64.code:.no_return
 
 	.no_return:
@@ -233,7 +221,7 @@ bootstrap:
 		ret
 	 
 	.cprint:
-		mov		ah, 0x71		; attrib = light gray on blue
+		mov		ah, 0x17		; attrib = light gray on blue
 		mov		cx, ax			; save char/attribute
 		movzx	eax, word [ypos]
 		mov		dx, 160			; 2 bytes (char/attrib)
@@ -250,13 +238,21 @@ bootstrap:
 		add		byte [xpos], 1	; advance to right
 		ret
 
+	.printcheck:
+		;=======================================
+		mov		esi, E_CHECK
+		call	.sprint
+		ret
+		;=======================================
+
 ; Verify that CPUID instruction is supported.
 ; The ID flag (bit 21) in the EFLAGS register indicates support for the CPUID
 ; instruction. If this flag can be modified, it refers this CPU support CPUID.
 	.probe_cpuid:
-		; Store the original EFLAGS value to stack
+		; Save EFLAGS
 		pushfd
-
+		; Store the original EFLAGS value to stack
+		pushfd		
 		; Set the invert value of the ID flag (bit 21)
 		; NOTE: we do this directly on the stack
 		xor		dword [esp], 0x00200000
@@ -267,11 +263,12 @@ bootstrap:
 		; eax = modified EFLAGS (ID bit may or may not be inverted)
 		pop		eax
 		; eax = whichever bits were changed, compare to the original EFLAGS VALUE
-		xor		eax,[esp]
-		; We need the CPUID instruction... if not we 'hang' ourself :)
-		jz		.no_cpuid
+		xor		eax, [esp]
 		; Restore original EFLAGS
-		popfd
+		popfd		
+		; We need the CPUID instruction... if not we 'hang' ourself :)
+		and		eax, 0x00200000
+		jz		.no_cpuid
 
 		ret
 
@@ -327,6 +324,7 @@ bootstrap:
 	;	al: Contains the ASCII character to be printed to the screen
 	.error:
 		call	.sprint
+	.hlt:
 		hlt
 		jmp		.hlt
 
@@ -394,6 +392,8 @@ E_CHECK:		db		"Check Point reach, all OK.", 0
 SECTION		.data
 
 ALIGN	4
+mb2magic:		dd		0
+mb2addr:		dd		0
 xpos:			dd		0
 ypos:			dd		0
 
@@ -422,21 +422,38 @@ GDT64:
 		; null descriptor, if we dont declare this, some VM may make
 		; noice
 	.null	equ $ - GDT64
-		dq		0		; null descriptor
+		dw	0xFFFF                    ; Limit (low).
+		dw	0                         ; Base (low).
+		db	0                         ; Base (middle)
+		db	0                         ; Access.
+		db	1                         ; Granularity.
+		db	0                         ; Base (high).
 		; kernel code descrptor
 	.code	equ $ - GDT64
 		; Set 64-bit flag.
 		; read and execute.
 		; DPL is 0.
-		dd		0			; Limit (low) + Base (low)
-		dd		0x00209A00	; Access (exec/read) + Granularity
+		dw	0                         ; Limit (low).
+		dw	0                         ; Base (low).
+		db	0                         ; Base (middle)
+		db	10011010b                 ; Access (exec/read).
+		db	10101111b                 ; Granularity, 64 bits flag, limit19:16.
+		db	0                         ; Base (high).
+		; dd		0			; Limit (low) + Base (low)
+		; dd		0x00209A00	; Access (exec/read) + Granularity
 		; kernel data descriptor
 	.data	equ $ - GDT64
 		; Set 64-bit flag.
 		; read and write.
 		; DPL is 0.
-		dd		0			; Limit (low) + Base (low)
-		dd		0x00009200	; Access (read/write)
+		dw	0                         ; Limit (low).
+		dw	0                         ; Base (low).
+		db	0                         ; Base (middle)
+		db	10010010b                 ; Access (read/write).
+		db	00000000b                 ; Granularity.
+		db	0                         ; Base (high).
+		; dd		0			; Limit (low) + Base (low)
+		; dd		0x00009200	; Access (read/write)
 		; user land code descriptor
 	.user_code32	equ $ - GDT64
 		; DPL is 3. 
@@ -458,10 +475,9 @@ GDT64:
 		db		0		; Base (byte 4)
 		dd		0		; Base (bytes 5-8)
 		dd		0		; Zero / reserved
-
-GLOBAL	GDT_SIZE
-GDT_SIZE	equ	$ - GDT64 - 1
-
+	.Pointer:
+		dw		$ - GDT64 - 1	; Limit.
+		dq		GDT64			; Base
 
 ;==============================================================================
 ; .bss SECTION

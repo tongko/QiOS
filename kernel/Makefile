@@ -56,6 +56,7 @@ qios.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 	#$(LINK_LIST)
 	@$(OBJCOPY) --only-keep-debug $@ $@.sym
 	@$(OBJCOPY) --strip-debug $@
+	@$(OBJDUMP) -D $@ > $@.dmp
 	@grub-file --is-x86-multiboot2 $@
 
 .cpp.o:

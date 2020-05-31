@@ -6,4 +6,6 @@ set disassembly-flavor intel
 set pagination off
 target remote localhost:1234
 hbreak *0x100018
+hbreak *0x100055
 continue
+tui enable
