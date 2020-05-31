@@ -33,18 +33,20 @@ BITS	32
 ;==============================================================================
 SECTION		.text
 
-ALIGN	8
 header_start:
+ALIGN	8
 				dd		MULTIBOOT2_HEADER_MAGIC
 				dd		GRUB_MULTIBOOT_ARCHITECTURE_I386
 				dd		header_end - header_start
 				dd		0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
 
-				dw		MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS
-				dw		0
-				dd		12
-				dd		MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED
+; ALIGN	8
+; 				dw		MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS
+; 				dw		0
+; 				dd		12
+; 				dd		MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED
 
+ALIGN	8
 				dw		MULTIBOOT_HEADER_TAG_END
 				dw		0
 				dd		8
@@ -63,16 +65,20 @@ bootstrap:
 		push	0
 		popfd
 
-		;=======================================
-		mov		esi, E_CHECK
-				mov		eax, VGABUF
-		mov		es, eax
-		call	.sprint
-		;=======================================
-
 		;	Set stack pointer
 		mov		eax, STACK_BOTTOM
 		mov		esp, eax
+
+		;=======================================
+		push	eax
+		push	ebx
+
+		mov		esi, E_CHECK
+		call	.sprint
+
+		pop		ebx
+		pop		eax
+		;=======================================
 
 		;	Initialize cursor
 		call	.init_csr
@@ -216,11 +222,10 @@ bootstrap:
 
 		ret
 
-	;	Output string to console
 	.dochar:
 		call	.cprint
 	.sprint:
-		lodsb		;	string char to AL
+		lodsb	;	string char to AL
 		cmp		al, 0
 		jne		.dochar   ; else, we're done
 		add		dword [ypos], 1   ;down one row
@@ -228,15 +233,15 @@ bootstrap:
 		ret
 	 
 	.cprint:
-		mov		ah, 0x47		; attrib = light gray on blue
+		mov		ah, 0x71		; attrib = light gray on blue
 		mov		cx, ax			; save char/attribute
 		movzx	eax, word [ypos]
 		mov		dx, 160			; 2 bytes (char/attrib)
 		mul		dx				; for 80 columns
+		mov		edi, VGABUF		; start of video memory
 		movzx	ebx, word [xpos]
 		shl		bx, 1			; times 2 to skip attrib
 
-		mov		di, 0			; start of video memory
 		add		di, ax			; add y offset
 		add		di, bx			; add x offset
 
@@ -321,9 +326,9 @@ bootstrap:
 	;	.error: Writes "ERROR: $al" in red text and halts the CPU
 	;	al: Contains the ASCII character to be printed to the screen
 	.error:
-		mov		eax, VGABUF
-		mov		es, eax
 		call	.sprint
+		hlt
+		jmp		.hlt
 
 	.endbootstrap:
 
