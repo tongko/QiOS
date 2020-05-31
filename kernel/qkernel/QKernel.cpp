@@ -60,11 +60,10 @@ namespace QKernel {
 
 // Up to this point, we are expecting that boot loader have already setup the
 // GDT and Paging, and also kernel has been map to higher half VAS.
-void qkernel_main(VirtAddr mbAddr
-				  /*,System::VirtAddr	kiAddr
-				  ,System::PhysAddr *usedPageFrames
-				  ,uint64_t			pageFrameCount*/
-) {
+void qkernel_main(__vma mbAddr, __vma kernelEnd) {
+
+	uintptr_t kend = kernelEnd + KERNEL_VAS_OFFSET;
+
 	QTerm term;
 	Term = &term;
 

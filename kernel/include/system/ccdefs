@@ -66,8 +66,8 @@ typedef struct {
 
 typedef uint64_t fpos_t;
 
-typedef uintptr_t VirtAddr;
-typedef uintptr_t PhysAddr;
+typedef uintptr_t __vma;
+typedef uintptr_t _pma;
 
 ////////////////////////////////////////////////////////////////////////////////
 //    INTERFACE STRUCTURES                                                    //

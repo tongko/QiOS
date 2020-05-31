@@ -3,7 +3,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace QKernel { namespace QMemory {
+namespace QMemory {
+
+#define KERNEL_VAS_OFFSET 0xFFFFFFFF80000000;
 
 class IHeap {
 
@@ -15,4 +17,4 @@ public:
 	virtual void *CAlloc(size_t, size_t)  = 0;
 };
 
-}}	  // namespace QKernel::QMemory
+}	 // namespace QMemory

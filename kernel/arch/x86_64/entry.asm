@@ -53,10 +53,14 @@ long_mode_entry:
 		call	_init
 
 	; Pass multiboot information to kmain
+		extern _end
+		mov		rsi, _end
+
 		add		rsp, 8
 		pop		rdi
-		extern	_ZN7QKernel12qkernel_mainEm
-		call	_ZN7QKernel12qkernel_mainEm
+		
+		extern	_ZN7QKernel12qkernel_mainEmm
+		call	_ZN7QKernel12qkernel_mainEmm
 
 	; Don't call global destructors - we should never get here
 		sti
