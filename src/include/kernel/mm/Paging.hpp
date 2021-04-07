@@ -4,8 +4,6 @@
 
 namespace qkrnl { namespace mm {
 
-extern const __vma_t P4_RECURSIVE_ENTRY;
-
 typedef volatile uintptr_t *page_dir_t;
 typedef volatile uintptr_t *page_tbl_t;
 

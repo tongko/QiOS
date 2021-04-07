@@ -23,10 +23,18 @@ const dword_t PAGING_SIZE = 0x1000;
  * P4 Entry [510] is Recursive entry
  * P4 Entry [509] is Kernel Heap and others.
  */
-const __vma_t P1_RECURSIVE_ENTRY = 0xFFFFFF0000000000UL;
-const __vma_t P2_RECURSIVE_ENTRY = 0xFFFFFF7F80000000UL;
-const __vma_t P3_RECURSIVE_ENTRY = 0xFFFFFF7FBFC00000UL;
-const __vma_t P4_RECURSIVE_ENTRY = 0xFFFFFF7FBFDFF000UL;
+static const __vma_t P1_RECURSIVE_ENTRY = 0xFFFFFF0000000000UL;
+static const __vma_t P2_RECURSIVE_ENTRY = 0xFFFFFF7F80000000UL;
+static const __vma_t P3_RECURSIVE_ENTRY = 0xFFFFFF7FBFC00000UL;
+static const __vma_t P4_RECURSIVE_ENTRY = 0xFFFFFF7FBFDFF000UL;
+/**
+ * The following virtual address is being used to temporary mapped
+ * a physical page so paging could zero init the page.
+ */
+static const __vma_t PAGING_TEMP_VIRT = 0xFFFFFFFFFFFFF000UL;
+
+static __vma_t s_Recursives[3]
+	= {P4_RECURSIVE_ENTRY, P3_RECURSIVE_ENTRY, P2_RECURSIVE_ENTRY};
 
 #define GET_PAGE_TABLE(tVirt)                                  \
 	(P1_RECURSIVE_ENTRY | (((size_t) GET_P4_IDX(tVirt)) << 30) \
@@ -46,7 +54,11 @@ static __pma_t GetNewPage() {
 	}
 
 	if (newPage) {
-		memset((void *) newPage, 0, PAGING_SIZE);
+		// Temporary map the newPage to PAGING_TEMP_VIRT
+		page_tbl_t p1Addr
+			= reinterpret_cast<page_tbl_t>(GET_PAGE_TABLE(PAGING_TEMP_VIRT));
+		p1Addr[0] = newPage | DEFAULT_TABLE_FLAGS;
+		memset((void *) PAGING_TEMP_VIRT, 0, PAGING_SIZE);
 	}
 
 	return newPage;
@@ -115,6 +127,9 @@ kresult_t PagingUnmapPage(__vma_t tVirt) {
 	return S_OK;
 }
 
+/**
+ * PagingMapPage()
+ */
 kresult_t PagingMapPage(__vma_t tVirt,
 						__pma_t tPhys,
 						dword_t tTblFlags,
@@ -129,17 +144,19 @@ kresult_t PagingMapPage(__vma_t tVirt,
 		return E_MEMMAN_ADDR_UNALIGNED;
 	}
 
-	__vma_t recursives[3]
-		= {P4_RECURSIVE_ENTRY, P3_RECURSIVE_ENTRY, P2_RECURSIVE_ENTRY};
+	// To map a virtual address to physical address, we must first examine the
+	// existant of each page directory level. In AMD64 architecture, this is
+	// namely PML4, PDPE, PDE, and PTE respectively. Although AMD64 paging
+	// support large page size, QiOS only support 4K page size at this moment.
 	int idxs[3] = {GET_P4_IDX(tVirt), GET_P3_IDX(tVirt), GET_P2_IDX(tVirt)};
 	page_dir_t ptr;
 	kresult_t  kr;
 	__pma_t	   newPage;
 	int		   idx;
 	for (int i = 0; i < 3; i++) {
-		ptr = reinterpret_cast<page_dir_t>(recursives[i]);
+		ptr = reinterpret_cast<page_dir_t>(s_Recursives[i]);
 		idx = idxs[i];
-		if (!(ptr[idx])) {
+		if (ptr[idx] == 0) {
 			//	Entry not set, get a new page and set to this entry
 			newPage = GetNewPage();
 			if (newPage == 0) {
@@ -154,7 +171,7 @@ kresult_t PagingMapPage(__vma_t tVirt,
 	//	Cast the page table entry to page_tbl_t type.
 	ptr = reinterpret_cast<page_tbl_t>(P1_RECURSIVE_ENTRY);
 	int p1Idx = GET_P1_IDX(tVirt);
-	if (!(ptr[p1Idx]) || tCanOverride) {
+	if (ptr[p1Idx] == 0 || tCanOverride) {
 		ptr[p1Idx] = tPhys | tPgFlags;
 	}
 	else {
@@ -179,64 +196,82 @@ void PagingInitialize() {
 	__vma_t krnlStart = g_pBootParams->KernelStart & ADDR_MASK;
 	__vma_t krnlEnd = pageAddr - virOffset;
 
-	page_dir_t p4Dir = (page_dir_t) g_pBootParams->PageDirectory;
-	page_dir_t p3Dir = p4Dir + GET_P4_IDX(krnlStart);	 // p4Idx should be 511
-	if (*p3Dir == 0) {									 //	Not mapped
-		*p3Dir = krnlEnd | DEFAULT_TABLE_FLAGS;
-		memsetdw((void *) krnlEnd, 0, 1024);
-		krnlEnd += 0x1000;
-	}
-	page_dir_t p2Dir = (page_dir_t)(*p3Dir & ADDR_MASK) + GET_P3_IDX(krnlStart);
-	if (*p2Dir == 0) {
-		*p2Dir = krnlEnd | DEFAULT_TABLE_FLAGS;
-		memsetdw((void *) krnlEnd, 0, 1024);
-		krnlEnd += 0x1000;
-	}
-
+	// Copy current PML4
+	page_dir_t p4Dir = (page_dir_t) krnlEnd;
+	krnlEnd += 0x1000;
+	memcpy((void *) p4Dir, (void *) g_pBootParams->PageDirectory, 0x1000);
+	// p4Idx should be 511, krnlEnd is the new p3Dir
+	p4Dir[GET_P4_IDX(krnlStart)] = krnlEnd | DEFAULT_TABLE_FLAGS;
+	memsetdw((void *) krnlEnd, 0, 1024);
+	krnlEnd += 0x1000;
+	page_dir_t p3Dir = (page_dir_t)(p4Dir[GET_P4_IDX(krnlStart)] & ADDR_MASK);
+	//	p3Idx should be 510, krnlEnd is the new p2Dir
+	p3Dir[GET_P3_IDX(krnlStart)] = krnlEnd | DEFAULT_TABLE_FLAGS;
+	memsetdw((void *) krnlEnd, 0, 1024);
+	krnlEnd += 0x1000;
+	page_dir_t p2Dir = (page_dir_t)(p3Dir[GET_P3_IDX(krnlStart)] & ADDR_MASK);
+	//	p2Idx should be 0, krnlEnd is the new p1Tbl
+	p2Dir[GET_P2_IDX(krnlStart)] = krnlEnd | DEFAULT_TABLE_FLAGS;
+	memsetdw((void *) krnlEnd, 0, 1024);
+	krnlEnd += 0x1000;
 	//	Mapping from kernel image start to end.
-	page_dir_t p1Dir;
+	page_dir_t p1Tbl;
 	page_tbl_t phys;
 	for (__vma_t v = krnlStart; v < (pageAddr - 1); v += 0x1000) {
-		p1Dir = (page_dir_t)(*p2Dir & ADDR_MASK) + GET_P2_IDX(v);
-		if (*p1Dir == 0) {
-			*p1Dir = krnlEnd | DEFAULT_TABLE_FLAGS;
+		if (p2Dir[GET_P2_IDX(v)] == 0) {
+			p2Dir[GET_P2_IDX(v)] = krnlEnd | DEFAULT_TABLE_FLAGS;
 			memsetdw((void *) krnlEnd, 0, 1024);
 			krnlEnd += 0x1000;
 		}
 
-		phys = (page_tbl_t)(*p1Dir & ADDR_MASK) + GET_P1_IDX(v);
-		*phys = (v - virOffset) | DEFAULT_PAGE_FLAGS;
+		p1Tbl = (page_dir_t)(p2Dir[GET_P2_IDX(v)] & ADDR_MASK);
+		p1Tbl[GET_P1_IDX(v)] = (v - virOffset) | DEFAULT_PAGE_FLAGS;
+	}
+
+	//	The special virtual address for temporary used.
+	if (p3Dir[511] == 0) {
+		p3Dir[511] = krnlEnd | DEFAULT_TABLE_FLAGS;
+		memsetdw((void *) krnlEnd, 0, 1024);
+		krnlEnd += 0x1000;
+	}
+	p2Dir = (page_dir_t)(p3Dir[511] & ADDR_MASK);
+	if (p2Dir[511] == 0) {
+		p2Dir[511] = krnlEnd | DEFAULT_TABLE_FLAGS;
+		memsetdw((void *) krnlEnd, 0, 1024);
+		krnlEnd += 0x1000;
 	}
 
 	//	We need to help KHeap to allocate 32 MiB, because if heap not
 	//	prepared, we can't run MapPage properly.
 	__vma_t v = g_KERNEL_VIRT_START;
-	p3Dir = p4Dir + GET_P4_IDX(v);	  // P4 idx should be 509
-	if (*p3Dir == 0) {
-		*p3Dir = krnlEnd | DEFAULT_TABLE_FLAGS;
-		memsetdw((void *) krnlEnd, 0, 1024);
-		krnlEnd += 0x1000;
-	}
-	p2Dir = ((page_dir_t)(*p3Dir & ADDR_MASK)) + GET_P3_IDX(v);
-	if (*p2Dir == 0) {
-		*p2Dir = krnlEnd | DEFAULT_TABLE_FLAGS;
-		memsetdw((void *) krnlEnd, 0, 1024);
-		krnlEnd += 0x1000;
-	}
+	// P4 idx should be 509
+	p4Dir[GET_P4_IDX(v)] = krnlEnd | DEFAULT_TABLE_FLAGS;
+	memsetdw((void *) krnlEnd, 0, 1024);
+	krnlEnd += 0x1000;
+	p3Dir = (page_dir_t)(p4Dir[GET_P4_IDX(v)] & ADDR_MASK);
+	p3Dir[GET_P3_IDX(v)] = krnlEnd | DEFAULT_TABLE_FLAGS;
+	memsetdw((void *) krnlEnd, 0, 1024);
+	krnlEnd += 0x1000;
+	p2Dir = (page_dir_t)(p3Dir[GET_P3_IDX(v)] & ADDR_MASK);
+	p2Dir[GET_P2_IDX(v)] = krnlEnd | DEFAULT_TABLE_FLAGS;
+	memsetdw((void *) krnlEnd, 0, 1024);
+	krnlEnd += 0x1000;
+
 	for (; v < g_KERNEL_VIRT_START + 0x2000000; v += 0x1000) {
-		p1Dir = ((page_dir_t)(*p2Dir & ADDR_MASK)) + GET_P2_IDX(v);
-		if (*p1Dir == 0) {
-			*p1Dir = krnlEnd | DEFAULT_TABLE_FLAGS;
+		if (p2Dir[GET_P2_IDX(v)] == 0) {
+			p2Dir[GET_P2_IDX(v)] = krnlEnd | DEFAULT_TABLE_FLAGS;
 			memsetdw((void *) krnlEnd, 0, 1024);
 			krnlEnd += 0x1000;
 		}
-
-		phys = ((page_tbl_t)(*p1Dir & ADDR_MASK)) + GET_P1_IDX(v);
-		*phys = 0;	  // No need to map to physical for now, only do it until it
-					  // is needed
+		// No need to map to physical for now, only do it until it is needed
 	}
 
 	g_LastUsed = krnlEnd + virOffset;
+
+	//	We also want to disable the 1 GiB Identity map made in loader.
+	p4Dir[0] = 0;
+	//	Copy back to current PML4
+	memcpy((void *) g_pBootParams->PageDirectory, (void *) p4Dir, 0x1000);
 
 	//	Flush TLB
 	_ASMV_("mov rax, CR3\n"
