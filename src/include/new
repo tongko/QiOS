@@ -1,0 +1,73 @@
+#pragma once
+
+#if !defined(size_t)
+	#if defined(__x86_64__)
+typedef unsigned long size_t;
+	#else
+typedef unsigned int size_t;
+	#endif
+#endif
+
+//	default placement versions of operator new
+inline void *operator new(size_t, void *p) noexcept {
+	return p;
+}
+inline void *operator new[](size_t, void *p) noexcept {
+	return p;
+}
+
+#if defined(__GNUG__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-value"
+	#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
+// Default placement versions of operator delete.
+inline void operator delete(void *, void *) noexcept {}
+inline void operator delete[](void *, void *) noexcept {}
+
+#if defined(__GNUG__)
+	#pragma GCC diagnostic pop
+#endif
+
+// /**
+//  * Initialize instance of object using placement new. This should only be
+//  called
+//  * before KHeap is available.
+//  */
+// template <typename T>
+// byte_t *new_instance() noexcept;
+
+//	After KHeap initialized, should used `new` keyword instead of
+// `new_instance`.
+#include <kernel/mm/KHeap.hpp>
+extern qkrnl::mm::KHeap *g_pHeap;
+extern __vma_t			 g_LastUsed;
+
+inline void *operator new(size_t tSize) {
+	if (g_pHeap == nullptr) {
+		void *buff = reinterpret_cast<void *>(g_LastUsed);
+		g_LastUsed += tSize;
+		return buff;
+	}
+
+	return g_pHeap->Alloc(tSize);
+}
+
+inline void *operator new[](size_t tSize) {
+	if (g_pHeap == nullptr) {
+		void *buff = reinterpret_cast<void *>(g_LastUsed);
+		g_LastUsed += tSize;
+		return buff;
+	}
+
+	return g_pHeap->Alloc(tSize);
+}
+
+inline void operator delete(void *p) {
+	g_pHeap->Free(p);
+}
+
+inline void operator delete[](void *p) {
+	g_pHeap->Free(p);
+}

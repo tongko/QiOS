@@ -44,6 +44,7 @@ obj/
 sysroot/
 
 *.log
+.*
 # vs code files
 .vscode/
 *.code-workspace

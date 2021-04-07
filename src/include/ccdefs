@@ -1,0 +1,7 @@
+#include <cdefs.h>
+
+#ifdef __cplusplus
+namespace std {
+typedef __SIZE_TYPE__ size_t;
+}
+#endif
