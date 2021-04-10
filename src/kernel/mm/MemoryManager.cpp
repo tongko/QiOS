@@ -1,4 +1,5 @@
 #include <cdefs.h>
+#include <kernel/KTextMode.hpp>
 #include <kernel/Logger.hpp>
 #include <kernel/bootinfo.hpp>
 #include <kernel/mm/AddressPool.hpp>
@@ -40,9 +41,7 @@ static void SetupKernelHeap(byte_t *tpHeapBuff) {
 	size_t	size = nHeapSize;
 
 	//	LastUsed will be used to map the g_KERNEL_VIRT_START
-	__pma_t addr;
-	//	Get the physical address pointed to by LastUsedAddr
-	PagingVirtToPhys(g_LastUsed, &addr);
+	__pma_t addr = g_LastUsed - g_pBootParams->VirtualOffset;
 	//	Map to 32 MiB to Virtual Address
 	for (__vma_t v = heapStart; v < (heapStart + nHeapSize) - 1;
 		 v += 0x1000, addr += 0x1000) {
@@ -98,15 +97,21 @@ kresult_t MemoryManager::Initialize() {
 	byte_t *pHeapBuff = (byte_t *) g_LastUsed;
 	g_LastUsed += sizeof(KHeap);
 
-	//	Setup Page table
-	PagingInitialize();
-
 	//	Setup a 4K kernel virtual addresss range
 	s_pPool = new AddressPool(PageSizes::FourK);
 	s_pPool->AddRange(g_KERNEL_VIRT_START,
 					  g_KERNEL_VIRT_START + g_KERNEL_VIRT_LENGTH - 1);
+
+	//	Setup Page table
+	__vma_t newPageBuffer = ALIGN(g_LastUsed, 0x1000);
+	PagingInitialize(newPageBuffer);
+	//	Set the new VIDEO MEM.
+	TextModeSetBuffer(0xFFFFFFFFFFFFD000);
+
 	//	Setup Page Frame Allocator
-	s_pPageAlloc = new PageAllocator();
+	s_pPageAlloc = new PageAllocator(newPageBuffer);
+
+	g_LastUsed = newPageBuffer;
 
 	//	Kernel heap
 	SetupKernelHeap(pHeapBuff);

@@ -128,7 +128,7 @@ kresult_t PagingUnmapPage(__vma_t tVirt);
 //  */
 // kresult_t PagingClearFreePages();
 
-void PagingInitialize();
+void PagingInitialize(__vma_t &tNewPageBuffer);
 
 void InvalidatePage(void *addr);
 

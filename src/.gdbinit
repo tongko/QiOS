@@ -19,4 +19,5 @@ set architecture i386:x86-64:intel
 target remote localhost:1234
 break entry.asm:long_mode_entry
 break qkernel.cpp:_kmain
+break Paging.cpp:274
 continue

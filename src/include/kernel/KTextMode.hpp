@@ -35,6 +35,8 @@ void TextModeSetPosition(byte_t tX, byte_t tY);
 void TextModePutChar(int_t tnCh, bool btUpdate = true);
 //	Put string to cursor position
 void TextModePutString(const char *tStr);
+//	Set the text mode video buffer
+void TextModeSetBuffer(__vma_t tNewBuffer);
 
 }	 // namespace qkrnl
 

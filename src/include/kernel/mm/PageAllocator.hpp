@@ -16,7 +16,7 @@ class StackPageAllocator;
 class PageAllocator {
 
 public:	   //	Constructor
-	PageAllocator();
+	PageAllocator(__vma_t &bitmpBuffer);
 
 public:	   //	Attributes
 	/**

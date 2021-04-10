@@ -12,14 +12,14 @@ extern qkrnl::Logger *g_pLogger;
 
 namespace qkrnl { namespace mm {
 
-PageAllocator::PageAllocator() {
+PageAllocator::PageAllocator(__vma_t &bitmapBuffer) {
 
 	g_pLogger->Print("[PageAllocator::Ctor] Initializing PageAllocator...\n");
 	//	Initialize Mutex
 	m_pMutex = new qklib::Mutex();
 
 	//	Initialized bitmap page allocator
-	BmpPageAllocator::Initialize();
+	BmpPageAllocator::Initialize(bitmapBuffer);
 	//	Initialized stack page allocator of 32 MiB
 	g_pLogger->Print("[PageAllocator] Initializing stack page allocator...\n");
 	m_pStack = new StackPageAllocator(0x8000);

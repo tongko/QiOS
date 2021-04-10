@@ -40,9 +40,12 @@ inline void operator delete[](void *, void *) noexcept {}
 
 //	After KHeap initialized, should used `new` keyword instead of
 // `new_instance`.
+#include <kernel/bootinfo.hpp>
 #include <kernel/mm/KHeap.hpp>
-extern qkrnl::mm::KHeap *g_pHeap;
-extern __vma_t			 g_LastUsed;
+#include <kernel/mm/Paging.hpp>
+extern qkrnl::mm::KHeap * g_pHeap;
+extern __vma_t			  g_LastUsed;
+extern qkrnl::BootParams *g_pBootParams;
 
 inline void *operator new(size_t tSize) {
 	if (g_pHeap == nullptr) {

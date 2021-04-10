@@ -2,6 +2,7 @@
 #include <kernel/Logger.hpp>
 #include <kernel/bootinfo.hpp>
 #include <kernel/mm/BmpPageAllocator.hpp>
+#include <kernel/mm/Paging.hpp>
 #include <kernel/mm/mm_common.hpp>
 #include <kernel/types.hpp>
 #include <mutex.hpp>
@@ -28,6 +29,8 @@ static dword_t *s_pBmp {nullptr};
 static int_t s_nUsed {0};
 //	Total blocks
 static int_t s_nTotal {0};
+//	Total available blocks, i.e. installed RAM.
+static int_t s_nAvailable {0};
 //	Block sizes
 static int_t s_nSize {0x1000};
 
@@ -132,7 +135,7 @@ static int_t FirstFree(int_t tnSize) {
  */
 int_t BmpPageAllocator::GetTotalBlocks() {
 
-	return s_nTotal;
+	return s_nAvailable;
 }
 
 /**
@@ -146,7 +149,7 @@ int_t BmpPageAllocator::GetUsedBlocks() {
 /**
  * Initialize()
  */
-kresult_t BmpPageAllocator::Initialize() {
+kresult_t BmpPageAllocator::Initialize(__vma_t &bitmapBuffer) {
 
 	if (s_bInitialized) {
 		return S_OK;
@@ -178,21 +181,34 @@ kresult_t BmpPageAllocator::Initialize() {
 	int_t  nPgSize {BLOCK_SIZE};
 
 	//	Get total installed memory.
+	size_t nNextStart = 0;
 	for (int i = 0; i < nEntries; i++) {
-		nTotalBytes += entries[i].Length();
+		if (i == 0 || entries[i].BaseAddress() == nNextStart) {
+			nTotalBytes += entries[i].Length();
+		}
+		else {
+			nTotalBytes += (entries[i].Length() + entries[i].BaseAddress()
+							- nNextStart);
+		}
+
+		nNextStart = entries[i].Length() + entries[i].BaseAddress();
 	}
 
-	pLog->Print("[BmpPageAllocator] Total physical memory detected: 0x%x KiB",
+	pLog->Print("[BmpPageAllocator] Total physical memory detected: 0x%x KiB\n",
 				nTotalBytes / 0x400);
 	//	Compute required block size.
 	s_nTotal = nTotalBytes / nPgSize;
+	size_t byteNeeded = s_nTotal / BLOCKS_PER_BYTE;
 	//	Allocate new.
-	s_pBmp = reinterpret_cast<dword_t *>(g_LastUsed);
+	s_pBmp = reinterpret_cast<dword_t *>(bitmapBuffer);
+	for (__vma_t v = bitmapBuffer; v < (bitmapBuffer + byteNeeded);
+		 v += 0x1000) {
+		PagingMapPage(v, v - g_pBootParams->VirtualOffset);
+	}
 	//	Advance g_LastUsed
-	g_LastUsed += (s_nTotal / BLOCKS_PER_BYTE);
+	bitmapBuffer += byteNeeded;
 	//	By default, all page are set
-	memset(s_pBmp, 0xFF, s_nTotal / BLOCKS_PER_BYTE);
-	s_nUsed = s_nTotal;
+	memset(s_pBmp, 0xFF, byteNeeded);
 
 	// lets find out which part in memory are available
 	// for free use.
@@ -201,8 +217,10 @@ kresult_t BmpPageAllocator::Initialize() {
 			continue;
 		}
 
+		s_nAvailable += entries[i].Length();
 		UnsetRegion(entries[i].BaseAddress(), entries[i].Length());
 	}
+	s_nUsed = 0;
 
 	// Reclaim usable Low Memory
 	// Typically in x86 machine, the low mem begin from 0x500, but we want this
@@ -212,8 +230,9 @@ kresult_t BmpPageAllocator::Initialize() {
 	//	for which kernel occupied, we need to set it to used.
 	__pma_t physStart
 		= g_pBootParams->KernelStart - g_pBootParams->VirtualOffset;
-	__pma_t physEnd = ALIGN(g_LastUsed - g_pBootParams->VirtualOffset, nPgSize);
-	size_t	len = physEnd - physStart;
+	__pma_t physEnd
+		= ALIGN(bitmapBuffer, nPgSize) - g_pBootParams->VirtualOffset;
+	size_t len = physEnd - physStart;
 	SetRegion(physStart, len);
 
 	UNLOCK;

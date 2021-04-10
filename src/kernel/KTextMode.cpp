@@ -77,6 +77,11 @@ static void UpdateCursor() {
 	outportb(0x3D5, (byte_t)(s_wPoint >> 8) & 0xFF);
 }
 
+void TextModeSetBuffer(__vma_t tNewBuffer) {
+
+	s_pVideoMem = reinterpret_cast<word_t *>(tNewBuffer);
+}
+
 void TextModeSetForeColor(TextModeColor teFore) {
 
 	s_bColor |= ColorToByte(teFore);

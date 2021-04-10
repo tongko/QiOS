@@ -127,7 +127,7 @@ qemu:
 	@qemu-system-$(HOSTARCH) -S -gdb tcp::1234 -boot d -cdrom qios.iso -no-reboot -m 4096M -d guest_errors,int,cpu_reset -smp 1 -usb -vga std -serial file:../.logs/com1.log -D ../.logs/qemu.log
 
 run: build iso
-	@qemu-system-$(HOSTARCH) -S -gdb tcp::1234 -boot d -cdrom qios.iso -no-reboot -m 4096M -d guest_errors,int,cpu_reset -smp 1 -usb -vga std -serial file:../.logs/com1.log -D ../.logs/qemu.log
+	@qemu-system-$(HOSTARCH) -qmp tcp:localhost:4444,server,nowait -S -gdb tcp::1234 -boot d -cdrom qios.iso -no-reboot -m 4096M -d guest_errors,int,cpu_reset -smp 1 -usb -vga std -serial file:../.logs/com1.log -D ../.logs/qemu.log
 
 .ONESHELL:
 iso:
