@@ -214,14 +214,21 @@ kresult_t PagingMapPage(__vma_t tVirt,
 	// this is namely PML4, PDPE, PDE, and PTE respectively. Although AMD64
 	// paging support large page size, QiOS only support 4K page size at
 	// this moment.
-	int		   idxs[4] = {GET_P4_IDX(tVirt),
-					  GET_P3_IDX(tVirt),
-					  GET_P2_IDX(tVirt),
-					  GET_P1_IDX(tVirt)};
+#if defined(__GNUG__) && (__cplusplus)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+	// For debugging used
+	int idxs[4] = {GET_P4_IDX(tVirt),
+				   GET_P3_IDX(tVirt),
+				   GET_P2_IDX(tVirt),
+				   GET_P1_IDX(tVirt)};
+#if defined(__GNUG__) && (__cplusplus)
+	#pragma GCC diagnostic pop
+#endif
+
 	page_dir_t ptr;
-	kresult_t  kr;
 	__pma_t	   newPage;
-	int		   idx;
 
 	//	Examine P4 page
 	int p4Idx = GET_P4_IDX(tVirt);
@@ -273,7 +280,7 @@ kresult_t PagingMapPage(__vma_t tVirt,
 									   | ((qword_t) p4Idx << 30) | (p3Idx << 21)
 									   | (p2Idx << 12) | (p1Idx * 8));
 	if (*ptr == 0 || tCanOverride) {
-		*ptr = tPhys | tTblFlags;
+		*ptr = tPhys | tPgFlags;
 	}
 	else {
 		return E_MEMMAN_ENTRY_EXISTS;
@@ -326,7 +333,6 @@ void PagingInitialize(__vma_t &tNewPageBuffer) {
 				false);
 	//	Mapping from kernel image start to end.
 	page_dir_t p1Tbl;
-	page_tbl_t phys;
 	for (__vma_t v = krnlStart; v < (pageAddr - 1); v += 0x1000) {
 		SetNewTable(p2Dir, GET_P2_IDX(v), krnlEnd, DEFAULT_TABLE_FLAGS);
 

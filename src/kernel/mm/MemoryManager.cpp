@@ -137,12 +137,12 @@ void *MemoryManager::VirtualAlloc(int_t		tnPageCount,
 		KernelPanic("[MemoryManager::VirtualAlloc] Out of memory.");
 	}
 
-	if (tbNoMap) {
-		return (void *) addr;
+	if (!tbNoMap) {
+		__pma_t pAddr = s_pPageAlloc->Alloc(nPgCount);
+		PagingMapPage(addr, pAddr);
 	}
 
-	__pma_t pAddr = s_pPageAlloc->Alloc(nPgCount);
-	PagingMapPage(addr, pAddr);
+	return (void *) addr;
 }
 
 /**
