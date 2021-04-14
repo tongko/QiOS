@@ -135,6 +135,10 @@ iso:
 	mkdir -p $(iso-dir)/boot/grub
 	cp $(DESTDIR)$(BOOTDIR)/$(kernel) $(iso-dir)/boot/$(kernel)
 	cat <<- EOF > $(iso-dir)/boot/grub/grub.cfg
+	GRUB_DEFAULT="QiOS"
+	GRUB_TIMEOUT="0"
+	GRUB_TIMEOUT_STYLE="hidden"
+	GRUB_DISABLE_LINUX_UUID=“true”
 	menuentry "QiOS" {
 		multiboot2 /boot/$(kernel)
 	}

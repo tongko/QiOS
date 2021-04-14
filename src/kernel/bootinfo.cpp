@@ -12,8 +12,9 @@ using namespace qklib;
 using namespace qkrnl;
 
 //	Global variables
-extern Logger *	   g_pLogger;
-extern BootParams *g_pBootParams;
+extern Logger *		g_pLogger;
+extern BootParams * g_pBootParams;
+extern Mb2BootInfo *g_pBootInfo;
 
 namespace qkrnl {
 
@@ -22,8 +23,6 @@ namespace qkrnl {
 static char *		 s_BootCmdLine {0};
 static char *		 s_BootLoaderName {0};
 static Mb2MMapEntry *s_aMemMap;
-static uint32_t		 s_nMemLowerBound {0};
-static uint32_t		 s_nMemUpperBound {0};
 static bool			 s_ExitBootServiceNotCalled {false};
 static dword_t		 s_dwEfi32ImgHandlePtr {0};
 static qword_t		 s_qwEfi64ImgHandlePtr {0};
@@ -39,11 +38,42 @@ static Mb2DhcpAck		  s_DhcpAck;
 static Mb2RSDPDescriptor  s_OldAcpi;
 static Mb2RSDPDescriptor2 s_NewAcpi;
 static BootApm			  s_BootApm;
-static BiosBootDev		  s_BootDev;
 
 /////////////////////////////////////////////
 //	Extract Modules
-static void ExtractModules(const Mb2TagMod *tpTagMod) {}
+static void ExtractModules(const Mb2TagMod *tpTagMod) {
+
+	if (tpTagMod == nullptr) {
+		return;
+	}
+
+	g_pLogger->Print("[BootInfo] Found boot module: '%s' (0x%x-0x%x)",
+					 tpTagMod->lpszCmdLine,
+					 tpTagMod->dwModStart,
+					 tpTagMod->dwModEnd);
+
+	BootModule *pNew = new BootModule();
+	pNew->BaseAddr = tpTagMod->dwModStart;
+	pNew->EndAddr = tpTagMod->dwModEnd;
+	size_t n = strlen(tpTagMod->lpszCmdLine);
+	pNew->lpszModString = new char[n];
+	memcpy((void *) pNew->lpszModString, tpTagMod->lpszCmdLine, n);
+	pNew->pNext = nullptr;
+
+	if (!g_pBootInfo->pBootModules) {
+		g_pBootInfo->pBootModules = pNew;
+	}
+	else {
+		BootModule *p = g_pBootInfo->pBootModules;
+		while (p) {
+			if (!p->pNext) {
+				p->pNext = pNew;
+				break;
+			}
+			p = p->pNext;
+		}
+	}
+}
 
 /////////////////////////////////////////////
 //	Extract Boot Devices
@@ -53,9 +83,12 @@ static void ExtractBootDevices(const Mb2TagBootDev *tpTagBootDev) {
 		return;
 	}
 
-	s_BootDev.dwBiosDev = tpTagBootDev->dwBiosDev;
-	s_BootDev.dwPartition = tpTagBootDev->dwPart;
-	s_BootDev.dwSubPartition = tpTagBootDev->dwSlice;
+	BiosBootDev *pNew = new BiosBootDev();
+	pNew->dwBiosDev = tpTagBootDev->dwBiosDev;
+	pNew->dwPartition = tpTagBootDev->dwPart;
+	pNew->dwSubPartition = tpTagBootDev->dwSlice;
+
+	g_pBootInfo->pBiosBootDevice = pNew;
 }
 
 /////////////////////////////////////////////
@@ -66,26 +99,27 @@ static void ExtractMemoryMap(const Mb2Tag *tpTagMMap) {
 		return;
 	}
 
-	Logger *pLogger = g_pLogger;
+	// Logger *pLogger = g_pLogger;
 
-	pLogger->PrintWithLock(
-		"--------------------------------------------------------------\n");
-	pLogger->PrintWithLock(
-		"| idx |     Base address     |        Length        |  Type  |\n");
-	pLogger->PrintWithLock(
-		"--------------------------------------------------------------\n");
+	// pLogger->PrintWithLock(
+	// 	"--------------------------------------------------------------\n");
+	// pLogger->PrintWithLock(
+	// 	"| idx |     Base address     |        Length        |  Type  |\n");
+	// pLogger->PrintWithLock(
+	// 	"--------------------------------------------------------------\n");
 
-	const char *format = "|%4d |  0x%08x%08x  |  0x%08x%08x  |  0x%02x  |\n";
+	// const char *format = "|%4d |  0x%08x%08x  |  0x%08x%08x  |  0x%02x  |\n";
 
 	Mb2TagMMap *pTag = (Mb2TagMMap *) tpTagMMap;
 	//	Allocate enough memory for entries count + 1.
-	int size = ((pTag->dwSize - 16) / pTag->dwEntrySize) + 1;
+	// int size = ((pTag->dwSize - 16) / pTag->dwEntrySize) + 1;
 	// s_aMemMap = reinterpret_cast<Mb2MMapEntry *>(g_LastUsed);
 	// g_LastUsed += size;
-	s_aMemMap = new Mb2MMapEntry[size];
+	// s_aMemMap = new Mb2MMapEntry[size];
 	//	Zero init the memory
-	memset((void *) s_aMemMap, 0, size * pTag->dwEntrySize);
+	// memset((void *) s_aMemMap, 0, size * pTag->dwEntrySize);
 
+	MemMapEntry * pNew = nullptr;
 	Mb2MMapEntry *pEntry;
 	int			  i;
 	for (pEntry = pTag->pEntries, i = 0;
@@ -93,19 +127,29 @@ static void ExtractMemoryMap(const Mb2Tag *tpTagMMap) {
 		 i++,
 		pEntry = (Mb2MMapEntry *) ((__vma_t) pEntry + pTag->dwEntrySize)) {
 
-		memcpy((void *) &s_aMemMap[i], (void *) pEntry, pTag->dwEntrySize);
+		if (pNew) {
+			pNew->SetNext(new MemMapEntry(*pEntry));
+			pNew = pNew->GetNext();
+		}
+		else {
+			g_pBootInfo->pMemMapEntry = new MemMapEntry(*pEntry);
+			pNew = g_pBootInfo->pMemMapEntry;
+		}
 
-		pLogger->PrintWithLock(format,
-							   i,
-							   (unsigned) (pEntry->qwAddress >> 32),
-							   (unsigned) (pEntry->qwAddress & 0xffffffff),
-							   (unsigned) (pEntry->qwLength >> 32),
-							   (unsigned) (pEntry->qwLength & 0xffffffff),
-							   (unsigned) pEntry->dwType);
+		pNew->SetNext(nullptr);
+		// memcpy((void *) &s_aMemMap[i], (void *) pEntry, pTag->dwEntrySize);
+
+		// pLogger->PrintWithLock(format,
+		// 					   i,
+		// 					   (unsigned) (pEntry->qwAddress >> 32),
+		// 					   (unsigned) (pEntry->qwAddress & 0xffffffff),
+		// 					   (unsigned) (pEntry->qwLength >> 32),
+		// 					   (unsigned) (pEntry->qwLength & 0xffffffff),
+		// 					   (unsigned) pEntry->dwType);
 	}
 
-	pLogger->PrintWithLock(
-		"--------------------------------------------------------------\n");
+	// pLogger->PrintWithLock(
+	// 	"--------------------------------------------------------------\n");
 }
 
 /////////////////////////////////////////////
@@ -218,6 +262,7 @@ void BootInfoInit() {
 		KernelPanic("[BootInfoInit] Invalid multiboot info address.");
 	}
 
+	g_pBootInfo = new Mb2BootInfo();
 	s_vMb2Addr = pBoot->Mb2Address;
 	Mb2Tag *pTag = reinterpret_cast<Mb2Tag *>(s_vMb2Addr + 8);
 
@@ -236,6 +281,7 @@ void BootInfoInit() {
 			memcpy(s_BootCmdLine,
 				   static_cast<const void *>(pStr->szString),
 				   pStr->dwSize);
+			g_pBootInfo->lpszBootCmdLine = s_BootCmdLine;
 
 		} break;
 
@@ -249,6 +295,7 @@ void BootInfoInit() {
 			memcpy(s_BootLoaderName,
 				   static_cast<const void *>(pStr->szString),
 				   pStr->dwSize);
+			g_pBootInfo->lpszBootLoaderName = s_BootLoaderName;
 		} break;
 
 		case MB2_TAG_TYPE_MODULE: {
@@ -259,8 +306,12 @@ void BootInfoInit() {
 		case MB2_TAG_TYPE_BASIC_MEMINFO: {
 
 			Mb2TagMemInfo *pInfo = static_cast<Mb2TagMemInfo *>(pTag);
-			s_nMemLowerBound = pInfo->dwMemLower;
-			s_nMemUpperBound = pInfo->dwMemUpper;
+			BasicMemInfo * pNew = new BasicMemInfo();
+			pNew->dwMemLower = pInfo->dwMemLower;
+			pNew->dwMemUpper = pInfo->dwMemUpper;
+
+			g_pBootInfo->pBasicMemInfo = pNew;
+
 		} break;
 
 		case MB2_TAG_TYPE_BOOTDEV: {
@@ -294,15 +345,17 @@ void BootInfoInit() {
 		case MB2_TAG_TYPE_APM: {
 
 			Mb2TagAPM *apm = static_cast<Mb2TagAPM *>(pTag);
-			s_BootApm.wVersion = apm->wVersion;
-			s_BootApm.wCSeg = apm->wCSeg;
-			s_BootApm.dwOffset = apm->dwOffset;
-			s_BootApm.wCSeg16 = apm->wCSeg_16;
-			s_BootApm.wDSeg = apm->wDSeg;
-			s_BootApm.wFlags = apm->wFlags;
-			s_BootApm.wCSegLen = apm->wCSegLen;
-			s_BootApm.wCSeg16Len = apm->wCSeg16Len;
-			s_BootApm.wDSegLen = apm->wDSegLen;
+			g_pBootInfo->pBootApm = new BootApm();
+			BootApm *pNew = g_pBootInfo->pBootApm;
+			pNew->wVersion = apm->wVersion;
+			pNew->wCSeg = apm->wCSeg;
+			pNew->dwOffset = apm->dwOffset;
+			pNew->wCSeg16 = apm->wCSeg_16;
+			pNew->wDSeg = apm->wDSeg;
+			pNew->wFlags = apm->wFlags;
+			pNew->wCSegLen = apm->wCSegLen;
+			pNew->wCSeg16Len = apm->wCSeg16Len;
+			pNew->wDSegLen = apm->wDSegLen;
 		} break;
 
 		case MB2_TAG_TYPE_EFI32: {
@@ -402,8 +455,8 @@ int BootInfoEnumMemMap(MemMapEntry *tlpMemMap, int_t tCb, int_t *tlpCbNeeded) {
 //	BootInfoGetBasicMemInfo
 int BootInfoGetBasicMemInfo(qword_t *tqwLoMem, qword_t *tqwHiMem) {
 
-	*tqwLoMem = s_nMemLowerBound * 1024;
-	*tqwHiMem = s_nMemUpperBound * 1024;
+	*tqwLoMem = g_pBootInfo->pBasicMemInfo->dwMemLower * 1024;
+	*tqwHiMem = g_pBootInfo->pBasicMemInfo->dwMemUpper * 1024;
 
 	return 1;
 }

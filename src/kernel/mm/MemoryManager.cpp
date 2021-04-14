@@ -41,14 +41,16 @@ static void SetupKernelHeap(byte_t *tpHeapBuff) {
 	size_t	size = nHeapSize;
 
 	//	LastUsed will be used to map the g_KERNEL_VIRT_START
-	__pma_t addr = g_LastUsed - g_pBootParams->VirtualOffset;
+	__pma_t addr = MemoryManager::PhysAlloc(
+		nHeapSize / 0x1000,
+		PageSizes::FourK);	  // g_LastUsed - g_pBootParams->VirtualOffset;
 	//	Map to 32 MiB to Virtual Address
 	for (__vma_t v = heapStart; v < (heapStart + nHeapSize) - 1;
 		 v += 0x1000, addr += 0x1000) {
 		PagingMapPage(v, addr);
 	}
 
-	g_LastUsed += nHeapSize;
+	// g_LastUsed += nHeapSize;
 
 	byte_t *buff = tpHeapBuff;
 	g_pHeap

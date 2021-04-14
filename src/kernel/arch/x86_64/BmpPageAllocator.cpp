@@ -12,9 +12,10 @@ using namespace qklib;
 using namespace qkrnl;
 
 //	Global variables
-extern __vma_t			  g_LastUsed;
-extern qkrnl::BootParams *g_pBootParams;
-extern qkrnl::Logger *	  g_pLogger;
+extern __vma_t			   g_LastUsed;
+extern qkrnl::BootParams * g_pBootParams;
+extern qkrnl::Logger *	   g_pLogger;
+extern qkrnl::Mb2BootInfo *g_pBootInfo;
 
 #define LOCK   s_Mutex.Acquire()
 #define UNLOCK s_Mutex.Release()
@@ -29,8 +30,8 @@ static dword_t *s_pBmp {nullptr};
 static int_t s_nUsed {0};
 //	Total blocks
 static int_t s_nTotal {0};
-//	Total available blocks, i.e. installed RAM.
-static int_t s_nAvailable {0};
+//	Total available bytes, i.e. installed RAM.
+static size_t s_nAvailable {0};
 //	Block sizes
 static int_t s_nSize {0x1000};
 
@@ -98,7 +99,48 @@ static int_t FirstFree(int_t tnSize) {
 		return FirstFree();
 	}
 
-	for (int_t i = 0; i < s_nTotal; i++) {
+	//	if needs 512 KB and above, we start the probing from 32 blocks aligned
+	if (size > 128) {
+		// Compute number of int_t blocks needed.
+		int_t needed = size / 32;
+		for (int_t i = 0; i < s_nTotal / 32; i++) {
+			if (s_pBmp[i] == 0) {	 // this int_t block is empty, let's try it
+				int_t j;
+				for (j = 0; j < needed; j++) {
+					if (s_pBmp[i + j] > 0) {
+						//	too bad, doesn't meet requirement
+						//	move i forward to i + j
+						i = i + j;
+						break;
+					}
+				}
+
+				if (j == needed) {
+					// we found enough full int_t blocks,
+					// Any remainder block needed?
+					int_t k, blocksRequired = size % 32;
+					// For this to be continuos blocks, the following needs
+					// to be unset from bit 0 onwards
+					for (k = 0; k < blocksRequired; k++) {
+						int_t bit = 1 << k;
+						if (!(s_pBmp[i + j] & bit)) {
+							// Good, not used, continue
+							continue;
+						}
+
+						// to bad, we don't have a contiguos blocks
+						break;
+					}
+
+					if (k == blocksRequired)
+						return i * 32;
+				}
+			}
+		}
+	}
+
+	int_t nRemaining = size;
+	for (int_t i = 0; i < s_nTotal / 32; i++) {
 
 		if (s_pBmp[i] != 0xFFFFFFFF) {
 
@@ -117,10 +159,14 @@ static int_t FirstFree(int_t tnSize) {
 
 						if (!TestBit(startBit + count))
 							free++;	   // this bit is clear (free frame)
+						else {
+							i = (startBit + count) / 32;
+							break;
+						}
 
 						if (free == size)
-							return i * 4 * 8 + j;	 // free count==size needed;
-													 // return index
+							return i * 32 + j;	  // free count==size needed;
+												  // return index
 					}
 				}
 			}
@@ -158,68 +204,72 @@ kresult_t BmpPageAllocator::Initialize(__vma_t &bitmapBuffer) {
 	Logger *pLog = g_pLogger;
 	pLog->Print("[BmpPageAllocator::Initialize] Initializing bitmap page "
 				"allocator...\n");
-	//	find out total memory
-	MemMapEntry *entries;
-	int_t		 nNeeded;
+	int_t nNeeded;
 
 	LOCK;
 
 	s_bInitialized = true;
 
-	//	Allocate free mem from g_LastUsed
-	entries = (MemMapEntry *) g_LastUsed;
-	//	Enumerate mem map entry into `entries`.
-	if (!BootInfoEnumMemMap(entries, 0x1000, &nNeeded) || nNeeded <= 0) {
-		KernelPanic("[BmpPageAllocator::Initialize] Failed to obtain memory "
-					"map info from BootInfo module.");
+	MemMapEntry *pEntry = g_pBootInfo->pMemMapEntry;
+	if (pEntry == nullptr) {
+		KernelPanic("[BmpPageAllocator::Initialize] Failed to obtain memory"
+					"map info from BootInfo module.\n");
 	}
-	//	Advance g_LastUsed
-	g_LastUsed += nNeeded;
 
-	int_t  nEntries = nNeeded / sizeof(MemMapEntry);
+	//	find out total memory
+	//	Get mem map from boot info
 	size_t nTotalBytes {0};
-	int_t  nPgSize {BLOCK_SIZE};
-
-	//	Get total installed memory.
-	size_t nNextStart = 0;
-	for (int i = 0; i < nEntries; i++) {
-		if (i == 0 || entries[i].BaseAddress() == nNextStart) {
-			nTotalBytes += entries[i].Length();
+	size_t nNextStart {0};
+	s_pBmp = reinterpret_cast<dword_t *>(bitmapBuffer);
+	// lets find out which part in memory are available
+	// for free use.
+	do {
+		if (nNextStart == 0 || pEntry->BaseAddress() == nNextStart) {
+			nTotalBytes += pEntry->Length();
 		}
 		else {
-			nTotalBytes += (entries[i].Length() + entries[i].BaseAddress()
-							- nNextStart);
+			nTotalBytes
+				+= (pEntry->Length() + pEntry->BaseAddress() - nNextStart);
 		}
 
-		nNextStart = entries[i].Length() + entries[i].BaseAddress();
-	}
+		if (pEntry->Type() == MMapEntryType::Available) {
+			s_nAvailable += pEntry->Length();
+		}
+
+		nNextStart = pEntry->BaseAddress() + pEntry->Length();
+		pEntry = pEntry->GetNext();
+	} while (pEntry != nullptr);
 
 	pLog->Print("[BmpPageAllocator] Total physical memory detected: 0x%x KiB\n",
-				nTotalBytes / 0x400);
+				s_nAvailable / 0x400);
+
+	int_t nPgSize {BLOCK_SIZE};
 	//	Compute required block size.
 	s_nTotal = nTotalBytes / nPgSize;
 	size_t byteNeeded = s_nTotal / BLOCKS_PER_BYTE;
-	//	Allocate new.
-	s_pBmp = reinterpret_cast<dword_t *>(bitmapBuffer);
+
+	//	Map the page to it physical address.
 	for (__vma_t v = bitmapBuffer; v < (bitmapBuffer + byteNeeded);
 		 v += 0x1000) {
 		PagingMapPage(v, v - g_pBootParams->VirtualOffset);
 	}
-	//	Advance g_LastUsed
-	bitmapBuffer += byteNeeded;
 	//	By default, all page are set
 	memset(s_pBmp, 0xFF, byteNeeded);
 
-	// lets find out which part in memory are available
-	// for free use.
-	for (int i = 0; i < nEntries; i++) {
-		if (entries[i].Type() != MMapEntryType::Available) {
-			continue;
+	pEntry = g_pBootInfo->pMemMapEntry;
+	do {
+		if (pEntry->Type() == MMapEntryType::Available) {
+			UnsetRegion(pEntry->BaseAddress(), pEntry->Length());
+		}
+		else {
+			SetRegion(pEntry->BaseAddress(), pEntry->Length());
 		}
 
-		s_nAvailable += entries[i].Length();
-		UnsetRegion(entries[i].BaseAddress(), entries[i].Length());
-	}
+		pEntry = pEntry->GetNext();
+	} while (pEntry != nullptr);
+
+	//	Advance g_LastUsed
+	bitmapBuffer += byteNeeded;
 	s_nUsed = 0;
 
 	// Reclaim usable Low Memory
@@ -227,13 +277,25 @@ kresult_t BmpPageAllocator::Initialize(__vma_t &bitmapBuffer) {
 	// to be page aligned, thus let it start from 0x1000.
 	UnsetRegion(LOW_MEM_START, LOW_MEM_LEN);
 
-	//	for which kernel occupied, we need to set it to used.
+	//	Mark kernel image as used.
 	__pma_t physStart
 		= g_pBootParams->KernelStart - g_pBootParams->VirtualOffset;
 	__pma_t physEnd
 		= ALIGN(bitmapBuffer, nPgSize) - g_pBootParams->VirtualOffset;
 	size_t len = physEnd - physStart;
 	SetRegion(physStart, len);
+
+	//	Mark the modules range as used
+	BootModule *pMod = g_pBootInfo->pBootModules;
+	while (pMod != nullptr) {
+		range_t<__vma_t> rangeMod;
+		rangeMod.Start = pMod->BaseAddr + g_pBootParams->VirtualOffset;
+		rangeMod.Length = pMod->EndAddr - pMod->BaseAddr;
+
+		SetRegion(pMod->BaseAddr, pMod->EndAddr - pMod->EndAddr);
+
+		pMod = pMod->pNext;
+	}
 
 	UNLOCK;
 

@@ -7,6 +7,7 @@ namespace qkrnl {
 
 //	Prototypes
 struct Mb2MMapEntry;
+struct Elf64Shdr;
 
 struct BootParams {
 	__vma_t Mb2Address;
@@ -15,6 +16,133 @@ struct BootParams {
 	__vma_t PageDirectory;
 	size_t	VirtualOffset;
 };
+
+/**
+ * Boot Device
+ **/
+typedef struct {
+	dword_t dwBiosDev;
+	dword_t dwSlice;
+	dword_t dwPart;
+} BiosBootDevice;
+
+/**
+ * Boot module info
+ **/
+typedef struct BootModule {
+	__pma_t		BaseAddr;
+	__pma_t		EndAddr;
+	char *		lpszModString;
+	BootModule *pNext;
+};
+
+/**
+ * ELF Symbols
+ **/
+typedef struct {
+	dword_t	   dwNum;
+	dword_t	   dwShndx;
+	Elf64Shdr *pSection;
+} ElfSymbols;
+
+/**
+ * Basic Mem Info
+ **/
+typedef struct {
+	dword_t dwMemLower;
+	dword_t dwMemUpper;
+} BasicMemInfo;
+
+/**
+ * BIOS Boot Device
+ **/
+typedef struct {
+	dword_t dwBiosDev;
+	dword_t dwPartition;
+	dword_t dwSubPartition;
+} BiosBootDev;
+
+/**
+ * Memory Map Entry type
+ **/
+enum class MMapEntryType {
+	Available = 1,			// Can be used freely
+	Reserved = 2,			//	Unusable
+	AcpiReclaimable = 3,	// Usable memory holding ACPI information
+	NVS = 4,	  // Reserved memory which needs to be preserved on hibernation
+	BadRam = 5	  // Defective ram
+};
+
+class MemMapEntry {
+public:
+	MemMapEntry();
+	MemMapEntry(Mb2MMapEntry &entry);
+
+public:	   // Attributes
+	__pma_t		  BaseAddress() noexcept { return m_qwBaseAddr; }
+	size_t		  Length() noexcept { return m_qwLength; }
+	MMapEntryType Type() noexcept { return m_eType; }
+	MemMapEntry * GetNext() const noexcept { return m_pNext; }
+	void		  SetNext(MemMapEntry *tNext) noexcept { m_pNext = tNext; }
+
+public:	   // Operations
+	void FromMb2(const Mb2MMapEntry *entry) noexcept;
+	bool IsEmpty() noexcept {
+		return m_eType == MMapEntryType::Available && m_qwBaseAddr == 0
+			   && m_qwLength == 0;
+	}
+
+private:	// Operations
+	static MMapEntryType GetEntryType(dword_t dwType) noexcept;
+
+private:	//	Members
+	MMapEntryType m_eType;
+	__pma_t		  m_qwBaseAddr;
+	size_t		  m_qwLength;
+	MemMapEntry * m_pNext;
+};
+
+/**
+ * Boot APM table
+ **/
+typedef struct _PACKED_ {
+	word_t	wVersion;
+	word_t	wCSeg;
+	dword_t dwOffset;
+	word_t	wCSeg16;
+	word_t	wDSeg;
+	word_t	wFlags;
+	word_t	wCSegLen;
+	word_t	wCSeg16Len;
+	word_t	wDSegLen;
+} BootApm;
+
+/**
+ * VBE Info
+ **/
+typedef struct {
+	word_t wMode;
+	word_t wInterfaceSeg;
+	word_t wInterfaceOff;
+	word_t wInterfaceLen;
+	byte_t ControlInfo[512];
+	byte_t ModeInfo[256];
+} VBEInfo;
+
+/**
+ * MB2 Boot Info Struct
+ **/
+typedef struct _PACKED_ mb2_boot_info_t {
+	char *		  lpszBootCmdLine;
+	char *		  lpszBootLoaderName;
+	BootModule *  pBootModules;
+	BasicMemInfo *pBasicMemInfo;
+	BiosBootDev * pBiosBootDevice;
+	MemMapEntry * pMemMapEntry;
+	BootApm *	  pBootApm;
+	VBEInfo *	  pVbeInfo;
+
+} Mb2BootInfo;
 
 // typedef struct _PACKED_ mb2_info_t {
 // 	Mb2TagMemInfo	   MemInfo;
@@ -57,58 +185,6 @@ struct BootParams {
 // 	__pma_t ModEnd;
 // 	char	szCmdLine[MAX_LEN];
 // } BootModule;
-
-typedef struct _PACKED_ {
-	word_t	wVersion;
-	word_t	wCSeg;
-	dword_t dwOffset;
-	word_t	wCSeg16;
-	word_t	wDSeg;
-	word_t	wFlags;
-	word_t	wCSegLen;
-	word_t	wCSeg16Len;
-	word_t	wDSegLen;
-} BootApm;
-
-typedef struct {
-	dword_t dwBiosDev;
-	dword_t dwPartition;
-	dword_t dwSubPartition;
-} BiosBootDev;
-
-enum class MMapEntryType {
-	Available = 1,			// Can be used freely
-	Reserved = 2,			//	Unusable
-	AcpiReclaimable = 3,	// Usable memory holding ACPI information
-	NVS = 4,	  // Reserved memory which needs to be preserved on hibernation
-	BadRam = 5	  // Defective ram
-};
-
-class MemMapEntry {
-public:
-	MemMapEntry();
-	MemMapEntry(Mb2MMapEntry &entry);
-
-public:	   // Attributes
-	qword_t		  BaseAddress() noexcept { return m_qwBaseAddr; }
-	qword_t		  Length() noexcept { return m_qwLength; }
-	MMapEntryType Type() noexcept { return m_eType; }
-
-public:	   // Operations
-	void FromMb2(const Mb2MMapEntry *entry) noexcept;
-	bool IsEmpty() noexcept {
-		return m_eType == MMapEntryType::Available && m_qwBaseAddr == 0
-			   && m_qwLength == 0;
-	}
-
-private:	// Operations
-	static MMapEntryType GetEntryType(dword_t dwType) noexcept;
-
-private:	//	Members
-	MMapEntryType m_eType;
-	qword_t		  m_qwBaseAddr;
-	qword_t		  m_qwLength;
-};
 
 /**
  * Initialize boot info.

@@ -62,7 +62,7 @@ void SetupLogging() {
 	g_pLogger = new Logger();
 	g_pLogger->SetConsoleEnabled(true);
 	g_pLogger->SetSerialPortEnabled(true);
-	g_pLogger->Print("QiOS ver 0.0.0.1\n\n");
+	g_pLogger->Print("QiOS (0.0.0.1)\n\n");
 }
 
 extern "C" void _kmain(__vma_t tBootParams) {

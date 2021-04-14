@@ -12,3 +12,4 @@ qkrnl::mm::PageSizes g_ePageSize;
 qkrnl::mm::KHeap *	 g_pHeap;
 qkrnl::Logger *		 g_pLogger;
 qkrnl::BootParams *	 g_pBootParams;
+qkrnl::Mb2MMapEntry *g_pBootInfo;

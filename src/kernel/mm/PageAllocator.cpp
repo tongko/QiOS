@@ -22,7 +22,7 @@ PageAllocator::PageAllocator(__vma_t &bitmapBuffer) {
 	BmpPageAllocator::Initialize(bitmapBuffer);
 	//	Initialized stack page allocator of 32 MiB
 	g_pLogger->Print("[PageAllocator] Initializing stack page allocator...\n");
-	m_pStack = new StackPageAllocator(0x8000);
+	m_pStack = new StackPageAllocator(0x2000);
 }
 
 size_t PageAllocator::GetTotalBytes() {

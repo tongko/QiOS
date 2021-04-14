@@ -46,7 +46,7 @@ struct range_t {
 
 	T			GetEnd() { return (T)(Start + Length); }
 	inline bool Intersect(range_t<T> &other) {
-		return Start < other.GetEnd() && GetEnd() >= other.Start;
+		return Start <= other.GetEnd() && GetEnd() >= other.Start;
 	}
 	void Advance(size_t tSize) {
 		Start += tSize;
