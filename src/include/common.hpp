@@ -24,12 +24,16 @@
 //	Only for C++
 #if defined(__cplusplus)
 	#define PROPERTY_DECL(type, varname) \
-		type Get##varname();             \
-		void Set##varname(type);
+		type varname##_get();            \
+		void varname##_set(type);
 
 	#define STATIC_PROP_DECL(type, varname) \
-		static type Get##varname();         \
-		static void Set##varname(type);
+		static type varname##_get();        \
+		static void varname##_set(type);
+
+	#define PROP_DECL_IMPL(type, varname) \
+		type varname##_get() override;    \
+		void varname##_set(type) override;
 #endif
 
 #define MAX_LEN 256
@@ -55,4 +59,4 @@ struct range_t {
 	void Shrink(size_t tSize) { Length -= tSize; }
 };
 
-}
+}	 // namespace qklib

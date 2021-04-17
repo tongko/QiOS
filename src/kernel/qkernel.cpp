@@ -7,6 +7,7 @@
 #include <kernel/types.hpp>
 #include <new>
 #include <stdio.hpp>
+#include <string.hpp>
 
 using namespace qkrnl;
 using namespace qklib;
