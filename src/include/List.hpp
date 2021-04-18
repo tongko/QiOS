@@ -21,8 +21,9 @@ public:
 	List();
 	List(IIteratable<T> &collection);
 
-public:	   //	IIterator implementations
-	IIterator<T> &GetIterator() override;
+public:	   //	IIteratable implementations
+	IIterator<T> &begin() override;
+	IIterator<T> &end() override;
 
 public:	   // Attributes
 	PROP_DECL_IMPL(size_t, Capacity);
@@ -54,6 +55,36 @@ private:
 	size_t			   m_nCount;
 	size_t			   m_nCapacity;
 	int				   m_nVersion;
+
+private:
+	/**
+	 * Nested type
+	 */
+	template <typename T>
+	class ListIterator : public IIterator<T> {
+
+	public:	   //	Constructor
+		ListIterator() noexcept
+			: m_pCurrent(m_pHead) {}
+		ListIterator(LinkedListNode<T> *tpNode) noexcept
+			: m_pCurrent(tpNode) {}
+
+	public:	   // IIterator implementations
+		IIterator<T> &operator=(T *tpElem) override {
+			LinkedListNode<T> newElem = new LinkedListNode<T>();
+			newElem->pValue = tpElem;
+			newElem->pValue = nullptr;
+			this->m_pCurrent = newElem;
+			return *this;
+		}
+		IIterator<T> &operator++() override;
+		IIterator<T> &operator++(int) override;
+		bool		  operator!=(const IIterator<T> &) override;
+		int			  operator*() override;
+
+	private:
+		LinkedListNode<T> m_pCurrent;
+	};
 };
 
 }	 // namespace qklib

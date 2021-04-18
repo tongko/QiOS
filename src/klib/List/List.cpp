@@ -30,4 +30,7 @@ List<T>::List(IIteratable<T> &collection)
 	AddRange(collection);
 }
 
+template <typename T>
+IIterator<T> &List<T>::begin() {}
+
 }	 // namespace qklib
