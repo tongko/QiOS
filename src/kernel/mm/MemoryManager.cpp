@@ -83,7 +83,7 @@ kresult_t MemoryManager::Initialize() {
 	}
 
 	Logger *pLog = g_pLogger;
-	pLog->Print("[MemoryManager::Initialize] Initializing MemoryManager...\n");
+	pLog->Info("[MemoryManager::Initialize] Initializing MemoryManager...\n");
 	//	Validation
 	BootParams *pParams = g_pBootParams;
 	if (pParams->KernelStart == 0 || pParams->KernelEnd == 0

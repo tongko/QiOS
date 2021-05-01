@@ -298,9 +298,9 @@ kresult_t AddressPool::Dump(bool tOnlyFree) {
 	LOCK;
 
 	Logger *pLogger = g_pLogger;
-	pLogger->PrintWithLock("[DBG] Address Range structure:\n");
+	pLogger->Debug("[DBG] Address Range structure:\n");
 	if (m_pFirst == nullptr) {
-		pLogger->PrintWithLock("[DBG] Dump failed, no first entry.\n");
+		pLogger->Debug("[DBG] Dump failed, no first entry.\n");
 		return E_MEMMAN_AR_EMPTY;
 	}
 
@@ -308,7 +308,7 @@ kresult_t AddressPool::Dump(bool tOnlyFree) {
 	while (pCurr) {
 		if (!tOnlyFree || !pCurr->Used) {
 			size_t size = pCurr->Size();
-			pLogger->PrintWithLock(
+			pLogger->Debug(
 				"[DBG] Used: %c, Base: 0x%08x%08x, Pages: %i (- 0x%08x%08x)\n",
 				pCurr->Used ? 't' : 'f',
 				pCurr->Base >> 32,

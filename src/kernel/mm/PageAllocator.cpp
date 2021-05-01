@@ -14,14 +14,14 @@ namespace qkrnl { namespace mm {
 
 PageAllocator::PageAllocator(__vma_t &bitmapBuffer) {
 
-	g_pLogger->Print("[PageAllocator::Ctor] Initializing PageAllocator...\n");
+	g_pLogger->Info("[PageAllocator::Ctor] Initializing PageAllocator...\n");
 	//	Initialize Mutex
 	m_pMutex = new qklib::Mutex();
 
 	//	Initialized bitmap page allocator
 	BmpPageAllocator::Initialize(bitmapBuffer);
 	//	Initialized stack page allocator of 32 MiB
-	g_pLogger->Print("[PageAllocator] Initializing stack page allocator...\n");
+	g_pLogger->Info("[PageAllocator] Initializing stack page allocator...\n");
 	m_pStack = new StackPageAllocator(0x2000);
 }
 

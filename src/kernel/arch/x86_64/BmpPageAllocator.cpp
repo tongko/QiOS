@@ -139,7 +139,6 @@ static int_t FirstFree(int_t tnSize) {
 		}
 	}
 
-	int_t nRemaining = size;
 	for (int_t i = 0; i < s_nTotal / 32; i++) {
 
 		if (s_pBmp[i] != 0xFFFFFFFF) {
@@ -202,9 +201,8 @@ kresult_t BmpPageAllocator::Initialize(__vma_t &bitmapBuffer) {
 	}
 
 	Logger *pLog = g_pLogger;
-	pLog->Print("[BmpPageAllocator::Initialize] Initializing bitmap page "
-				"allocator...\n");
-	int_t nNeeded;
+	pLog->Info("[BmpPageAllocator::Initialize] Initializing bitmap page "
+			   "allocator...\n");
 
 	LOCK;
 
@@ -240,8 +238,8 @@ kresult_t BmpPageAllocator::Initialize(__vma_t &bitmapBuffer) {
 		pEntry = pEntry->GetNext();
 	} while (pEntry != nullptr);
 
-	pLog->Print("[BmpPageAllocator] Total physical memory detected: 0x%x KiB\n",
-				s_nAvailable / 0x400);
+	pLog->Info("[BmpPageAllocator] Total physical memory detected: 0x%x KiB\n",
+			   s_nAvailable / 0x400);
 
 	int_t nPgSize {BLOCK_SIZE};
 	//	Compute required block size.
@@ -290,9 +288,10 @@ kresult_t BmpPageAllocator::Initialize(__vma_t &bitmapBuffer) {
 	while (pMod != nullptr) {
 		range_t<__vma_t> rangeMod;
 		rangeMod.Start = pMod->BaseAddr + g_pBootParams->VirtualOffset;
-		rangeMod.Length = pMod->EndAddr - pMod->BaseAddr;
+		rangeMod.Length
+			= (pMod->EndAddr + g_pBootParams->VirtualOffset) - pMod->BaseAddr;
 
-		SetRegion(pMod->BaseAddr, pMod->EndAddr - pMod->EndAddr);
+		SetRegion(rangeMod.Start, rangeMod.Length);
 
 		pMod = pMod->pNext;
 	}

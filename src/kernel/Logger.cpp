@@ -17,10 +17,13 @@ namespace qkrnl {
 static Mutex s_Mutex;
 
 Logger::Logger()
+	: Logger(LogLevel::Error) {}
+
+Logger::Logger(LogLevel teLevel)
 	: m_bAcquired(false)
 	, m_bSerialEnabled(false)
-	//	by default, logging to console is on
-	, m_bConsoleEnabled(true) {
+	, m_bConsoleEnabled(true)
+	, m_eLevel(teLevel) {
 
 	//	by default, logging to Serial Port is on
 	m_pCom = new SerialPort(ComPorts::COM1, BaudRates::BR115200);
@@ -64,6 +67,60 @@ void Logger::SetConsoleEnabled(bool tValue) {
 	m_bConsoleEnabled = tValue;
 }
 
+LogLevel Logger::GetLoggingLevel() {
+
+	return m_eLevel;
+}
+
+void Logger::SetLoggingLevel(LogLevel teLevel) {
+
+	m_eLevel = teLevel;
+}
+
+void Logger::Debug(const char *tMsg, ...) {
+
+	if (!DebugEnabled())
+		return;
+
+	va_list args;
+	va_start(args, tMsg);
+	PrintWithLock(tMsg, args);
+	va_end(args);
+}
+
+void Logger::Info(const char *tMsg, ...) {
+
+	if (!InfoEnabled())
+		return;
+
+	va_list args;
+	va_start(args, tMsg);
+	Print(tMsg, args);
+	va_end(args);
+}
+
+void Logger::Warn(const char *tMsg, ...) {
+
+	if (!WarnEnabled())
+		return;
+
+	va_list args;
+	va_start(args, tMsg);
+	PrintWithLock(tMsg, args);
+	va_end(args);
+}
+
+void Logger::Error(const char *tMsg, ...) {
+
+	if (!ErrorEnabled())
+		return;
+
+	va_list args;
+	va_start(args, tMsg);
+	PrintWithLock(tMsg, args);
+	va_end(args);
+}
+
 void Logger::Lock() {
 
 	if (m_bAcquired) {
@@ -86,34 +143,24 @@ void Logger::Unlock() {
 	m_bAcquired = false;
 }
 
-void Logger::PrintWithLock(const char *tMsg, ...) {
+void Logger::PrintWithLock(const char *__restrict tFormat, va_list tArgs) {
 
 	Lock();
 
-	va_list arg;
-	va_start(arg, tMsg);
-
-	char buffer[MAX_LEN];
-	int	 len = vsprintf(buffer, tMsg, arg);
-	va_end(arg);
-
-	TextModePutString(buffer);
-	m_pCom->Write((const byte_t *) buffer, len);
+	Print(tFormat, tArgs);
 
 	Unlock();
 }
 
-void Logger::Print(const char *tMsg, ...) {
-
-	va_list arg;
-	va_start(arg, tMsg);
+void Logger::Print(const char *__restrict tFormat, va_list tArgs) {
 
 	char buffer[MAX_LEN];
-	int	 len = vsprintf(buffer, tMsg, arg);
-	va_end(arg);
+	int	 len = vsprintf(buffer, tFormat, tArgs);
 
-	TextModePutString(buffer);
-	m_pCom->Write((const byte_t *) buffer, len);
+	if (GetConsoleEnabled())
+		TextModePutString(buffer);
+	if (GetSerialPortEnabled())
+		m_pCom->Write((const byte_t *) buffer, len);
 }
 
 }	 // namespace qkrnl

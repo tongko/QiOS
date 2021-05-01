@@ -29,7 +29,7 @@ typedef struct {
 /**
  * Boot module info
  **/
-typedef struct BootModule {
+struct BootModule {
 	__pma_t		BaseAddr;
 	__pma_t		EndAddr;
 	char *		lpszModString;

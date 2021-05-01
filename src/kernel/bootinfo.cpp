@@ -47,10 +47,10 @@ static void ExtractModules(const Mb2TagMod *tpTagMod) {
 		return;
 	}
 
-	g_pLogger->Print("[BootInfo] Found boot module: '%s' (0x%x-0x%x)",
-					 tpTagMod->lpszCmdLine,
-					 tpTagMod->dwModStart,
-					 tpTagMod->dwModEnd);
+	g_pLogger->Info("[BootInfo] Found boot module: '%s' (0x%x-0x%x)",
+					tpTagMod->lpszCmdLine,
+					tpTagMod->dwModStart,
+					tpTagMod->dwModEnd);
 
 	BootModule *pNew = new BootModule();
 	pNew->BaseAddr = tpTagMod->dwModStart;
@@ -99,26 +99,7 @@ static void ExtractMemoryMap(const Mb2Tag *tpTagMMap) {
 		return;
 	}
 
-	// Logger *pLogger = g_pLogger;
-
-	// pLogger->PrintWithLock(
-	// 	"--------------------------------------------------------------\n");
-	// pLogger->PrintWithLock(
-	// 	"| idx |     Base address     |        Length        |  Type  |\n");
-	// pLogger->PrintWithLock(
-	// 	"--------------------------------------------------------------\n");
-
-	// const char *format = "|%4d |  0x%08x%08x  |  0x%08x%08x  |  0x%02x  |\n";
-
-	Mb2TagMMap *pTag = (Mb2TagMMap *) tpTagMMap;
-	//	Allocate enough memory for entries count + 1.
-	// int size = ((pTag->dwSize - 16) / pTag->dwEntrySize) + 1;
-	// s_aMemMap = reinterpret_cast<Mb2MMapEntry *>(g_LastUsed);
-	// g_LastUsed += size;
-	// s_aMemMap = new Mb2MMapEntry[size];
-	//	Zero init the memory
-	// memset((void *) s_aMemMap, 0, size * pTag->dwEntrySize);
-
+	Mb2TagMMap *  pTag = (Mb2TagMMap *) tpTagMMap;
 	MemMapEntry * pNew = nullptr;
 	Mb2MMapEntry *pEntry;
 	int			  i;
@@ -137,19 +118,7 @@ static void ExtractMemoryMap(const Mb2Tag *tpTagMMap) {
 		}
 
 		pNew->SetNext(nullptr);
-		// memcpy((void *) &s_aMemMap[i], (void *) pEntry, pTag->dwEntrySize);
-
-		// pLogger->PrintWithLock(format,
-		// 					   i,
-		// 					   (unsigned) (pEntry->qwAddress >> 32),
-		// 					   (unsigned) (pEntry->qwAddress & 0xffffffff),
-		// 					   (unsigned) (pEntry->qwLength >> 32),
-		// 					   (unsigned) (pEntry->qwLength & 0xffffffff),
-		// 					   (unsigned) pEntry->dwType);
 	}
-
-	// pLogger->PrintWithLock(
-	// 	"--------------------------------------------------------------\n");
 }
 
 /////////////////////////////////////////////
@@ -255,7 +224,7 @@ void BootInfoInit() {
 	}
 
 	Logger *pLog = g_pLogger;
-	pLog->Print("[BootInfoInit] Initializing multiboot info structure...\n");
+	pLog->Info("[BootInfoInit] Initializing multiboot info structure...\n");
 	BootParams *pBoot = g_pBootParams;
 
 	if (pBoot->Mb2Address == 0) {
@@ -468,55 +437,52 @@ void BootInfoDebugPrint(uintptr_t tdwMb2Addr) {
 	Mb2Tag *tag;
 	dword_t dwSize = *(dword_t *) tdwMb2Addr;
 	Logger *pLogger = g_pLogger;
-	pLogger->PrintWithLock("Announce mbi size 0x%X\n", dwSize);
+	pLogger->Info("Announce mbi size 0x%X\n", dwSize);
 	for (tag = (Mb2Tag *) (tdwMb2Addr + 8); tag->dwType != MB2_TAG_TYPE_END;
 		 tag = (Mb2Tag *) ((byte_t *) tag + ((tag->dwSize + 7) & ~7))) {
-		pLogger->PrintWithLock("Tag 0x%x, Size 0x%x\n",
-							   tag->dwType,
-							   tag->dwSize);
+		pLogger->Info("Tag 0x%x, Size 0x%x\n", tag->dwType, tag->dwSize);
 		switch (tag->dwType) {
 		case MB2_TAG_TYPE_CMDLINE:
-			pLogger->PrintWithLock("Command line = %s\n",
-								   ((Mb2TagString *) tag)->szString);
+			pLogger->Info("Command line = %s\n",
+						  ((Mb2TagString *) tag)->szString);
 			break;
 		case MB2_TAG_TYPE_BOOT_LOADER_NAME:
-			pLogger->PrintWithLock("Boot loader name = %s\n",
-								   ((Mb2TagString *) tag)->szString);
+			pLogger->Info("Boot loader name = %s\n",
+						  ((Mb2TagString *) tag)->szString);
 			break;
 		case MB2_TAG_TYPE_MODULE:
-			pLogger->PrintWithLock("Module at 0x%x-0x%x. Command line %s\n",
-								   ((Mb2TagMod *) tag)->dwModStart,
-								   ((Mb2TagMod *) tag)->dwModEnd,
-								   ((Mb2TagMod *) tag)->lpszCmdLine);
+			pLogger->Info("Module at 0x%x-0x%x. Command line %s\n",
+						  ((Mb2TagMod *) tag)->dwModStart,
+						  ((Mb2TagMod *) tag)->dwModEnd,
+						  ((Mb2TagMod *) tag)->lpszCmdLine);
 			break;
 		case MB2_TAG_TYPE_BASIC_MEMINFO:
-			pLogger->PrintWithLock("mem_lower = %uKB, mem_upper = %uKB\n",
-								   ((Mb2TagMemInfo *) tag)->dwMemLower,
-								   ((Mb2TagMemInfo *) tag)->dwMemUpper);
+			pLogger->Info("mem_lower = %uKB, mem_upper = %uKB\n",
+						  ((Mb2TagMemInfo *) tag)->dwMemLower,
+						  ((Mb2TagMemInfo *) tag)->dwMemUpper);
 			break;
 		case MB2_TAG_TYPE_BOOTDEV:
-			pLogger->PrintWithLock("Boot device 0x%x,%u,%u\n",
-								   ((Mb2TagBootDev *) tag)->dwBiosDev,
-								   ((Mb2TagBootDev *) tag)->dwSlice,
-								   ((Mb2TagBootDev *) tag)->dwPart);
+			pLogger->Info("Boot device 0x%x,%u,%u\n",
+						  ((Mb2TagBootDev *) tag)->dwBiosDev,
+						  ((Mb2TagBootDev *) tag)->dwSlice,
+						  ((Mb2TagBootDev *) tag)->dwPart);
 			break;
 		case MB2_TAG_TYPE_MMAP: {
 			Mb2MMapEntry *mmap;
 
-			pLogger->PrintWithLock("mmap\n");
+			pLogger->Info("mmap\n");
 
 			for (mmap = ((Mb2TagMMap *) tag)->pEntries;
 				 (byte_t *) mmap < (byte_t *) tag + tag->dwSize;
 				 mmap = (Mb2MMapEntry *) ((unsigned long) mmap
 										  + ((Mb2TagMMap *) tag)->dwEntrySize))
-				pLogger->PrintWithLock(
-					" base_addr = 0x%x%x,"
-					" length = 0x%x%x, type = 0x%x\n",
-					(unsigned) (mmap->qwAddress >> 32),
-					(unsigned) (mmap->qwAddress & 0xffffffff),
-					(unsigned) (mmap->qwLength >> 32),
-					(unsigned) (mmap->qwLength & 0xffffffff),
-					(unsigned) mmap->dwType);
+				pLogger->Info(" base_addr = 0x%x%x,"
+							  " length = 0x%x%x, type = 0x%x\n",
+							  (unsigned) (mmap->qwAddress >> 32),
+							  (unsigned) (mmap->qwAddress & 0xffffffff),
+							  (unsigned) (mmap->qwLength >> 32),
+							  (unsigned) (mmap->qwLength & 0xffffffff),
+							  (unsigned) mmap->dwType);
 		} break;
 		case MB2_TAG_TYPE_FRAMEBUFFER: {
 			dword_t			   color;
@@ -592,8 +558,7 @@ void BootInfoDebugPrint(uintptr_t tdwMb2Addr) {
 		}
 	}
 	tag = (Mb2Tag *) ((byte_t *) tag + ((tag->dwSize + 7) & ~7));
-	pLogger->PrintWithLock("Total mbi size 0x%x\n",
-						   (uintptr_t) tag - tdwMb2Addr);
+	pLogger->Info("Total mbi size 0x%x\n", (uintptr_t) tag - tdwMb2Addr);
 }
 
 /////////////////////////////////////////////
