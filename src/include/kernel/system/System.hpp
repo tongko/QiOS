@@ -8,6 +8,9 @@ class System {
 
 public:	   //	Operations
 	static void InitBootStrapProcessor(__pma_t);
+	static void InitializeApp();
+	static void WaitForAppCores();
+	static void MarkAppCoreReady();
 };
 
 }}	  // namespace qkrnl::system

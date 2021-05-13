@@ -23,7 +23,10 @@ int abs(int_t x);
 	#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
 #endif	  //	ISDIGIT
 
-size_t	 itoa(uint32_t value, char *str, int base, const char *digit_str);
+size_t	 itoa(int32_t value, char *str, int base, const char *digit_str);
+size_t	 utoa(uint32_t value, char *str, int base, const char *digit_str);
+size_t	 ltoa(int64_t value, char *str, int base, const char *digit_str);
+size_t	 ultoa(uint64_t value, char *str, int base, const char *digit_str);
 uint32_t atoi(const char *str);
 
 #define MAX(a, b)                              \

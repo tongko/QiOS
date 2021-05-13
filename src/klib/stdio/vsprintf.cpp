@@ -32,7 +32,7 @@
 	u			Unsigned decimal integer
 	x			Unsigned hexadecimal integer
 	X			Unsigned hexadecimal integer (capital letters)
-	p			Not supported in kernel mode.
+	p			Pointer address.
 	n			Not supported in kernel mode.
 	%			% Character
 --------------------------------------------------------------------------------
@@ -71,16 +71,21 @@
 				all characters are printed until the ending null character is
 				encountered. For c type − it has no effect. When no precision is
 				specified, the default is 1. If the period is specified without
-				an explicit value for precision, 0 is assumed.
+				an explicit value for precision, 0 is assumed. If precision has
+				been specified, `Width` will be ignored.
 	.*			The precision is not specified in the format string, but as an
 				additional integer value argument preceding the argument that
 				has to be formatted.
 --------------------------------------------------------------------------------
 	Length:
 
-	h			Not supported.
-	l			Not supported.
-	L			Not supported.
+	h			The argument is interpreted as a short int or unsigned short int
+				(only applies to integer specifiers − i, d, o, u, x and X).
+	l			The argument is interpreted as a long int or unsigned long int
+				for integer specifiers (i, d, o, u, x and X), and as a wide
+				character or wide character string for specifiers c and s.
+	L			he argument is interpreted as a long double (only applies to
+				floating point specifiers − e, E, f, g and G).
 */
 
 #include <stdarg.h>
@@ -112,6 +117,7 @@ using namespace qklib;
 #define BASE(x)                     \
 	do {                            \
 		switch ((char) x) {         \
+		case 'p':                   \
 		case 'x':                   \
 		case 'X': base = 16; break; \
 		case 'o': base = 8; break;  \
@@ -122,26 +128,118 @@ using namespace qklib;
 
 namespace qklib {
 
-static unsigned int print_number(char *				 dest,
-								 unsigned int		 value,
-								 format_specifier_t *format) {
+typedef struct format_specifier {
+	char specifier;	   // Specifier
+#define FMTS_FLAGS_LEFTJUSTIFIED 0x01
+#define FMTS_FLAGS_FORCESIGN	 0x02
+#define FMTS_FLAGS_FILLSPACE	 0x04
+#define FMTS_FLAGS_LEADSIGN		 0x08
+#define FMTS_FLAGS_PADZEROES	 0x10
+	int flags;	  //	-, +, ' ', #, or 0
+	// int	 leftJustified;	   // left justified
+	// int	 zeroPad;		   //	zero pad
+	// int	 leadingSign;	   //	0x leading
+	// int	 forceSign;		   //	Force + sign
+	int	 fillWidth;	   //	Width
+	int	 precision;	   //	Precision
+	char length;	   // h, l, or L
+} format_specifier_t;
+
+static const char *FLAGS_STRING = "-+ #0";
+static const char *LENGTH_STRING = "hlL";
+
+static unsigned int print_number_ul(char *				dest,
+									unsigned long		value,
+									format_specifier_t *format) {
+
+	if (!format->precision && !value)
+		return 0;
+
+	char *		p = dest;
+	const char *strDigit = DIGIT_STR(format->specifier);
+	size_t		len = 0;
+	char		buf1[32] {0};
+	int			base;
+	BASE(format->specifier);
+	switch (format->specifier) {
+	case 'd':
+	case 'i': {
+		/* Specifier says this is signed integer */
+		/* check the length to find out actual value type */
+		if (format->length == 'h') { /* short */
+			len += itoa(static_cast<int16_t>(value), buf1, base, strDigit);
+		}
+		else if (format->length == 'L') { /* long long */
+			len += ltoa(static_cast<int64_t>(value), buf1, base, strDigit);
+		}
+		else {
+			len += itoa(static_cast<int16_t>(value), buf1, base, strDigit);
+		}
+	} break;
+	case 'x':
+	case 'X':
+	case 'u':
+	case 'p': {
+		/* Specifier says this is unsigned integer */
+		uint64_t uValue;
+		/* Check the length to find out actual value type */
+		if (format->length == 'h') { /* short */
+			len += utoa(static_cast<uint16_t>(value), buf1, base, strDigit);
+		}
+		else if (format->length == 'L') { /* long long */
+			len += ultoa(value, buf1, base, strDigit);
+		}
+		else {
+			len += utoa(static_cast<uint32_t>(value), buf1, base, strDigit);
+		}
+	} break;
+	default: buf1[0] = '\0';
+	}
+
+	size_t max_width
+		= MAX(format->precision > -1 ? format->precision : format->fillWidth,
+			  len);
+	size_t paddspace = MAX(format->fillWidth - len, 0);
+	size_t paddzero = MAX(format->precision - len, 0);
+
+	/* Precision has higher precedence than width */
+	if (format->precision) {
+		// if x, X, or p, need Prefix?
+		if (((format->specifier == 'x' || format->specifier == 'X')
+			 && (format->flags & FMTS_FLAGS_LEADSIGN))
+			// p always has prefix
+			|| format->specifier == 'p') {
+			paddzero -= 2;
+			char temp[32];
+			temp[0] = '0';
+			temp[1] = format->specifier == 'X' ? 'X' : 'x';
+			memcpy(&temp[2], buf1, len);
+			memcpy(buf1, temp, len + 2);
+		}
+	}
+}
+
+static unsigned int print_number_ui(char *				dest,
+									unsigned int		value,
+									format_specifier_t *format) {
 	char * p = dest;
 	size_t len = 0;
 
 	char		 buf1[32] = {0};
 	unsigned int base;
-	BASE(format->s);
-	len += itoa(value, buf1, base, DIGIT_STR(format->s));
-	int max_width = MAX(MAX(format->fw, format->pw), (int) len);
-	int paddspace = MAX(format->fw - (int) len, 0);
-	int paddzero = MAX(format->pw - (int) len, 0);
+	BASE(format->specifier);
+	len += itoa(value, buf1, base, DIGIT_STR(format->specifier));
+	int max_width = MAX(MAX(format->fillWidth, format->precision), (int) len);
+	int paddspace = MAX(format->fillWidth - (int) len, 0);
+	int paddzero = MAX(format->precision - (int) len, 0);
 	int i = 0;
 	int leading = 0;
-	if (format->pw >= format->fw) {
+	if (format->precision >= format->fillWidth) {
 		//	precision greater than fixed width
-		if (format->hx && (format->s == 'X' || format->s == 'x')) {
+		if ((format->flags & FMTS_FLAGS_LEADSIGN)
+			&& (format->specifier == 'X' || format->specifier == 'x')) {
 			*p++ = '0';
-			*p++ = format->s;
+			*p++ = format->specifier;
 			*p = '\0';
 			leading = 2;
 		}
@@ -153,11 +251,12 @@ static unsigned int print_number(char *				 dest,
 		return max_width + leading;
 	}
 
-	int c_to_print = MAX(format->pw, (int) len);
-	if (format->lj) {
-		if (format->hx && (format->s == 'X' || format->s == 'x')) {
+	int c_to_print = MAX(format->precision, (int) len);
+	if ((format->flags & FMTS_FLAGS_LEFTJUSTIFIED)) {
+		if ((format->flags & FMTS_FLAGS_LEADSIGN)
+			&& (format->specifier == 'X' || format->specifier == 'x')) {
 			*p++ = '0';
-			*p++ = format->s;
+			*p++ = format->specifier;
 			*p = '\0';
 			leading = 2;
 		}
@@ -172,12 +271,13 @@ static unsigned int print_number(char *				 dest,
 	}
 	else {
 		for (i = 0; i < paddspace - paddzero; i++) {
-			*p++ = format->fz ? '0' : ' ';
+			*p++ = (format->flags & FMTS_FLAGS_PADZEROES) ? '0' : ' ';
 			*p = '\0';
 		}
-		if (format->hx && (format->s == 'X' || format->s == 'x')) {
+		if ((format->flags & FMTS_FLAGS_LEADSIGN)
+			&& (format->specifier == 'X' || format->specifier == 'x')) {
 			*p++ = '0';
-			*p++ = format->s;
+			*p++ = 'x';
 			*p = '\0';
 			leading = 2;
 		}
@@ -194,12 +294,12 @@ static unsigned int print_string(char *				 dest,
 								 const char *		 str,
 								 format_specifier_t *format) {
 	size_t len = strlen(str);
-	size_t c_to_print
-		= MIN(len,
-			  (unsigned int) format->pw);	 // number of characters to print
+	size_t c_to_print = MIN(
+		len,
+		(unsigned int) format->precision);	  // number of characters to print
 	int i;
 
-	if ((int) c_to_print >= format->fw) {
+	if ((int) c_to_print >= format->fillWidth) {
 		//	c to print is larger than width, justification not consider
 		if (c_to_print == 0) {
 			return 0;
@@ -214,22 +314,22 @@ static unsigned int print_string(char *				 dest,
 	}
 
 	//	c to print is shorter than width, process justification
-	if (format->lj) {
+	if (format->flags & FMTS_FLAGS_LEFTJUSTIFIED) {
 		//	left justified. print c_to_print, then spaces
-		for (i = 0; i < format->fw; i++) {
+		for (i = 0; i < format->fillWidth; i++) {
 			*dest++ = i < (int) c_to_print ? *str++ : ' ';
 			*dest = '\0';
 		}
 	}
 	else {
 		//	default - right justified.
-		for (i = 0; i < format->fw; i++) {
-			*dest++ = i < format->fw - (int) c_to_print ? ' ' : *str++;
+		for (i = 0; i < format->fillWidth; i++) {
+			*dest++ = i < format->fillWidth - (int) c_to_print ? ' ' : *str++;
 			*dest = '\0';
 		}
 	}
 
-	return format->fw;
+	return format->fillWidth;
 }
 
 int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
@@ -237,10 +337,12 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 		return 0;
 	}
 
-	format_specifier_t fmt_spcf = {'\0', 0, 0, 0, -1, -1};
+	format_specifier_t fmt_spcf = {'\0', 0, -1, -1, '\0'};
 	const char *	   ptr = format;
 	char *			   value = str;
 	unsigned int	   i = 0;
+	char			   fsbuf[32] = {0};
+	unsigned int	   idx = 0;
 
 	while (*ptr != '\0') {
 		if (*ptr != '%') { /* While we have regular characters, print them.  */
@@ -249,31 +351,27 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 			} while (*ptr != '%' && *ptr != '\0');
 		}
 		else {
-			/* We got a   format specifier! */
+			/* We got a format specifier! */
 			ptr++; /* move pass '%'. */
-			fmt_spcf.s = '\0';
-			fmt_spcf.lj = fmt_spcf.fz = fmt_spcf.hx = 0;
-			fmt_spcf.fw = fmt_spcf.pw = -1;
+			fmt_spcf.specifier = fmt_spcf.length = '\0';
+			fmt_spcf.flags = 0;
+			fmt_spcf.fillWidth = fmt_spcf.precision = -1;
 
-			while (strchr("-#0", *ptr)) { /* Move past flags.  */
-				if (*ptr == '-') {
-					fmt_spcf.lj = 1;
-				}
-				if (*ptr == '0') {
-					fmt_spcf.fz = 1;
-				}
-				if (*ptr == '#') {
-					fmt_spcf.hx = 1;
-				}
-				ptr++;
+			/* Now we check if any flags specified. */
+			auto flgIdx = strchr(FLAGS_STRING, *ptr++);
+			if (flgIdx) {
+				fmt_spcf.flags = 1 << (int) (flgIdx - FLAGS_STRING);
 			}
 
-			char		 fsbuf[32] = {0};
-			unsigned int idx = 0;
+			/* probe for width */
 			if (*ptr == '*') {
-				COPY_VA_INT(&(fmt_spcf.fw));
+				/* Found field specified width, get the width from argument. */
+				fmt_spcf.fillWidth = abs(va_arg(arg, int));
+				ptr++;
+				// COPY_VA_INT(&(fmt_spcf.fillWidth));
 			}
 			else {
+				/* Maybe the width was specified in number form? let try it. */
 				idx = 0;
 				while (ISDIGIT(*ptr)) /* Handle explicit numeric value.  */
 				{
@@ -283,21 +381,28 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 				}
 
 				if (idx > 0) {
-					fmt_spcf.fw = atoi(fsbuf);
+					/* Yup, is in number form, keep it. */
+					fmt_spcf.fillWidth = atoi(fsbuf);
 				}
 			}
 
+			/* probe for precisions */
 			if (*ptr == '.') {
-				ptr++; /* Copy and go past the period.  */
+				ptr++; /* go past the period.  */
 				if (*ptr == '*') {
-					COPY_VA_INT(&(fmt_spcf.pw));
+					/* Found argument specified precision, get the precision
+					 * from argument. */
+					fmt_spcf.precision = abs(va_arg(arg, int));
+					ptr++;
+					// COPY_VA_INT(&(fmt_spcf.precision));
 				}
 				else {
-					idx = 0;
-					//	reset fsbuf
-					while (idx < 32) {
-						fsbuf[idx++] = '\0';
-					}
+					/* Maybe precision being specified in number form? */
+					// idx = 0;
+					////	reset fsbuf
+					// while (idx < 32) {
+					// 	fsbuf[idx++] = '\0';
+					// }
 					idx = 0;
 					while (ISDIGIT(*ptr)) /* Handle explicit numeric value.  */
 					{
@@ -306,20 +411,42 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 						ptr++;
 					}
 
-					fmt_spcf.pw = atoi(fsbuf);
+					if (idx > 0) {
+						fmt_spcf.precision = atoi(fsbuf);
+					}
 				}
 			}
 
-			fmt_spcf.s = *ptr;
+			/* probe for length specifier */
+			auto lenIdx = strchr(LENGTH_STRING, *ptr++);
+			if (lenIdx) {
+				fmt_spcf.length = *lenIdx;
+			}
+
+			fmt_spcf.specifier = *ptr;
 			switch (*ptr++) {
 			case 'd':
 			case 'i':
 			case 'u':
 			case 'x':
 			case 'X': {
+				// default to int length.
+				if (fmt_spcf.length == '\0')
+					fmt_spcf.length = 'l';
 				const unsigned int v = va_arg(arg, unsigned int);
 				char			   num_buff[32] = {0};
-				unsigned int	   x = print_number(num_buff, v, &fmt_spcf);
+				unsigned int	   x = print_number_ui(num_buff, v, &fmt_spcf);
+				strcat(value, num_buff);
+				value += x;
+				i += x;
+			} break;
+			case 'p': {
+				void *	  ptr = va_arg(arg, void *);
+				char	  num_buff[32] = {0};
+				uintptr_t v = (uintptr_t) ptr;
+				fmt_spcf.flags |= FMTS_FLAGS_LEADSIGN;
+				fmt_spcf.specifier = 'X';
+				unsigned int x = print_number_ui(num_buff, v, &fmt_spcf);
 				strcat(value, num_buff);
 				value += x;
 				i += x;

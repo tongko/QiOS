@@ -1,3 +1,5 @@
+#include <stdlib.hpp>
+
 /*-- QiOS ---------------------------------------------------------------------*
  *                                                                             *
  *	Copyright (C) 2020 Liew Tze Wei                                            *
@@ -12,7 +14,7 @@
 
 namespace qklib {
 
-size_t itoa(int32_t value, char *str, int base, const char *digit_str) {
+size_t ultoa(uint64_t value, char *str, int base, const char *digit_str) {
 
 	//	Validate base
 	if (base != 2 && base != 8 && base != 10 && base != 16) {
@@ -20,21 +22,17 @@ size_t itoa(int32_t value, char *str, int base, const char *digit_str) {
 		return 0;
 	}
 
-	char *	p = str;
-	int32_t quotient = value;
-	size_t	sz = 0;
+	char *	 p = str;
+	uint64_t quotient = value;
+	size_t	 sz = 0;
 
 	//	Conversion. Number is reversed.
 	do {
-		const int32_t tmp = quotient / base;
-		*p++ = digit_str[abs(quotient - (tmp * base))];
+		const uint64_t tmp = quotient / base;
+		*p++ = digit_str[quotient - (tmp * base)];
 		quotient = tmp;
 		sz++;
 	} while (quotient);
-
-	if (value < 0) {
-		*p++ = '-';
-	}
 
 	*p = '\0';
 	reverse(str);
