@@ -34,6 +34,7 @@ size_t itoa(int32_t value, char *str, int base, const char *digit_str) {
 
 	if (value < 0) {
 		*p++ = '-';
+		sz++;
 	}
 
 	*p = '\0';

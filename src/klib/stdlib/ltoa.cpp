@@ -23,6 +23,11 @@ size_t ltoa(int64_t value, char *str, int base, const char *digit_str) {
 		sz++;
 	} while (quotient);
 
+	if (value < 0) {
+		*p++ = '-';
+		sz++;
+	}
+
 	*p = '\0';
 	reverse(str);
 

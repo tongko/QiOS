@@ -17,13 +17,6 @@ namespace qkrnl { namespace system { namespace processor {
 static LinkedList<Processor> *s_Processors {0};
 static dword_t *s_IdMap {0};	//	Apic to processor logical id map.
 
-// struct FindPredicate {
-// 	dword_t m_id;
-// 	FindPredicate(dword_t tid)
-// 		: m_id(tid) {}
-// 	inline auto operator()(Processor &tp) const { return tp.dwApicId == m_id; }
-// };
-
 bool ProcessorSupportsCpuId() {
 	return _probeCPUID();
 }

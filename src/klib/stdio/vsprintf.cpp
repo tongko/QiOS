@@ -148,46 +148,54 @@ typedef struct format_specifier {
 static const char *FLAGS_STRING = "-+ #0";
 static const char *LENGTH_STRING = "hlL";
 
-static unsigned int print_number_ul(char *				dest,
-									unsigned long		value,
-									format_specifier_t *format) {
+static int print_number_ul(char *dest, long value, format_specifier_t *format) {
 
 	if (!format->precision && !value)
 		return 0;
 
 	char *		p = dest;
 	const char *strDigit = DIGIT_STR(format->specifier);
-	size_t		len = 0;
+	int			len = 0;
 	char		buf1[32] {0};
 	int			base;
+	bool		bHasSign = value < 0 || format->flags & FMTS_FLAGS_FORCESIGN;
+
 	BASE(format->specifier);
 	switch (format->specifier) {
 	case 'd':
 	case 'i': {
 		/* Specifier says this is signed integer */
 		/* check the length to find out actual value type */
+		/*
+		 * we don't want to print any sign to buf1 at this moment
+		 * because padding and justification would alter the actual
+		 * position of the sign
+		 */
+		auto v = absl(value);
 		if (format->length == 'h') { /* short */
-			len += itoa(static_cast<int16_t>(value), buf1, base, strDigit);
+			len += itoa(static_cast<int16_t>(v), buf1, base, strDigit);
 		}
 		else if (format->length == 'L') { /* long long */
-			len += ltoa(static_cast<int64_t>(value), buf1, base, strDigit);
+			len += ltoa(v, buf1, base, strDigit);
 		}
 		else {
-			len += itoa(static_cast<int16_t>(value), buf1, base, strDigit);
+			len += itoa(static_cast<int32_t>(v), buf1, base, strDigit);
 		}
 	} break;
 	case 'x':
 	case 'X':
 	case 'u':
 	case 'p': {
-		/* Specifier says this is unsigned integer */
-		uint64_t uValue;
+		/* Specifier says this is unsigned integer.
+		   Force sign is not supported.
+		*/
+		bHasSign = false;
 		/* Check the length to find out actual value type */
 		if (format->length == 'h') { /* short */
 			len += utoa(static_cast<uint16_t>(value), buf1, base, strDigit);
 		}
 		else if (format->length == 'L') { /* long long */
-			len += ultoa(value, buf1, base, strDigit);
+			len += ultoa(static_cast<uint64_t>(value), buf1, base, strDigit);
 		}
 		else {
 			len += utoa(static_cast<uint32_t>(value), buf1, base, strDigit);
@@ -196,99 +204,171 @@ static unsigned int print_number_ul(char *				dest,
 	default: buf1[0] = '\0';
 	}
 
-	size_t max_width
-		= MAX(format->precision > -1 ? format->precision : format->fillWidth,
-			  len);
-	size_t paddspace = MAX(format->fillWidth - len, 0);
-	size_t paddzero = MAX(format->precision - len, 0);
-
-	/* Precision has higher precedence than width */
-	if (format->precision) {
-		// if x, X, or p, need Prefix?
-		if (((format->specifier == 'x' || format->specifier == 'X')
-			 && (format->flags & FMTS_FLAGS_LEADSIGN))
-			// p always has prefix
-			|| format->specifier == 'p') {
-			paddzero -= 2;
-			char temp[32];
-			temp[0] = '0';
-			temp[1] = format->specifier == 'X' ? 'X' : 'x';
-			memcpy(&temp[2], buf1, len);
-			memcpy(buf1, temp, len + 2);
-		}
-	}
-}
-
-static unsigned int print_number_ui(char *				dest,
-									unsigned int		value,
-									format_specifier_t *format) {
-	char * p = dest;
-	size_t len = 0;
-
-	char		 buf1[32] = {0};
-	unsigned int base;
-	BASE(format->specifier);
-	len += itoa(value, buf1, base, DIGIT_STR(format->specifier));
-	int max_width = MAX(MAX(format->fillWidth, format->precision), (int) len);
-	int paddspace = MAX(format->fillWidth - (int) len, 0);
-	int paddzero = MAX(format->precision - (int) len, 0);
-	int i = 0;
-	int leading = 0;
-	if (format->precision >= format->fillWidth) {
-		//	precision greater than fixed width
-		if ((format->flags & FMTS_FLAGS_LEADSIGN)
-			&& (format->specifier == 'X' || format->specifier == 'x')) {
-			*p++ = '0';
-			*p++ = format->specifier;
-			*p = '\0';
-			leading = 2;
-		}
-		for (i = 0; i < max_width; i++) {
-			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
-			*p = '\0';
-		}
-
-		return max_width + leading;
+	/*
+		If '0' flags specified, Left-pads the number with zeroes instead of
+	   spaces, if fillwidth specified.
+	*/
+	if (format->flags & FMTS_FLAGS_PADZEROES) {
+		format->precision = MAX(format->precision, format->fillWidth);
+		format->fillWidth = 0;
 	}
 
-	int c_to_print = MAX(format->precision, (int) len);
-	if ((format->flags & FMTS_FLAGS_LEFTJUSTIFIED)) {
-		if ((format->flags & FMTS_FLAGS_LEADSIGN)
-			&& (format->specifier == 'X' || format->specifier == 'x')) {
-			*p++ = '0';
-			*p++ = format->specifier;
-			*p = '\0';
-			leading = 2;
+	/* max_width is taken from precision, width, and len, whichever larger */
+	auto max_width = MAX(format->precision, format->fillWidth);
+	max_width = MAX(max_width, len);
+	auto paddzero = MAX(format->precision - len, 0);
+	paddzero = MAX(paddzero, 0);
+	auto toBeMinus = MAX(len, format->precision);
+	auto paddspace = MAX(format->fillWidth - toBeMinus, 0);
+	paddspace = MAX(paddspace, 0);
+	auto retVal = max_width;
+	auto printed = 0;
+
+	if (len > format->precision && len > format->fillWidth) {
+		if (bHasSign) {
+			*p++ = value < 0 ? '-' : '+';
+			printed++;
+			retVal++;
 		}
-		for (i = 0; i < c_to_print; i++) {
-			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
-			*p = '\0';
-		}
-		for (i = 0; i < paddspace - paddzero; i++) {
-			*p++ = ' ';
-			*p = '\0';
-		}
-	}
-	else {
-		for (i = 0; i < paddspace - paddzero; i++) {
-			*p++ = (format->flags & FMTS_FLAGS_PADZEROES) ? '0' : ' ';
-			*p = '\0';
-		}
-		if ((format->flags & FMTS_FLAGS_LEADSIGN)
-			&& (format->specifier == 'X' || format->specifier == 'x')) {
+		else if (format->flags & FMTS_FLAGS_LEADSIGN) {
 			*p++ = '0';
 			*p++ = 'x';
-			*p = '\0';
-			leading = 2;
+			printed += 2;
+			retVal += 2;
 		}
-		for (i = 0; i < c_to_print; i++) {
-			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
-			*p = '\0';
+
+		for (auto i = 0; i < max_width; i++) {
+			*p++ = buf1[i];
+		}
+	}
+	else if (format->flags & FMTS_FLAGS_LEFTJUSTIFIED) { /* Left justified */
+
+		if (bHasSign) {
+			*p++ = value < 0 ? '-' : '+';
+			printed++;
+			retVal++;
+		}
+		else if (format->flags & FMTS_FLAGS_LEADSIGN) {
+			*p++ = '0';
+			*p++ = 'x';
+			printed += 2;
+			retVal += 2;
+		}
+
+		for (auto i = 0; i < paddzero; i++) {
+			*p++ = '0';
+		}
+		for (auto i = 0; i < len; i++) {
+			*p++ = buf1[i - paddzero];
+		}
+		for (auto i = 0; i < (paddspace - printed); i++) {
+			*p++ = ' ';
+		}
+	}
+	else { /* right justified */
+		if (bHasSign) {
+			printed++;
+		}
+		else if (format->flags & FMTS_FLAGS_LEADSIGN) {
+			printed += 2;
+		}
+
+		for (auto i = 0; i < (paddspace - printed); i++) {
+			*p++ = ' ';
+		}
+		if (bHasSign) {
+			*p++ = value < 0 ? '-' : '+';
+			retVal++;
+		}
+		else if (format->flags & FMTS_FLAGS_LEADSIGN) {
+			*p++ = '0';
+			*p++ = 'x';
+			retVal += 2;
+		}
+
+		for (auto i = 0; i < paddzero; i++) {
+			*p++ = '0';
+		}
+		for (auto i = 0; i < len; i++) {
+			*p++ = buf1[i];
 		}
 	}
 
-	return max_width + leading;
+	*p = '\0';
+
+	return retVal;
 }
+
+// static unsigned int print_number_ui(char *				dest,
+// 									unsigned int		value,
+// 									format_specifier_t *format) {
+// 	char * p = dest;
+// 	size_t len = 0;
+//
+// 	char		 buf1[32] = {0};
+// 	unsigned int base;
+// 	BASE(format->specifier);
+// 	len += itoa(value, buf1, base, DIGIT_STR(format->specifier));
+// 	int max_width = MAX(MAX(format->fillWidth, format->precision), (int) len);
+// 	int paddspace = MAX(format->fillWidth - (int) len, 0);
+// 	int paddzero = MAX(format->precision - (int) len, 0);
+// 	int i = 0;
+// 	int leading = 0;
+// 	if (format->precision >= format->fillWidth) {
+// 		//	precision greater than fixed width
+// 		if ((format->flags & FMTS_FLAGS_LEADSIGN)
+// 			&& (format->specifier == 'X' || format->specifier == 'x')) {
+// 			*p++ = '0';
+// 			*p++ = format->specifier;
+// 			*p = '\0';
+// 			leading = 2;
+// 		}
+// 		for (i = 0; i < max_width; i++) {
+// 			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
+// 			*p = '\0';
+// 		}
+//
+// 		return max_width + leading;
+// 	}
+//
+// 	int c_to_print = MAX(format->precision, (int) len);
+// 	if ((format->flags & FMTS_FLAGS_LEFTJUSTIFIED)) {
+// 		if ((format->flags & FMTS_FLAGS_LEADSIGN)
+// 			&& (format->specifier == 'X' || format->specifier == 'x')) {
+// 			*p++ = '0';
+// 			*p++ = format->specifier;
+// 			*p = '\0';
+// 			leading = 2;
+// 		}
+// 		for (i = 0; i < c_to_print; i++) {
+// 			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
+// 			*p = '\0';
+// 		}
+// 		for (i = 0; i < paddspace - paddzero; i++) {
+// 			*p++ = ' ';
+// 			*p = '\0';
+// 		}
+// 	}
+// 	else {
+// 		for (i = 0; i < paddspace - paddzero; i++) {
+// 			*p++ = (format->flags & FMTS_FLAGS_PADZEROES) ? '0' : ' ';
+// 			*p = '\0';
+// 		}
+// 		if ((format->flags & FMTS_FLAGS_LEADSIGN)
+// 			&& (format->specifier == 'X' || format->specifier == 'x')) {
+// 			*p++ = '0';
+// 			*p++ = 'x';
+// 			*p = '\0';
+// 			leading = 2;
+// 		}
+// 		for (i = 0; i < c_to_print; i++) {
+// 			*p++ = i < paddzero ? '0' : buf1[i - paddzero];
+// 			*p = '\0';
+// 		}
+// 	}
+//
+// 	return max_width + leading;
+// }
 
 static unsigned int print_string(char *				 dest,
 								 const char *		 str,
@@ -361,6 +441,7 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 			auto flgIdx = strchr(FLAGS_STRING, *ptr++);
 			if (flgIdx) {
 				fmt_spcf.flags = 1 << (int) (flgIdx - FLAGS_STRING);
+				ptr++;
 			}
 
 			/* probe for width */
@@ -421,6 +502,7 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 			auto lenIdx = strchr(LENGTH_STRING, *ptr++);
 			if (lenIdx) {
 				fmt_spcf.length = *lenIdx;
+				ptr++;
 			}
 
 			fmt_spcf.specifier = *ptr;
@@ -435,7 +517,7 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 					fmt_spcf.length = 'l';
 				const unsigned int v = va_arg(arg, unsigned int);
 				char			   num_buff[32] = {0};
-				unsigned int	   x = print_number_ui(num_buff, v, &fmt_spcf);
+				unsigned int	   x = print_number_ul(num_buff, v, &fmt_spcf);
 				strcat(value, num_buff);
 				value += x;
 				i += x;
@@ -444,9 +526,16 @@ int vsprintf(char *__restrict str, const char *__restrict format, va_list arg) {
 				void *	  ptr = va_arg(arg, void *);
 				char	  num_buff[32] = {0};
 				uintptr_t v = (uintptr_t) ptr;
-				fmt_spcf.flags |= FMTS_FLAGS_LEADSIGN;
+				fmt_spcf.flags |= FMTS_FLAGS_LEADSIGN | FMTS_FLAGS_PADZEROES;
 				fmt_spcf.specifier = 'X';
-				unsigned int x = print_number_ui(num_buff, v, &fmt_spcf);
+#if defined(__x86_64__)
+				fmt_spcf.precision = 16;
+				fmt_spcf.length = 'L';
+#else
+				fmt_spcf.precision = 8;
+				fmt_spcf.length = 'l';
+#endif
+				unsigned int x = print_number_ul(num_buff, v, &fmt_spcf);
 				strcat(value, num_buff);
 				value += x;
 				i += x;

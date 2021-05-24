@@ -17,7 +17,8 @@ namespace qklib {
 extern "C" {
 __attribute__((__noreturn__)) void abort(void);
 
-int abs(int_t x);
+int	 abs(int_t x);
+long absl(long x);
 
 #ifndef ISDIGIT
 	#define ISDIGIT(x) (x >= 0x30 && x <= 0x39)
