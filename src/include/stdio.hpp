@@ -18,15 +18,6 @@
 
 namespace qklib {
 
-typedef struct format_specifier {
-	char		 s;		// Specifier
-	unsigned int lj;	// left justified
-	unsigned int fz;	//	zero pad
-	unsigned int hx;	//	0x leading
-	int			 fw;
-	int			 pw;
-} format_specifier_t;
-
 extern int printf(const char *__restrict format, ...);
 extern int sprintf(char *__restrict str, const char *__restrict format, ...);
 extern int vsprintf(char *__restrict str,
